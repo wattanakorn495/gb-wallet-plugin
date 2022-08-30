@@ -992,6 +992,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
+      key: Key('Register_plugin_${DateTime.now().toString()}'),
       onWillPop: () async {
         onBackButton(selectedStep);
         return true;
@@ -1072,48 +1073,6 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
           body: SafeArea(
             top: false,
             child: Stack(children: [
-              // Visibility(
-              //   visible: _phoneVisible,
-              //   maintainState: true,
-              //   child: SingleChildScrollView(
-              //     padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 20),
-              //     child: Form(
-              //       key: _formKeyPhoneNumber,
-              //       child: Column(
-              //         crossAxisAlignment: CrossAxisAlignment.start,
-              //         children: [
-              //           Text('register'.tr, style: const TextStyle(fontSize: 24)),
-              //           const SizedBox(height: 10),
-              //           Column(children: [
-              //             SizedBox(
-              //               width: double.infinity,
-              //               child: TextFormField(
-              //                 enabled: false,
-              //                 controller: phonenumberController,
-              //                 maxLength: 12,
-              //                 validator: (v) {
-              //                   if (v!.isEmpty) {
-              //                     return 'please_enter'.tr;
-              //                   } else if (v.length != 10 && validatePhonenumber) {
-              //                     return 'pls_10digits'.tr;
-              //                   }
-              //                   return null;
-              //                 },
-              //                 onChanged: (v) async {
-              //                   _formKeyPhoneNumber.currentState!.validate();
-              //                   if (v.length == 10) {
-              //                     FocusScope.of(context).unfocus();
-              //                     await autoSubmitPhoneNumber();
-              //                   }
-              //                 },
-              //               ),
-              //             )
-              //           ]),
-              //         ],
-              //       ),
-              //     ),
-              //   ),
-              // ),
               Visibility(
                 visible: _otpVisible,
                 maintainState: true,

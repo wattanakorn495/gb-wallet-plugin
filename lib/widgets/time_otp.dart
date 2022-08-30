@@ -10,6 +10,7 @@ Widget timeOTP({
 }) {
   if (expiration) {
     return Center(
+      key: Key('timeOTP_plugin_${DateTime.now().toString()}'),
       child: Container(
         width: 136,
         height: 44,
@@ -42,6 +43,7 @@ Widget timeOTP({
     int minutesOTP = expirationOTP.inMinutes.remainder(60);
     int secondsOTP = expirationOTP.inSeconds.remainder(60);
     return Container(
+      key: Key('timeOTP_plugin_${DateTime.now().toString()}'),
       width: double.infinity,
       padding: const EdgeInsets.only(top: 20),
       child: Row(

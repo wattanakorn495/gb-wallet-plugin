@@ -986,16 +986,20 @@ class _PersonalInfoState extends State<PersonalInfo> {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenheight = MediaQuery.of(context).size.height;
 
-    return ListView(physics: const ClampingScrollPhysics(), padding: const EdgeInsets.only(top: 5, bottom: 30), children: [
-      Form(
-          key: _formKey,
-          child: Column(children: [
-            personInformation(screenWidth),
-            widget.ocrAllFailed ? Container(height: 20, width: double.infinity, color: Colors.grey[100]) : Container(),
-            widget.ocrAllFailed ? idCardCapturing(screenWidth: screenWidth, screenheight: screenheight) : Container(),
-            Container(height: 20, width: double.infinity, color: Colors.grey[100]),
-            workInformation(),
-          ]))
-    ]);
+    return ListView(
+        key: Key('PersonalInfo_plugin_${DateTime.now().toString()}'),
+        physics: const ClampingScrollPhysics(),
+        padding: const EdgeInsets.only(top: 5, bottom: 30),
+        children: [
+          Form(
+              key: _formKey,
+              child: Column(children: [
+                personInformation(screenWidth),
+                widget.ocrAllFailed ? Container(height: 20, width: double.infinity, color: Colors.grey[100]) : Container(),
+                widget.ocrAllFailed ? idCardCapturing(screenWidth: screenWidth, screenheight: screenheight) : Container(),
+                Container(height: 20, width: double.infinity, color: Colors.grey[100]),
+                workInformation(),
+              ]))
+        ]);
   }
 }

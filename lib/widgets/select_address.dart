@@ -38,6 +38,7 @@ class _SelectAddressState extends State<SelectAddress> with TickerProviderStateM
   @override
   Widget build(BuildContext context) {
     return SizedBox(
+      key: Key('SelectAddress_plugin_${DateTime.now().toString()}'),
       height: MediaQuery.of(context).size.height * 0.75,
       width: double.infinity,
       child: Column(children: [

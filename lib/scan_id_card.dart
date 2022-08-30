@@ -175,6 +175,7 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: Key('CameraScanIDCard_plugin_${DateTime.now().toString()}'),
       body: Stack(children: [
         visibleFront! ? _cameraFrontPreviewWidget() : _cameraBackPreviewWidget(),
         Align(

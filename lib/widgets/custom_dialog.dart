@@ -25,6 +25,7 @@ class CustomDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
+      key: Key('CustomDialog_plugin_${DateTime.now().toString()}'),
       elevation: 0,
       backgroundColor: Colors.transparent,
       child: _buildDialogContent(context),

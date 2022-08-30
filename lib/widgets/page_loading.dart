@@ -5,6 +5,7 @@ import 'package:loading_indicator/loading_indicator.dart';
 //หน้า Loading ที่มีโลโก้พร้อมวงโหลด
 Widget pageLoading({String? title}) {
   return Scaffold(
+    key: Key('pageLoading_plugin_${DateTime.now().toString()}'),
     body: Container(
       color: Colors.white,
       height: double.infinity,

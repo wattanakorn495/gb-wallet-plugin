@@ -43,6 +43,7 @@ class _NumpadState extends State<Numpad> {
   Widget build(BuildContext context) {
     reset(widget.reset);
     return Column(
+      key: Key('Numpad_plugin_${DateTime.now().toString()}'),
       children: <Widget>[
         Preview(text: number, length: widget.length),
         const SizedBox(height: 30),
