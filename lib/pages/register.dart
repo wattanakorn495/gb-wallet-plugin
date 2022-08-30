@@ -13,7 +13,6 @@ import 'package:gbkyc/scan_id_card.dart';
 import 'package:gbkyc/state_store.dart';
 import 'package:gbkyc/utils/error_messages.dart';
 import 'package:gbkyc/utils/file_uitility.dart';
-import 'package:gbkyc/utils/mask_text_formatter.dart';
 import 'package:gbkyc/widgets/button_cancel.dart';
 import 'package:gbkyc/widgets/button_confirm.dart';
 import 'package:gbkyc/widgets/custom_dialog.dart';
@@ -30,7 +29,8 @@ import 'package:pin_code_fields/pin_code_fields.dart';
 import 'personal_info.dart';
 
 class Register extends StatefulWidget {
-  const Register({Key? key}) : super(key: key);
+  const Register({Key? key, this.phoneNumber}) : super(key: key);
+  final String? phoneNumber;
 
   @override
   // ignore: library_private_types_in_public_api
@@ -56,15 +56,13 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
   String fileNameBackID = '';
   String fileNameSelfieID = '';
   String fileNameLiveness = '';
-
   int length = 6;
-  int selectedStep = 0;
+  int selectedStep = 1;
   int? careerID;
   int? indexProvince, indexDistric, indexSubDistric;
   int failFacematch = 0;
 
-  bool _phoneVisible = true;
-  bool _otpVisible = false;
+  bool _otpVisible = true;
   bool _scanIDVisible = false;
   bool _dataVisible = false;
   bool _kycVisible = false;
@@ -108,6 +106,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     onTapRecognizer = TapGestureRecognizer()..onTap = () => Get.back();
     errorController = StreamController<ErrorAnimationType>();
+    phonenumberController.value = phonenumberController.value.copyWith(text: widget.phoneNumber);
+    autoSubmitPhoneNumber(widget.phoneNumber.toString());
   }
 
   @override
@@ -424,14 +424,13 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
     );
   }
 
-  autoSubmitPhoneNumber() async {
-    txPhoneNumber = phonenumberController.text.replaceAll('-', '');
+  autoSubmitPhoneNumber(String phonenumber) async {
     setState(() => validatePhonenumber = true);
-    if (_formKeyPhoneNumber.currentState!.validate() && phonenumberController.text.length == 12) {
+    if (phonenumber.length == 10) {
       var otpId = await PostAPI.call(
         url: '$register3003/send_otps',
         headers: Authorization.auth2,
-        body: {"phone_number": phonenumberController.text.replaceAll('-', ''), "country_code": countryCode},
+        body: {"phone_number": phonenumber, "country_code": countryCode},
       );
 
       if (otpId['success']) {
@@ -441,7 +440,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
           datetimeOTP = DateTime.parse(data['expiration_at']);
 
           selectedStep = 1;
-          _phoneVisible = false;
+          // _phoneVisible = false;
           _otpVisible = true;
           expiration = false;
         });
@@ -482,16 +481,15 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
       case 0:
         Navigator.of(context, rootNavigator: true).pop();
         break;
-      case 1:
-        setState(() {
-          otpController.clear();
-          phonenumberController.clear();
-          selectedStep = 0;
-          _phoneVisible = true;
-          _otpVisible = false;
-          hasError = false;
-        });
-        break;
+      // case 1:
+      //   setState(() {
+      //     otpController.clear();
+      //     phonenumberController.clear();
+      //     selectedStep = 0;
+      //     _otpVisible = false;
+      //     hasError = false;
+      //   });
+      //   break;
       case 2:
         showDialog(
           context: context,
@@ -509,11 +507,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                   _dataVisible = false;
                 });
               } else {
-                Navigator.pop(context);
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (BuildContext context) => const Register()),
-                );
+                Navigator.popUntil(context, (route) => false);
               }
             },
           ),
@@ -644,7 +638,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
               child: ButtonConfirm(
                 text: 'continue'.tr,
                 onPressed: () async {
-                  await autoSubmitPhoneNumber();
+                  await autoSubmitPhoneNumber(widget.phoneNumber.toString());
                 },
               ),
             )
@@ -665,7 +659,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                       otpController.clear();
                       phonenumberController.clear();
                       selectedStep = 0;
-                      _phoneVisible = true;
+                      // _phoneVisible = true;
                       _otpVisible = false;
                       hasError = false;
                     });
@@ -1083,51 +1077,48 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
           body: SafeArea(
             top: false,
             child: Stack(children: [
-              Visibility(
-                visible: _phoneVisible,
-                maintainState: true,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 20),
-                  child: Form(
-                    key: _formKeyPhoneNumber,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('register'.tr, style: const TextStyle(fontSize: 24)),
-                        Text('enter_to_otp'.tr, style: const TextStyle(color: Colors.black54, fontSize: 16)),
-                        const SizedBox(height: 10),
-                        Column(children: [
-                          SizedBox(
-                            width: double.infinity,
-                            child: TextFormField(
-                              controller: phonenumberController,
-                              maxLength: 12,
-                              validator: (v) {
-                                if (v!.isEmpty) {
-                                  return 'please_enter'.tr;
-                                } else if (v.length != 12 && validatePhonenumber) {
-                                  return 'pls_10digits'.tr;
-                                }
-                                return null;
-                              },
-                              onChanged: (v) async {
-                                _formKeyPhoneNumber.currentState!.validate();
-                                if (v.length == 12) {
-                                  FocusScope.of(context).unfocus();
-                                  await autoSubmitPhoneNumber();
-                                }
-                              },
-                              decoration: InputDecoration(labelText: 'phone_num'.tr),
-                              keyboardType: TextInputType.number,
-                              inputFormatters: <TextInputFormatter>[MaskTextFormatter.phoneNumber],
-                            ),
-                          )
-                        ]),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+              // Visibility(
+              //   visible: _phoneVisible,
+              //   maintainState: true,
+              //   child: SingleChildScrollView(
+              //     padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 20),
+              //     child: Form(
+              //       key: _formKeyPhoneNumber,
+              //       child: Column(
+              //         crossAxisAlignment: CrossAxisAlignment.start,
+              //         children: [
+              //           Text('register'.tr, style: const TextStyle(fontSize: 24)),
+              //           const SizedBox(height: 10),
+              //           Column(children: [
+              //             SizedBox(
+              //               width: double.infinity,
+              //               child: TextFormField(
+              //                 enabled: false,
+              //                 controller: phonenumberController,
+              //                 maxLength: 12,
+              //                 validator: (v) {
+              //                   if (v!.isEmpty) {
+              //                     return 'please_enter'.tr;
+              //                   } else if (v.length != 10 && validatePhonenumber) {
+              //                     return 'pls_10digits'.tr;
+              //                   }
+              //                   return null;
+              //                 },
+              //                 onChanged: (v) async {
+              //                   _formKeyPhoneNumber.currentState!.validate();
+              //                   if (v.length == 10) {
+              //                     FocusScope.of(context).unfocus();
+              //                     await autoSubmitPhoneNumber();
+              //                   }
+              //                 },
+              //               ),
+              //             )
+              //           ]),
+              //         ],
+              //       ),
+              //     ),
+              //   ),
+              // ),
               Visibility(
                 visible: _otpVisible,
                 maintainState: true,

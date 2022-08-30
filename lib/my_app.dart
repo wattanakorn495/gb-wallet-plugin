@@ -7,10 +7,10 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:gbkyc/pages/register.dart';
 import 'package:get/get.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:loading_indicator/loading_indicator.dart';
 import 'package:responsive_framework/responsive_framework.dart';
-import 'package:intl/date_symbol_data_local.dart';
 
 import 'address_bloc.dart';
 import 'utils/device_serial.dart';
@@ -43,8 +43,8 @@ void configLoading() {
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({Key? key}) : super(key: key);
-
+  const MyApp({Key? key, this.phoneNumber}) : super(key: key);
+  final phoneNumber;
   @override
   State<MyApp> createState() => _MyAppState();
 }
@@ -90,7 +90,9 @@ class _MyAppState extends State<MyApp> {
               ],
               background: Container(color: const Color(0xFFF5F5F5))),
         ),
-        home: const Register(),
+        home: Register(
+          phoneNumber: widget.phoneNumber,
+        ),
         title: 'GB Wallet',
         theme: ThemeData(
           primaryColor: const Color(0xFF02416D),
