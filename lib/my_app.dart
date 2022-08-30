@@ -40,8 +40,8 @@ void configLoading() {
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({Key? key}) : super(key: key);
-
+  const MyApp({Key? key, required this.phoneNumber}) : super(key: key);
+  final String phoneNumber;
   @override
   State<MyApp> createState() => _MyAppState();
 }
@@ -88,7 +88,9 @@ class _MyAppState extends State<MyApp> {
               ],
               background: Container(color: const Color(0xFFF5F5F5))),
         ),
-        home: const Register(),
+        home: Register(
+          phoneNumber: widget.phoneNumber,
+        ),
         title: 'GB Wallet',
         theme: ThemeData(
           primaryColor: const Color(0xFF02416D),
