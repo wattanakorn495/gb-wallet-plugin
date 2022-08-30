@@ -3,12 +3,11 @@ import 'dart:convert';
 
 import 'package:camera/camera.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:gbkyc/api/config_api.dart';
 import 'package:gbkyc/api/post_api.dart';
 import 'package:gbkyc/utils/crop_image_path.dart';
-import 'package:get/get_utils/src/extensions/internacionalization.dart';
-import 'package:flutter/material.dart';
-import 'package:get/route_manager.dart';
+import 'package:gbkyc/utils/file_uitility.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'widgets/circular_progress.dart';
@@ -32,6 +31,7 @@ class CameraScanIDCard extends StatefulWidget {
 }
 
 class _CameraScanIDCardState extends State<CameraScanIDCard> {
+  BuildContext? currentContext;
   bool? visibleFront = true;
   bool visibleBack = false;
   bool isBusy = false;
@@ -107,6 +107,7 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
   void initState() {
     super.initState();
 
+    currentContext = context;
     cameraCount = 0;
     cameraBackCount = 0;
     noFrame = widget.noFrame;
@@ -157,8 +158,8 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
         showDialog(
           context: context,
           builder: (context) => CustomDialog(
-            title: 'Camera_is_disabled'.tr,
-            content: 'access_your_camera_Want_to_go_to_settings'.tr,
+            title: 'Camera_is_disabled'.tr(),
+            content: 'access_your_camera_Want_to_go_to_settings' /*.tr()*/,
             avatar: false,
             onPressedConfirm: () {
               Navigator.pop(context);
@@ -170,110 +171,6 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
       }
     }
   }
-
-  // Future _switchLiveCamera() async {
-  //   if (_direction == CameraLensDirection.front) {
-  //     _direction = CameraLensDirection.back;
-  //     setState(() => hideFlash = false);
-  //   } else {
-  //     _direction = CameraLensDirection.front;
-  //     _controller?.setFlashMode(FlashMode.off);
-  //     setState(() {
-  //       flashStatus = false;
-  //       hideFlash = true;
-  //     });
-  //   }
-  //   _controller = null;
-  //   await _startLiveFeed();
-  // }
-
-  // Future<void> processImage(InputImage inputImage) async {
-  //   if (isBusy) return;
-  //   isBusy = true;
-  //   final recognisedText = await textDetector.processImage(inputImage);
-  //   debugPrint(recognisedText.text);
-  //   if (RegExp(r'Thai National|dentification Number').hasMatch(recognisedText.text) &&
-  //       RegExp(r'of lssue|of Expiry').hasMatch(recognisedText.text) &&
-  //       !_takeFront &&
-  //       visibleFront!) {
-  //     _takeFront = true;
-  //     Future.delayed(const Duration(seconds: 1), () {
-  //       _onCaptureFrontPressed();
-  //     });
-  //   }
-  //   if (RegExp(r'BORA-').hasMatch(recognisedText.text) && !_takeBack && visibleBack) {
-  //     _takeBack = true;
-  //     Future.delayed(const Duration(seconds: 1), () {
-  //       _onCaptureBackPressed();
-  //     });
-  //   }
-
-  //   if (inputImage.inputImageData?.size != null && inputImage.inputImageData?.imageRotation != null) {}
-  //   isBusy = false;
-  //   isInputScan = true;
-  //   if (mounted) {
-  //     setState(() {});
-  //   }
-  // }
-
-  // Future _processCameraImage(CameraImage image) async {
-  //   if (isInputScan) {
-  //     isInputScan = false;
-  //     Future.delayed(const Duration(milliseconds: 500), () async {
-  //       // double leftFinal = offset.dx * image.width / Get.width;
-  //       // double topFinal = offset.dy * image.height / Get.height;
-  //       // double widthFinal = size.width * image.width / Get.width;
-  //       // double heightFinal = size.height * image.height / Get.height;
-
-  //       // Uint8List bytes = await convertImageToPng(image, leftFinal, topFinal, widthFinal, heightFinal);
-  //       // if (mounted) setState(() => test = bytes);
-
-  //       // final tempDir = await getTemporaryDirectory();
-  //       // File file = await File('${tempDir.path}/image.png').create();
-  //       // file.writeAsBytesSync(bytes);
-
-  //       // processImage(InputImage.fromFile(file));
-
-  //       final WriteBuffer allBytes = WriteBuffer();
-  //       for (Plane plane in image.planes) {
-  //         allBytes.putUint8List(plane.bytes);
-  //       }
-  //       final bytes = allBytes.done().buffer.asUint8List();
-
-  //       final Size imageSize = Size(image.width.toDouble(), image.height.toDouble());
-
-  //       // final camera = await availableCameras().then(
-  //       //   (List<CameraDescription> cameras) => cameras.firstWhere(
-  //       //     (CameraDescription camera) => camera.lensDirection == _direction,
-  //       //   ),
-  //       // );
-  //       const imageRotation = InputImageRotation.rotation0deg;
-
-  //       const inputImageFormat = InputImageFormat.nv21;
-
-  //       final planeData = image.planes.map(
-  //         (Plane plane) {
-  //           return InputImagePlaneMetadata(
-  //             bytesPerRow: plane.bytesPerRow,
-  //             height: plane.height,
-  //             width: plane.width,
-  //           );
-  //         },
-  //       ).toList();
-
-  //       final inputImageData = InputImageData(
-  //         size: imageSize,
-  //         imageRotation: imageRotation,
-  //         inputImageFormat: inputImageFormat,
-  //         planeData: planeData,
-  //       );
-
-  //       final inputImage = InputImage.fromBytes(bytes: bytes, inputImageData: inputImageData);
-
-  //       processImage(inputImage);
-  //     });
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -325,7 +222,7 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
                   ]),
                 ),
         ),
-        Center(child: SizedBox(key: _globalKey, height: Get.height / 2.5, width: double.infinity)),
+        Center(child: SizedBox(key: _globalKey, height: MediaQuery.of(context).size.height / 2.5, width: double.infinity)),
         // if (frontIDPath != null) Image.file(File(frontIDPath!))
       ]),
     );
@@ -350,7 +247,7 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
           child: Opacity(
             opacity: 0.8,
             child: Image.asset(
-              isFront ? 'assets/images/crop_front_id_${'language'.tr}.png' : 'assets/images/crop_back_id_${'language'.tr}.png',
+              isFront ? 'assets/images/crop_front_id_${'language'.tr()}.png' : 'assets/images/crop_back_id_${'language'.tr()}.png',
               package: 'gbkyc',
               fit: BoxFit.fitWidth,
             ),
@@ -358,11 +255,11 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
         ),
       if (!noFrame!)
         Positioned(
-          top: Get.height / 5,
+          top: MediaQuery.of(context).size.height / 5,
           left: 0,
           right: 0,
           child: Text(
-            isFront ? 'Please_arrange_the_front_of_the_card'.tr : 'Please_arrange_the_back_of_the_card'.tr,
+            isFront ? 'Please_arrange_the_front_of_the_card'.tr() : 'Please_arrange_the_back_of_the_card'.tr(),
             style: const TextStyle(fontSize: 16, color: Colors.white),
             textAlign: TextAlign.center,
           ),
@@ -383,7 +280,7 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
             CustomPaint(foregroundPainter: Paint()),
             circularProgress(),
             const SizedBox(height: 5),
-            Text('${'System_is_processing'.tr}...', style: const TextStyle(color: Colors.white)),
+            Text('${'System_is_processing'.tr()}...', style: const TextStyle(color: Colors.white)),
           ],
         ),
       );
@@ -403,7 +300,7 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
             CustomPaint(foregroundPainter: Paint()),
             circularProgress(),
             const SizedBox(height: 5),
-            Text('${'System_is_processing'.tr}...', style: const TextStyle(color: Colors.white)),
+            Text('${'System_is_processing'.tr()}...', style: const TextStyle(color: Colors.white)),
           ]));
     } else {
       return ocrGuideFrame(false);
@@ -472,7 +369,7 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
       setState(() => isLoading = true);
       await _controller!.takePicture().then((v) => frontIDPath = v.path);
 
-      List<int> toJPG = await cropImagePath(imagePath: frontIDPath!, offset: offset, size: size);
+      List<int> toJPG = await cropImagePath(imagePath: frontIDPath!, offset: offset, size: size, context: context);
       String base64 = base64Encode(toJPG);
 
       final resFront = await ocrThaiID(image: base64, side: "front");
@@ -485,7 +382,7 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
         if (resFront['date_of_birth_en'].toString().contains(' ')) arrBirthday = resFront['date_of_birth_en'].split(' ');
 
         if (arrName.isNotEmpty) {
-          if (Get.locale.toString() == 'th_TH') {
+          if (/*context.locale.toString()*/ "en_US" == 'th_TH') {
             ocrFrontName = arrName[arrName.length - 2];
             ocrFrontSurname = arrName[arrName.length - 1];
           } else {
@@ -517,8 +414,8 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
           barrierDismissible: false,
           context: context,
           builder: (context) => CustomDialog(
-            title: 'Something_went_wrong'.tr,
-            content: 'ID_card_scan_failed_Please_try_again'.tr,
+            title: 'Something_went_wrong'.tr(),
+            content: 'ID_card_scan_failed_Please_try_again'.tr(),
             avatar: false,
             onPressedConfirm: () async {
               Navigator.pop(context);
@@ -552,7 +449,7 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
       setState(() => isLoading = true);
       await _controller!.takePicture().then((v) => backIDPath = v.path);
 
-      List<int> toJPG = await cropImagePath(imagePath: backIDPath!, offset: offset, size: size);
+      List<int> toJPG = await cropImagePath(imagePath: backIDPath!, offset: offset, size: size, context: context);
       String base64 = base64Encode(toJPG);
 
       final resBack = await ocrThaiID(image: base64, side: 'back');
@@ -604,19 +501,19 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
         birthDay = '$convertFrontBirthdayD/$convertFrontBirthdayM/$ocrFrontBirthdayY';
 
         var verifyDOPA = await PostAPI.call(
-          url: '$register3003/users/verify_dopa',
-          headers: Authorization.auth2,
-          body: {
-            "id_card": ocrFrontID!,
-            "first_name": dopaFirstName!,
-            "last_name": dopaLastName!,
-            "birthday": birthDay!,
-            "laser": ocrBackLaser!,
-          },
-        );
+            url: '$register3003/users/verify_dopa',
+            headers: Authorization.auth2,
+            body: {
+              "id_card": ocrFrontID!,
+              "first_name": dopaFirstName!,
+              "last_name": dopaLastName!,
+              "birthday": birthDay!,
+              "laser": ocrBackLaser!,
+            },
+            context: context);
 
         if (verifyDOPA['success']) {
-          Get.back(result: callBackData());
+          Navigator.pop(this.context, callBackData());
         } else {
           // if (File(backIDPath) != null) {
           //   await File(backIDPath).delete();
@@ -630,7 +527,7 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
           if (cameraBackCount == 3) {
             // await File(frontIDPath).delete();
             ocrFailedAll = true;
-            Get.back(result: callBackData());
+            Navigator.pop(this.context, callBackData());
           } else {
             await _startLiveFeed();
           }
@@ -640,8 +537,8 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
           barrierDismissible: false,
           context: context,
           builder: (context) => CustomDialog(
-            title: 'Something_went_wrong'.tr,
-            content: 'ID_card_scan_failed_Please_try_again'.tr,
+            title: 'Something_went_wrong'.tr(),
+            content: 'ID_card_scan_failed_Please_try_again'.tr(),
             avatar: false,
             onPressedConfirm: () async {
               Navigator.pop(context);

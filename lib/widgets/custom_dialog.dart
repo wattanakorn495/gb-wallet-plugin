@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_utils/src/extensions/internacionalization.dart';
+import 'package:gbkyc/utils/file_uitility.dart';
 
 class CustomDialog extends StatelessWidget {
   final String? title, content, textConfirm, textCancel;
@@ -78,7 +78,7 @@ class CustomDialog extends StatelessWidget {
                   ),
                   onPressed: onPressedConfirm ?? () => Navigator.pop(context),
                   child: Text(
-                    textConfirm ?? 'ok'.tr,
+                    textConfirm ?? 'ok'.tr(),
                     style: const TextStyle(color: Colors.white),
                   ),
                 ),
@@ -96,7 +96,7 @@ class CustomDialog extends StatelessWidget {
                 ),
                 onPressed: onPressedCancel ?? () => Navigator.pop(context),
                 child: Text(
-                  textCancel ?? "Cancel".tr,
+                  textCancel ?? "Cancel".tr(),
                   style: const TextStyle(
                     color: Color(0xFF02416D),
                   ),

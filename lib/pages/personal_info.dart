@@ -1,26 +1,24 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dotted_border/dotted_border.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gbkyc/address_bloc.dart';
 import 'package:gbkyc/api/config_api.dart';
 import 'package:gbkyc/api/get_api.dart';
-import 'package:gbkyc/personal_info_model.dart';
 import 'package:gbkyc/api/post_api.dart';
 import 'package:gbkyc/pages/register.dart';
+import 'package:gbkyc/personal_info_model.dart';
 import 'package:gbkyc/scan_id_card.dart';
 import 'package:gbkyc/state_store.dart';
 import 'package:gbkyc/utils/file_uitility.dart';
 import 'package:gbkyc/widgets/button_confirm.dart';
 import 'package:gbkyc/widgets/custom_dialog.dart';
 import 'package:gbkyc/widgets/select_address.dart';
-import 'package:get/get_utils/src/extensions/internacionalization.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter/services.dart';
-import 'package:dotted_border/dotted_border.dart';
-import 'package:get/route_manager.dart';
 import 'package:intl/intl.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
@@ -204,19 +202,19 @@ class _PersonalInfoState extends State<PersonalInfo> {
       for (var e in dataProvince) {
         if (RegExp(filterProvince.replaceAll('จ.', '')).hasMatch(e['name_th'])) {
           int provinceID = e['id'];
-          String province = e['name${'lang'.tr}'];
+          String province = e['name${'lang'.tr()}'];
           for (var e in dataDistrict) {
             if ((RegExp(filterDistrict.replaceAll('อ.', '')).hasMatch(e['name_th']) ||
                     RegExp(filterDistrict.replaceAll('เขต', '')).hasMatch(e['name_th'])) &&
                 e['province_id'] == provinceID) {
               int codeDistrict = e['code'];
-              String district = e['name${'lang'.tr}'];
+              String district = e['name${'lang'.tr()}'];
               for (var e in dataSubDistrict) {
                 if (RegExp(filterSubDistrict).hasMatch(e['name_th']) && e['code'].toString().substring(0, 4) == codeDistrict.toString()) {
                   widget.setindexProvince!(e['province_id']);
                   widget.setindexDistric!(e['district_id']);
                   widget.setindexSubDistric!(e['id']);
-                  addressShowController.text = "$province/$district/${e['name${'lang'.tr}']}/${e['post_code']}";
+                  addressShowController.text = "$province/$district/${e['name${'lang'.tr()}']}/${e['post_code']}";
                 }
               }
             }
@@ -224,11 +222,11 @@ class _PersonalInfoState extends State<PersonalInfo> {
         }
       }
     }
-    dataProvince.sort((a, b) => a['name${'lang'.tr}'].compareTo(b['name${'lang'.tr}']));
+    dataProvince.sort((a, b) => a['name${'lang'.tr()}'].compareTo(b['name${'lang'.tr()}']));
 
-    Get.context?.read<AddressBloc>().add(const ClearProvince());
+    context.read<AddressBloc>().add(const ClearProvince());
     for (var item in dataProvince) {
-      Get.context?.read<AddressBloc>().add(SetProvince(item));
+      context.read<AddressBloc>().add(SetProvince(item));
     }
   }
 
@@ -251,7 +249,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
         color: Colors.white,
         child: Column(mainAxisSize: MainAxisSize.max, children: [
           ButtonConfirm(
-            text: 'ok'.tr,
+            text: 'ok'.tr(),
             radius: 0,
             onPressed: () {
               birthdayController.text = textBirthday!;
@@ -284,7 +282,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
               controller: workNameController,
               style: const TextStyle(fontSize: 15),
               validator: (v) {
-                if (v!.isEmpty && checkValidate) return 'please_enter'.tr;
+                if (v!.isEmpty && checkValidate) return 'please_enter'.tr();
                 return null;
               },
               onChanged: (v) {
@@ -292,7 +290,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 widget.setWorkName!(v);
               },
               textInputAction: TextInputAction.next,
-              decoration: InputDecoration(labelText: 'careername'.tr),
+              decoration: InputDecoration(labelText: 'careername'.tr()),
             ),
             const SizedBox(height: 20),
             Row(
@@ -306,12 +304,12 @@ class _PersonalInfoState extends State<PersonalInfo> {
                     style: const TextStyle(fontSize: 15),
                     textInputAction: TextInputAction.next,
                     decoration: InputDecoration(
-                        labelText: "district_address".tr,
-                        hintText: "district_address".tr,
+                        labelText: "district_address".tr(),
+                        hintText: "district_address".tr(),
                         suffixIcon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.black54)),
                     validator: (v) {
                       if (v!.isEmpty && checkValidate) {
-                        return 'please_enter'.tr;
+                        return 'please_enter'.tr();
                       }
                       return null;
                     },
@@ -326,7 +324,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
               controller: workAddressController,
               style: const TextStyle(fontSize: 15),
               validator: (v) {
-                if (v!.isEmpty && checkValidate) return 'please_enter'.tr;
+                if (v!.isEmpty && checkValidate) return 'please_enter'.tr();
                 return null;
               },
               onChanged: (v) {
@@ -334,7 +332,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 widget.setWorkAddress!(v);
               },
               textInputAction: TextInputAction.next,
-              decoration: InputDecoration(labelText: 'addresscareer'.tr, hintText: 'house_number_floor_village_road'.tr),
+              decoration: InputDecoration(labelText: 'addresscareer'.tr(), hintText: 'house_number_floor_village_road'.tr()),
             ),
           ])
         : const SizedBox();
@@ -348,7 +346,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
         return DropdownMenuItem(
           value: index + 1,
           child: Text(
-            '${dataCareer[index]['name_${'language'.tr}']}',
+            '${dataCareer[index]['name_${'language'.tr()}']}',
             style: const TextStyle(fontFamily: 'kanit', package: 'gbkyc'),
           ),
         );
@@ -374,7 +372,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
               isDense: true,
               isExpanded: true,
               value: indexCareer,
-              hint: Text('- ${"career".tr} -'),
+              hint: Text('- ${"career".tr()} -'),
               icon: const Icon(Icons.keyboard_arrow_down_rounded),
               style: const TextStyle(color: Colors.black, fontFamily: 'kanit', package: 'gbkyc', fontSize: 15),
               onChanged: (dynamic v) {
@@ -399,7 +397,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
             top: 10,
             left: 10,
             child: Text(
-              ' ${"titlecareer".tr} ',
+              ' ${"titlecareer".tr()} ',
               style: const TextStyle(fontSize: 12, color: Colors.black54, backgroundColor: Colors.white),
             ),
           )
@@ -410,7 +408,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
 
   Widget dropdownCareerChild() {
     return FutureBuilder<Map>(
-      future: GetAPI.call(url: '$register3003/careers/$careerId/child', headers: Authorization.auth2),
+      future: GetAPI.call(url: '$register3003/careers/$careerId/child', headers: Authorization.auth2, context: context),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           if (snapshot.data!['success']) {
@@ -423,7 +421,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                   child: SizedBox(
                     width: 300,
                     child: Text(
-                      '${dataCareerChild[index]['name_${'language'.tr}']}',
+                      '${dataCareerChild[index]['name_${'language'.tr()}']}',
                       style: const TextStyle(fontFamily: 'kanit', package: 'gbkyc'),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -451,7 +449,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                       isDense: true,
                       isExpanded: true,
                       value: indexCareerChild,
-                      hint: Text('- ${"career_more".tr} -'),
+                      hint: Text('- ${"career_more".tr()} -'),
                       icon: const Icon(Icons.keyboard_arrow_down_rounded),
                       style: const TextStyle(color: Colors.black, fontFamily: 'kanit', package: 'gbkyc', fontSize: 15),
                       onChanged: (dynamic v) {
@@ -470,7 +468,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                     ? Positioned(
                         top: 10,
                         left: 10,
-                        child: Text(' ${"career_more_choice".tr} ',
+                        child: Text(' ${"career_more_choice".tr()} ',
                             style: const TextStyle(fontSize: 12, color: Colors.black54, backgroundColor: Colors.white)))
                     : const SizedBox()
               ]);
@@ -515,10 +513,10 @@ class _PersonalInfoState extends State<PersonalInfo> {
         padding: const EdgeInsets.all(20),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('idcard'.tr, style: const TextStyle(fontSize: 24)),
-            Text('${"Scan_result".tr} $ocrResultStatus', style: const TextStyle(fontSize: 18))
+            Text('idcard'.tr(), style: const TextStyle(fontSize: 24)),
+            Text('${"Scan_result".tr()} $ocrResultStatus', style: const TextStyle(fontSize: 18))
           ]),
-          Text('about_profile'.tr, style: const TextStyle(color: Colors.black54, fontSize: 16)),
+          Text('about_profile'.tr(), style: const TextStyle(color: Colors.black54, fontSize: 16)),
           const SizedBox(height: 20),
           Row(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
             Expanded(
@@ -527,7 +525,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                     style: const TextStyle(fontSize: 15),
                     validator: (v) {
                       if (v!.isEmpty && checkValidate) {
-                        return 'please_enter'.tr;
+                        return 'please_enter'.tr();
                       }
                       return null;
                     },
@@ -536,7 +534,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                       const Register().createState().setFirstName(v);
                     },
                     textInputAction: TextInputAction.next,
-                    decoration: InputDecoration(labelText: 'name'.tr))),
+                    decoration: InputDecoration(labelText: 'name'.tr()))),
             const SizedBox(width: 20),
             Expanded(
                 child: TextFormField(
@@ -544,7 +542,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                     style: const TextStyle(fontSize: 15),
                     validator: (v) {
                       if (v!.isEmpty && checkValidate) {
-                        return 'please_enter'.tr;
+                        return 'please_enter'.tr();
                       }
                       return null;
                     },
@@ -553,7 +551,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                       const Register().createState().setLastName(v);
                     },
                     textInputAction: TextInputAction.next,
-                    decoration: InputDecoration(labelText: 'last_name'.tr)))
+                    decoration: InputDecoration(labelText: 'last_name'.tr())))
           ]),
           const SizedBox(height: 20),
           Row(
@@ -567,8 +565,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
                   style: const TextStyle(fontSize: 15),
                   textInputAction: TextInputAction.next,
                   decoration: InputDecoration(
-                    labelText: "district_address".tr,
-                    hintText: "district_address".tr,
+                    labelText: "district_address".tr(),
+                    hintText: "district_address".tr(),
                     suffixIcon: const Icon(
                       Icons.keyboard_arrow_down_rounded,
                       color: Colors.black54,
@@ -576,7 +574,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                   ),
                   validator: (v) {
                     if (v!.isEmpty && checkValidate) {
-                      return 'please_enter'.tr;
+                      return 'please_enter'.tr();
                     }
                     return null;
                   },
@@ -594,7 +592,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 style: const TextStyle(fontSize: 15),
                 validator: (v) {
                   if (v!.isEmpty && checkValidate) {
-                    return 'please_enter'.tr;
+                    return 'please_enter'.tr();
                   }
                   return null;
                 },
@@ -603,7 +601,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                   const Register().createState().setAddress(v);
                 },
                 textInputAction: TextInputAction.next,
-                decoration: InputDecoration(labelText: 'address'.tr, hintText: 'house_number_floor_village_road'.tr),
+                decoration: InputDecoration(labelText: 'address'.tr(), hintText: 'house_number_floor_village_road'.tr()),
               ),
             )
           ]),
@@ -616,13 +614,13 @@ class _PersonalInfoState extends State<PersonalInfo> {
                     onTap: () => widget.ocrAllFailed ? _selectDate(context) : null,
                     style: const TextStyle(fontSize: 15),
                     validator: (v) {
-                      if (v!.isEmpty && checkValidate) return 'please_enter'.tr;
+                      if (v!.isEmpty && checkValidate) return 'please_enter'.tr();
                       return null;
                     },
                     onChanged: (v) => _formKey.currentState!.validate(),
                     decoration: InputDecoration(
                         fillColor: widget.ocrAllFailed ? Colors.white : Colors.grey[200],
-                        labelText: 'birthday'.tr,
+                        labelText: 'birthday'.tr(),
                         suffixIcon: const Icon(Icons.calendar_today, color: Colors.black54)))),
             const SizedBox(width: 20),
             Expanded(
@@ -631,8 +629,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 readOnly: !widget.ocrAllFailed,
                 style: const TextStyle(fontSize: 15),
                 validator: (v) {
-                  if (v!.isEmpty && checkValidate) return 'please_enter'.tr;
-                  if (v.length != 17 && checkValidate) return "Please_enter_13_digit".tr;
+                  if (v!.isEmpty && checkValidate) return 'please_enter'.tr();
+                  if (v.length != 17 && checkValidate) return "Please_enter_13_digit".tr();
                   return null;
                 },
                 onChanged: (v) => _formKey.currentState!.validate(),
@@ -641,7 +639,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 inputFormatters: [idCardFormatter],
                 decoration: InputDecoration(
                   fillColor: widget.ocrAllFailed ? Colors.white : Colors.grey[200],
-                  labelText: 'id_card_code'.tr,
+                  labelText: 'id_card_code'.tr(),
                 ),
               ),
             )
@@ -655,13 +653,13 @@ class _PersonalInfoState extends State<PersonalInfo> {
               readOnly: !widget.ocrAllFailed,
               style: const TextStyle(fontSize: 15),
               validator: (v) {
-                if (v!.isEmpty && checkValidate) return 'please_enter'.tr;
+                if (v!.isEmpty && checkValidate) return 'please_enter'.tr();
                 return null;
               },
               onChanged: (v) => _formKey.currentState!.validate(),
               maxLength: 14,
               inputFormatters: [laserCodeFormatter],
-              decoration: InputDecoration(fillColor: widget.ocrAllFailed ? Colors.white : Colors.grey[200], labelText: "id_card_laserNo".tr),
+              decoration: InputDecoration(fillColor: widget.ocrAllFailed ? Colors.white : Colors.grey[200], labelText: "id_card_laserNo".tr()),
             ),
           )
         ]));
@@ -672,8 +670,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
       width: screenWidth,
       padding: const EdgeInsets.all(20),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text("confirm_identity_image".tr, style: const TextStyle(fontSize: 17)),
-        Text("confirm_identity_image_description".tr, style: const TextStyle(fontSize: 13, color: Color(0xff797979))),
+        Text("confirm_identity_image".tr(), style: const TextStyle(fontSize: 17)),
+        Text("confirm_identity_image_description".tr(), style: const TextStyle(fontSize: 13, color: Color(0xff797979))),
         const SizedBox(height: 20),
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Expanded(
@@ -682,8 +680,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 image: AssetImage(frontIDCardImage.isEmpty ? unCheckImage : checkImage, package: 'gbkyc'),
                 width: 24,
               ),
-              Text("idcard_front".tr, style: const TextStyle(color: Color(0xff555555))),
-              Text("${"photolight".tr}/${"photoandIDcard_info".tr}", style: const TextStyle(fontSize: 12, color: Color(0xff555555)))
+              Text("idcard_front".tr(), style: const TextStyle(color: Color(0xff555555))),
+              Text("${"photolight".tr()}/${"photoandIDcard_info".tr()}", style: const TextStyle(fontSize: 12, color: Color(0xff555555)))
             ]),
           ),
           const SizedBox(width: 15),
@@ -698,7 +696,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => CameraScanIDCard(titleAppbar: 'Front_ID_Card'.tr, enableButton: true, isFront: true, noFrame: false)),
+                        builder: (context) => CameraScanIDCard(titleAppbar: 'Front_ID_Card'.tr(), enableButton: true, isFront: true, noFrame: false)),
                   ).then((v) async {
                     if (v != null) {
                       int fileSize = await getFileSize(filepath: v);
@@ -711,7 +709,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                           context: context,
                           builder: (context) {
                             return CustomDialog(
-                                title: "Extension_not_correct".tr, textConfirm: "ok".tr, onPressedConfirm: () => Navigator.pop(context));
+                                title: "Extension_not_correct".tr(), textConfirm: "ok".tr(), onPressedConfirm: () => Navigator.pop(context));
                           },
                         );
                       } else if (fileSize > 10000000) {
@@ -719,7 +717,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
                           barrierDismissible: true,
                           context: context,
                           builder: (context) {
-                            return CustomDialog(title: "File_size_larger".tr, textConfirm: "ok".tr, onPressedConfirm: () => Navigator.pop(context));
+                            return CustomDialog(
+                                title: "File_size_larger".tr(), textConfirm: "ok".tr(), onPressedConfirm: () => Navigator.pop(context));
                           },
                         );
                       } else {
@@ -744,8 +743,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Image(image: AssetImage(backIDCardImage.isEmpty ? unCheckImage : checkImage, package: 'gbkyc'), width: 24),
-              Text("idcard_back".tr, style: const TextStyle(color: Color(0xff555555))),
-              Text("${"photolight".tr}/${"photoandIDcard_info".tr}", style: const TextStyle(fontSize: 12, color: Color(0xff555555))),
+              Text("idcard_back".tr(), style: const TextStyle(color: Color(0xff555555))),
+              Text("${"photolight".tr()}/${"photoandIDcard_info".tr()}", style: const TextStyle(fontSize: 12, color: Color(0xff555555))),
             ]),
           ),
           const SizedBox(width: 15),
@@ -760,7 +759,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => CameraScanIDCard(titleAppbar: 'Back_ID_Card'.tr, enableButton: true, isFront: false, noFrame: false),
+                      builder: (context) => CameraScanIDCard(titleAppbar: 'Back_ID_Card'.tr(), enableButton: true, isFront: false, noFrame: false),
                     ),
                   ).then((v) async {
                     if (v != null) {
@@ -774,7 +773,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                           context: context,
                           builder: (context) {
                             return CustomDialog(
-                                title: "Extension_not_correct".tr, textConfirm: "ok".tr, onPressedConfirm: () => Navigator.pop(context));
+                                title: "Extension_not_correct".tr(), textConfirm: "ok".tr(), onPressedConfirm: () => Navigator.pop(context));
                           },
                         );
                       } else if (fileSize > 10000000) {
@@ -782,7 +781,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
                           barrierDismissible: true,
                           context: context,
                           builder: (context) {
-                            return CustomDialog(title: "File_size_larger".tr, textConfirm: "ok".tr, onPressedConfirm: () => Navigator.pop(context));
+                            return CustomDialog(
+                                title: "File_size_larger".tr(), textConfirm: "ok".tr(), onPressedConfirm: () => Navigator.pop(context));
                           },
                         );
                       } else {
@@ -806,8 +806,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Image(image: AssetImage(selfieIDCard.isEmpty ? unCheckImage : checkImage, package: 'gbkyc'), width: 24),
-              Text("idcard_selfie".tr, style: const TextStyle(color: Color(0xff555555))),
-              Text("${"photolight".tr}/${"photoandIDcard_info".tr}", style: const TextStyle(fontSize: 12, color: Color(0xff555555))),
+              Text("idcard_selfie".tr(), style: const TextStyle(color: Color(0xff555555))),
+              Text("${"photolight".tr()}/${"photoandIDcard_info".tr()}", style: const TextStyle(fontSize: 12, color: Color(0xff555555))),
             ]),
           ),
           const SizedBox(width: 15),
@@ -822,7 +822,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => CameraScanIDCard(titleAppbar: 'Selfie_ID_Card'.tr, enableButton: true, isFront: true, noFrame: true),
+                      builder: (context) => CameraScanIDCard(titleAppbar: 'Selfie_ID_Card'.tr(), enableButton: true, isFront: true, noFrame: true),
                     ),
                   ).then((v) async {
                     if (v != null) {
@@ -836,7 +836,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                           context: context,
                           builder: (context) {
                             return CustomDialog(
-                                title: "Extension_not_correct".tr, textConfirm: "ok".tr, onPressedConfirm: () => Navigator.pop(context));
+                                title: "Extension_not_correct".tr(), textConfirm: "ok".tr(), onPressedConfirm: () => Navigator.pop(context));
                           },
                         );
                       } else if (fileSize > 10000000) {
@@ -844,7 +844,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
                           barrierDismissible: true,
                           context: context,
                           builder: (context) {
-                            return CustomDialog(title: "File_size_larger".tr, textConfirm: "ok".tr, onPressedConfirm: () => Navigator.pop(context));
+                            return CustomDialog(
+                                title: "File_size_larger".tr(), textConfirm: "ok".tr(), onPressedConfirm: () => Navigator.pop(context));
                           },
                         );
                       } else {
@@ -872,7 +873,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text("titlecareer".tr, style: const TextStyle(fontSize: 16)),
+        Text("titlecareer".tr(), style: const TextStyle(fontSize: 16)),
         dropdownCareer(),
         if (careerId != null) dropdownCareerChild(),
         if (indexCareer != null) workLable(),
@@ -880,7 +881,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
         Row(children: [
           // Expanded(
           //   child: ButtonCancel(
-          //       text: 'back'.tr,
+          //       text: 'back'.tr(),
           //       onPressed: () {
           //         Navigator.pushReplacement(
           //           context,
@@ -892,7 +893,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
           // SizedBox(width: 20),
           Expanded(
             child: ButtonConfirm(
-              text: 'continue'.tr,
+              text: 'continue'.tr(),
               onPressed: () async {
                 FocusScope.of(context).unfocus();
                 checkValidate = true;
@@ -911,8 +912,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
                       context: context,
                       builder: (context) {
                         return CustomDialog(
-                          title: "confirm_identity_image".tr,
-                          content: "confirm_identity_image_description".tr,
+                          title: "confirm_identity_image".tr(),
+                          content: "confirm_identity_image_description".tr(),
                           avatar: false,
                         );
                       },
@@ -922,8 +923,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
                       context: context,
                       builder: (context) {
                         return CustomDialog(
-                          title: "career".tr,
-                          content: "career_request".tr,
+                          title: "career".tr(),
+                          content: "career_request".tr(),
                           avatar: false,
                         );
                       },
@@ -933,18 +934,18 @@ class _PersonalInfoState extends State<PersonalInfo> {
                       context: context,
                       builder: (context) {
                         return CustomDialog(
-                          title: "career_more".tr,
-                          content: "career_request".tr,
+                          title: "career_more".tr(),
+                          content: "career_request".tr(),
                           avatar: false,
                         );
                       },
                     );
                   } else {
                     final res = await PostAPI.call(
-                      url: '$register3003/users/pre_verify',
-                      headers: Authorization.auth2,
-                      body: {"id_card": idCardController.text.replaceAll('-', '')},
-                    );
+                        url: '$register3003/users/pre_verify',
+                        headers: Authorization.auth2,
+                        body: {"id_card": idCardController.text.replaceAll('-', '')},
+                        context: context);
 
                     if (res['success']) {
                       if (careerChildId != null) {

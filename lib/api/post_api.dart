@@ -2,12 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:gbkyc/api/config_api.dart';
 import 'package:gbkyc/utils/error_messages.dart';
-import 'package:get/get_utils/src/extensions/internacionalization.dart';
-import 'package:get/route_manager.dart';
+import 'package:gbkyc/utils/file_uitility.dart';
 import 'package:http/http.dart';
 import 'package:http/http.dart' as http;
 
@@ -19,6 +18,7 @@ class PostAPI {
     required String url,
     required Authorization headers,
     required Map<String, String> body,
+    required BuildContext context,
   }) async {
     try {
       await EasyLoading.show();
@@ -30,21 +30,28 @@ class PostAPI {
         final data = json.decode(response.body);
         await EasyLoading.dismiss();
         if (!data['success']) {
-          await Get.dialog(CustomDialog(title: 'Something_went_wrong'.tr, content: errorMessages(data), avatar: false));
+          await showDialog(
+              context: context, builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(data), avatar: false));
         }
         return data;
       } else {
         await EasyLoading.dismiss();
-        await Get.dialog(CustomDialog(title: 'Something_went_wrong'.tr, content: errorMessages(errorNotFound), avatar: false));
+        await showDialog(
+            context: context,
+            builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(errorNotFound), avatar: false));
         return errorNotFound;
       }
     } on TimeoutException catch (_) {
       await EasyLoading.dismiss();
-      await Get.dialog(CustomDialog(title: 'Something_went_wrong'.tr, content: errorMessages(errorTimeout), avatar: false));
+      await showDialog(
+          context: context,
+          builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(errorTimeout), avatar: false));
       return errorTimeout;
     } on SocketException catch (_) {
       await EasyLoading.dismiss();
-      await Get.dialog(CustomDialog(title: 'Something_went_wrong'.tr, content: errorMessages(messageOffline), avatar: false));
+      await showDialog(
+          context: context,
+          builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(messageOffline), avatar: false));
       return messageOffline;
     }
   }
@@ -55,6 +62,7 @@ class PostAPI {
     required Authorization headers,
     required List<MultipartFile> files,
     bool closeLoading = false,
+    required BuildContext context,
   }) async {
     var request = http.MultipartRequest('POST', Uri.parse(url));
 
@@ -78,21 +86,28 @@ class PostAPI {
         final data = json.decode(resStr);
         await EasyLoading.dismiss();
         if (!data['success']) {
-          await Get.dialog(CustomDialog(title: 'Something_went_wrong'.tr, content: errorMessages(data), avatar: false));
+          await showDialog(
+              context: context, builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(data), avatar: false));
         }
         return data;
       } else {
         await EasyLoading.dismiss();
-        await Get.dialog(CustomDialog(title: 'Something_went_wrong'.tr, content: errorMessages(errorNotFound), avatar: false));
+        await showDialog(
+            context: context,
+            builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(errorNotFound), avatar: false));
         return errorNotFound;
       }
     } on TimeoutException catch (_) {
       await EasyLoading.dismiss();
-      await Get.dialog(CustomDialog(title: 'Something_went_wrong'.tr, content: errorMessages(errorTimeout), avatar: false));
+      await showDialog(
+          context: context,
+          builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(errorTimeout), avatar: false));
       return errorTimeout;
     } on SocketException catch (_) {
       await EasyLoading.dismiss();
-      await Get.dialog(CustomDialog(title: 'Something_went_wrong'.tr, content: errorMessages(messageOffline), avatar: false));
+      await showDialog(
+          context: context,
+          builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(messageOffline), avatar: false));
       return messageOffline;
     }
   }

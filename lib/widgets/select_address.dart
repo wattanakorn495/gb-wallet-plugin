@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:get/get_utils/src/extensions/internacionalization.dart';
+import 'package:gbkyc/utils/file_uitility.dart';
 
 import '../address_bloc.dart';
 
@@ -14,9 +14,9 @@ class SelectAddress extends StatefulWidget {
 }
 
 class _SelectAddressState extends State<SelectAddress> with TickerProviderStateMixin {
-  String province = "province".tr;
-  String? district = "district".tr;
-  String subDistrict = "subdistrict".tr;
+  String province = "province".tr();
+  String? district = "district".tr();
+  String subDistrict = "subdistrict".tr();
   String addressCurrent = "";
 
   int? _selectedProvince, _selectedDistrict;
@@ -47,7 +47,7 @@ class _SelectAddressState extends State<SelectAddress> with TickerProviderStateM
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const SizedBox(),
-              Text("district_address".tr),
+              Text("district_address".tr()),
               GestureDetector(
                 child: const Icon(Icons.close),
                 onTap: () => Navigator.pop(context),
@@ -64,11 +64,11 @@ class _SelectAddressState extends State<SelectAddress> with TickerProviderStateM
             indicatorColor: const Color(0xFF02416D),
             labelColor: Colors.black,
             onTap: (v) {
-              if (v == 1 && province == "province".tr) {
+              if (v == 1 && province == "province".tr()) {
                 _tabBar!.index = 0;
-              } else if (v == 2 && province == "province".tr) {
+              } else if (v == 2 && province == "province".tr()) {
                 _tabBar!.index = 0;
-              } else if (v == 2 && district == "district".tr) {
+              } else if (v == 2 && district == "district".tr()) {
                 _tabBar!.index = 1;
               }
             },
@@ -89,7 +89,7 @@ class _SelectAddressState extends State<SelectAddress> with TickerProviderStateM
                   itemCount: data['province'].length,
                   itemBuilder: (BuildContext context, int index) {
                     return ListTile(
-                      title: Text(data['province'][index]['name${'lang'.tr}']),
+                      title: Text(data['province'][index]['name${'lang'.tr()}']),
                       selected: index == _selectedProvince,
                       trailing: index == _selectedProvince
                           ? const Image(image: AssetImage('assets/images/Check.png', package: 'gbkyc'), width: 25, height: 25)
@@ -99,14 +99,14 @@ class _SelectAddressState extends State<SelectAddress> with TickerProviderStateM
                           _selectedProvince = index;
                           _selectedDistrict = null;
 
-                          province = '${data['province'][index]['name${'lang'.tr}']}';
-                          district = "district".tr;
-                          subDistrict = "subdistrict".tr;
+                          province = '${data['province'][index]['name${'lang'.tr()}']}';
+                          district = "district".tr();
+                          subDistrict = "subdistrict".tr();
                           context.read<AddressBloc>().add(const ClearDistrict());
                           context.read<AddressBloc>().add(const ClearSubDistrict());
 
                           List listDistrict = address['district'];
-                          listDistrict.sort((a, b) => a['name${'lang'.tr}'].compareTo(b['name${'lang'.tr}']));
+                          listDistrict.sort((a, b) => a['name${'lang'.tr()}'].compareTo(b['name${'lang'.tr()}']));
 
                           for (var item in listDistrict) {
                             if (item['province_id'] == data['province'][index]['id']) {
@@ -125,7 +125,7 @@ class _SelectAddressState extends State<SelectAddress> with TickerProviderStateM
                   itemCount: data['district'].length,
                   itemBuilder: (BuildContext context, int index) {
                     return ListTile(
-                      title: Text(data['district'][index]['name${'lang'.tr}']),
+                      title: Text(data['district'][index]['name${'lang'.tr()}']),
                       selected: index == _selectedDistrict,
                       trailing: index == _selectedDistrict
                           ? const Image(image: AssetImage('assets/images/Check.png', package: 'gbkyc'), width: 25, height: 25)
@@ -134,11 +134,11 @@ class _SelectAddressState extends State<SelectAddress> with TickerProviderStateM
                         setState(() {
                           _selectedDistrict = index;
 
-                          district = data['district'][index]['name${'lang'.tr}'];
+                          district = data['district'][index]['name${'lang'.tr()}'];
                           context.read<AddressBloc>().add(const ClearSubDistrict());
 
                           List listSubDistrict = address['sub_district'];
-                          listSubDistrict.sort((a, b) => a['name${'lang'.tr}'].compareTo(b['name${'lang'.tr}']));
+                          listSubDistrict.sort((a, b) => a['name${'lang'.tr()}'].compareTo(b['name${'lang'.tr()}']));
 
                           for (var item in listSubDistrict) {
                             if (item['code'].toString().substring(0, 4) == data['district'][index]['code'].toString()) {
@@ -159,7 +159,7 @@ class _SelectAddressState extends State<SelectAddress> with TickerProviderStateM
                     return Column(children: [
                       ListTile(
                         title: Text(
-                          '${data["sub_district"][index]['name${'lang'.tr}']}',
+                          '${data["sub_district"][index]['name${'lang'.tr()}']}',
                         ),
                         onTap: () {
                           indexProvince = data["sub_district"][index]['province_id'];
@@ -171,7 +171,7 @@ class _SelectAddressState extends State<SelectAddress> with TickerProviderStateM
                             "indexDistrict": indexDistrict,
                             "indexSubDistrict": indexSubDistrict,
                             "showAddress":
-                                "$province/$district/${data["sub_district"][index]['name${'lang'.tr}']}/${data["sub_district"][index]['post_code']}"
+                                "$province/$district/${data["sub_district"][index]['name${'lang'.tr()}']}/${data["sub_district"][index]['post_code']}"
                           });
                         },
                       )

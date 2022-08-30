@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_utils/src/extensions/internacionalization.dart';
+import 'package:gbkyc/utils/file_uitility.dart';
 import 'package:loading_indicator/loading_indicator.dart';
 
 //หน้า Loading ที่มีโลโก้พร้อมวงโหลด
@@ -14,12 +14,12 @@ Widget pageLoading({String? title}) {
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
           Image.asset('assets/images/logo_home.jpg', package: 'gbkyc', height: 160, width: 180),
           Text(
-            title ?? 'System_is_processing'.tr,
+            title ?? 'System_is_processing'.tr(),
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 20),
           ),
           Text(
-            'sub_slogan'.tr,
+            'sub_slogan'.tr(),
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 16, color: Colors.grey),
           ),

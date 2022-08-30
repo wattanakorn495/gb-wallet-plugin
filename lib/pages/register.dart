@@ -19,8 +19,6 @@ import 'package:gbkyc/widgets/button_confirm.dart';
 import 'package:gbkyc/widgets/custom_dialog.dart';
 import 'package:gbkyc/widgets/page_loading.dart';
 import 'package:gbkyc/widgets/time_otp.dart';
-import 'package:get/route_manager.dart';
-import 'package:get/utils.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -104,9 +102,9 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    GetAPI.call(url: '$register3003/careers', headers: Authorization.auth2).then((v) => StateStore.careers.value = v);
+    GetAPI.call(url: '$register3003/careers', headers: Authorization.auth2, context: context).then((v) => StateStore.careers = v);
     WidgetsBinding.instance.addObserver(this);
-    onTapRecognizer = TapGestureRecognizer()..onTap = () => Get.back();
+    onTapRecognizer = TapGestureRecognizer()..onTap = () => Navigator.pop(context);
     errorController = StreamController<ErrorAnimationType>();
   }
 
@@ -167,7 +165,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
       isSuccess = false;
       var result = await facetecChannel.invokeMethod<String>(
         'getLivenessFacetec',
-        {"local": Get.locale.toString() == 'th_TH' ? "th" : "en"},
+        {"local": /*context.locale.toString()*/ "en_US" == 'th_TH' ? "th" : "en"},
       );
       debugPrint('getLivenessFacetec = $result');
     } on PlatformException catch (e) {
@@ -197,60 +195,60 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
         setState(() => isLoading = true);
         await getImageFacetec();
         final res = await PostAPI.callFormData(
-          closeLoading: true,
-          url: '$register3003/user_profiles/rekognition',
-          headers: Authorization.auth2,
-          files: [
-            http.MultipartFile.fromBytes('face_image', imgLiveness!.readAsBytesSync(), filename: imgLiveness!.path.split("/").last),
-            http.MultipartFile.fromBytes('card_image', imgFrontIDCard!.readAsBytesSync(), filename: imgFrontIDCard!.path.split("/").last),
-            http.MultipartFile.fromString('id_card', idCardController.text)
-          ],
-        );
+            closeLoading: true,
+            url: '$register3003/user_profiles/rekognition',
+            headers: Authorization.auth2,
+            files: [
+              http.MultipartFile.fromBytes('face_image', imgLiveness!.readAsBytesSync(), filename: imgLiveness!.path.split("/").last),
+              http.MultipartFile.fromBytes('card_image', imgFrontIDCard!.readAsBytesSync(), filename: imgFrontIDCard!.path.split("/").last),
+              http.MultipartFile.fromString('id_card', idCardController.text)
+            ],
+            context: context);
         final data = res['response']['data'];
 
         if (data['similarity'] > 80) {
           fileNameFrontID = data['card_image_file_name'];
           final resBackID = await PostAPI.callFormData(
-            url: '$register3003/users/upload_file',
-            headers: Authorization.auth2,
-            files: [
-              http.MultipartFile.fromBytes(
-                'image',
-                imgBackIDCard!.readAsBytesSync(),
-                filename: imgBackIDCard!.path.split("/").last,
-              )
-            ],
-          );
+              url: '$register3003/users/upload_file',
+              headers: Authorization.auth2,
+              files: [
+                http.MultipartFile.fromBytes(
+                  'image',
+                  imgBackIDCard!.readAsBytesSync(),
+                  filename: imgBackIDCard!.path.split("/").last,
+                )
+              ],
+              context: context);
           fileNameBackID = resBackID['response']['data']['file_name'];
           fileNameLiveness = data['face_image_file_name'];
 
           resCreateUser = await PostAPI.call(
-            url: '$register3003/users',
-            headers: Authorization.auth2,
-            body: {
-              "id_card": idCardController.text,
-              "first_name": firstNameController.text,
-              "last_name": lastNameController.text,
-              "address": addressController.text,
-              "birthday": birthdayController.text,
-              "pin": "111222",
-              // "pin": pinController.text,
-              "send_otp_id": sendOtpId,
-              "laser": ocrBackLaser,
-              "province_id": '$indexProvince',
-              "district_id": '$indexDistric',
-              "sub_district_id": '$indexSubDistric',
-              "career_id": '$careerID',
-              "work_name": workNameController.text,
-              "work_address": '${workAddressController.text} ${workAddressSerchController.text}',
-              "file_front_citizen": fileNameFrontID,
-              "file_back_citizen": fileNameBackID,
-              "file_selfie": '',
-              "file_liveness": fileNameLiveness,
-              "imei": StateStore.deviceSerial.value,
-              "fcm_token": StateStore.fcmToken.value,
-            },
-          );
+              url: '$register3003/users',
+              headers: Authorization.auth2,
+              body: {
+                "id_card": idCardController.text,
+                "first_name": firstNameController.text,
+                "last_name": lastNameController.text,
+                "address": addressController.text,
+                "birthday": birthdayController.text,
+                "pin": "111222",
+                // "pin": pinController.text,
+                "send_otp_id": sendOtpId,
+                "laser": ocrBackLaser,
+                "province_id": '$indexProvince',
+                "district_id": '$indexDistric',
+                "sub_district_id": '$indexSubDistric',
+                "career_id": '$careerID',
+                "work_name": workNameController.text,
+                "work_address": '${workAddressController.text} ${workAddressSerchController.text}',
+                "file_front_citizen": fileNameFrontID,
+                "file_back_citizen": fileNameBackID,
+                "file_selfie": '',
+                "file_liveness": fileNameLiveness,
+                "imei": StateStore.deviceSerial,
+                "fcm_token": StateStore.fcmToken,
+              },
+              context: context);
 
           setState(() => isLoading = false);
           if (resCreateUser['success']) {
@@ -261,9 +259,9 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
               barrierDismissible: false,
               context: context,
               builder: (context) => CustomDialog(
-                title: 'save_success'.tr,
-                content: 'congratulations'.tr,
-                textConfirm: "Close".tr,
+                title: 'save_success'.tr(),
+                content: 'congratulations'.tr(),
+                textConfirm: "Close".tr(),
                 onPressedConfirm: () {
                   Navigator.pop(context);
                   Navigator.of(context, rootNavigator: true).pop({
@@ -284,8 +282,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
               barrierDismissible: false,
               context: context,
               builder: (context) => CustomDialog(
-                title: 'facematch'.tr,
-                content: 'sub_facematch'.tr,
+                title: 'facematch'.tr(),
+                content: 'sub_facematch'.tr(),
                 avatar: false,
               ),
             );
@@ -311,7 +309,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
               FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text(
-                  'liveness_is_unsuccessful'.tr,
+                  'liveness_is_unsuccessful'.tr(),
                   style: const TextStyle(fontSize: 20),
                   textAlign: TextAlign.center,
                 ),
@@ -320,7 +318,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
               Image.asset('assets/icons/idCardD.png', package: 'gbkyc', width: 113, fit: BoxFit.cover),
               const SizedBox(height: 10),
               Text(
-                'Selfie_with_ID_cardMake_sure'.tr,
+                'Selfie_with_ID_cardMake_sure'.tr(),
                 style: const TextStyle(color: Colors.grey),
                 textAlign: TextAlign.center,
               ),
@@ -351,7 +349,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  CameraScanIDCard(titleAppbar: 'Selfie_ID_Card'.tr, enableButton: true, isFront: true, noFrame: true),
+                                  CameraScanIDCard(titleAppbar: 'Selfie_ID_Card'.tr(), enableButton: true, isFront: true, noFrame: true),
                             ),
                           ).then(
                             (v) async {
@@ -366,8 +364,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                     context: context,
                                     builder: (context) {
                                       return CustomDialog(
-                                        title: "Extension_not_correct".tr,
-                                        textConfirm: "ok".tr,
+                                        title: "Extension_not_correct".tr(),
+                                        textConfirm: "ok".tr(),
                                         onPressedConfirm: () => Navigator.pop(context),
                                       );
                                     },
@@ -378,14 +376,14 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                     context: context,
                                     builder: (context) {
                                       return CustomDialog(
-                                        title: "File_size_larger".tr,
-                                        textConfirm: "ok".tr,
+                                        title: "File_size_larger".tr(),
+                                        textConfirm: "ok".tr(),
                                         onPressedConfirm: () => Navigator.pop(context),
                                       );
                                     },
                                   );
                                 } else {
-                                  Get.back();
+                                  Navigator.pop(context);
                                   setState(() {
                                     _kycVisible = false;
                                     _kycVisibleFalse = true;
@@ -402,7 +400,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                             const Icon(Icons.photo_camera_outlined, color: Colors.white),
                             const SizedBox(width: 10),
                             Text(
-                              'camera'.tr,
+                              'camera'.tr(),
                               style: const TextStyle(fontSize: 17, color: Colors.white),
                             )
                           ],
@@ -432,6 +430,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
         url: '$register3003/send_otps',
         headers: Authorization.auth2,
         body: {"phone_number": phonenumberController.text.replaceAll('-', ''), "country_code": countryCode},
+        context: context,
       );
 
       if (otpId['success']) {
@@ -454,10 +453,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
 
     if (formkeyOTP.currentState!.validate() && otpController.text.length == 6) {
       var data = await PostAPI.call(
-        url: '$register3003/send_otps/$sendOtpId/verify',
-        headers: Authorization.auth2,
-        body: {"otp": otpController.text},
-      );
+          url: '$register3003/send_otps/$sendOtpId/verify', headers: Authorization.auth2, body: {"otp": otpController.text}, context: context);
 
       if (!data['success']) {
         errorController.add(ErrorAnimationType.shake);
@@ -496,8 +492,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
         showDialog(
           context: context,
           builder: (context) => CustomDialog(
-            title: 'back'.tr,
-            content: 'Do_you_want_to_go_back_previous_step'.tr,
+            title: 'back'.tr(),
+            content: 'Do_you_want_to_go_back_previous_step'.tr(),
             exclamation: true,
             buttonCancel: true,
             onPressedConfirm: () async {
@@ -638,11 +634,11 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
           padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 20),
           decoration: BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: Colors.grey[300]!))),
           child: Row(children: [
-            Expanded(child: ButtonCancel(text: 'back'.tr, onPressed: () => Navigator.of(context, rootNavigator: true).pop())),
+            Expanded(child: ButtonCancel(text: 'back'.tr(), onPressed: () => Navigator.of(context, rootNavigator: true).pop())),
             const SizedBox(width: 20),
             Expanded(
               child: ButtonConfirm(
-                text: 'continue'.tr,
+                text: 'continue'.tr(),
                 onPressed: () async {
                   await autoSubmitPhoneNumber();
                 },
@@ -659,7 +655,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
             children: [
               Expanded(
                 child: ButtonCancel(
-                  text: 'back'.tr,
+                  text: 'back'.tr(),
                   onPressed: () {
                     setState(() {
                       otpController.clear();
@@ -673,7 +669,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                 ),
               ),
               const SizedBox(width: 20),
-              Expanded(child: ButtonConfirm(text: 'continue'.tr, onPressed: autoSubmitOTP)),
+              Expanded(child: ButtonConfirm(text: 'continue'.tr(), onPressed: autoSubmitOTP)),
             ],
           ),
         );
@@ -686,13 +682,13 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                 child: Row(children: [
                   Expanded(
                     child: ButtonConfirm(
-                      text: 'accepttoscan'.tr,
+                      text: 'accepttoscan'.tr(),
                       onPressed: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => CameraScanIDCard(
-                              titleAppbar: 'idcard'.tr,
+                              titleAppbar: 'idcard'.tr(),
                               isFront: true,
                               noFrame: false,
                               enableButton: false,
@@ -787,7 +783,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                             children: [
                               const Icon(Icons.photo_camera_outlined, color: Colors.white),
                               const SizedBox(width: 10),
-                              Text('camera'.tr, style: const TextStyle(fontSize: 17, color: Colors.white))
+                              Text('camera'.tr(), style: const TextStyle(fontSize: 17, color: Colors.white))
                             ],
                           ),
                         ),
@@ -804,13 +800,13 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                               borderRadius: BorderRadius.circular(30),
                               side: const BorderSide(color: Color(0xFF115899)),
                             ),
-                            child: Text('Re-take_photo'.tr, style: const TextStyle(color: Color(0xFF115899))),
+                            child: Text('Re-take_photo'.tr(), style: const TextStyle(color: Color(0xFF115899))),
                             onPressed: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => CameraScanIDCard(
-                                    titleAppbar: 'Selfie_ID_Card'.tr,
+                                    titleAppbar: 'Selfie_ID_Card'.tr(),
                                     enableButton: true,
                                     isFront: true,
                                     noFrame: true,
@@ -826,8 +822,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                         context: context,
                                         builder: (context) {
                                           return CustomDialog(
-                                            title: "Extension_not_correct".tr,
-                                            textConfirm: "ok".tr,
+                                            title: "Extension_not_correct".tr(),
+                                            textConfirm: "ok".tr(),
                                             onPressedConfirm: () => Navigator.pop(context),
                                           );
                                         },
@@ -838,8 +834,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                         context: context,
                                         builder: (context) {
                                           return CustomDialog(
-                                            title: "File_size_larger".tr,
-                                            textConfirm: "ok".tr,
+                                            title: "File_size_larger".tr(),
+                                            textConfirm: "ok".tr(),
                                             onPressedConfirm: () => Navigator.pop(context),
                                           );
                                         },
@@ -875,74 +871,74 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                             child: MaterialButton(
                               height: 60,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                              child: Text('continue'.tr),
+                              child: Text('continue'.tr()),
                               onPressed: () async {
                                 final resFrontID = await PostAPI.callFormData(
-                                  url: '$register3003/users/upload_file',
-                                  headers: Authorization.auth2,
-                                  files: [
-                                    http.MultipartFile.fromBytes(
-                                      'image',
-                                      imgFrontIDCard!.readAsBytesSync(),
-                                      filename: imgFrontIDCard!.path.split("/").last,
-                                    )
-                                  ],
-                                );
+                                    url: '$register3003/users/upload_file',
+                                    headers: Authorization.auth2,
+                                    files: [
+                                      http.MultipartFile.fromBytes(
+                                        'image',
+                                        imgFrontIDCard!.readAsBytesSync(),
+                                        filename: imgFrontIDCard!.path.split("/").last,
+                                      )
+                                    ],
+                                    context: context);
                                 fileNameFrontID = resFrontID['response']['data']['file_name'];
 
                                 final resBackID = await PostAPI.callFormData(
-                                  url: '$register3003/users/upload_file',
-                                  headers: Authorization.auth2,
-                                  files: [
-                                    http.MultipartFile.fromBytes(
-                                      'image',
-                                      imgBackIDCard!.readAsBytesSync(),
-                                      filename: imgBackIDCard!.path.split("/").last,
-                                    )
-                                  ],
-                                );
+                                    url: '$register3003/users/upload_file',
+                                    headers: Authorization.auth2,
+                                    files: [
+                                      http.MultipartFile.fromBytes(
+                                        'image',
+                                        imgBackIDCard!.readAsBytesSync(),
+                                        filename: imgBackIDCard!.path.split("/").last,
+                                      )
+                                    ],
+                                    context: context);
                                 fileNameBackID = resBackID['response']['data']['file_name'];
 
                                 final resSelfieID = await PostAPI.callFormData(
-                                  url: '$register3003/users/upload_file',
-                                  headers: Authorization.auth2,
-                                  files: [
-                                    http.MultipartFile.fromBytes(
-                                      'image',
-                                      File(pathSelfie).readAsBytesSync(),
-                                      filename: File(pathSelfie).path.split("/").last,
-                                    )
-                                  ],
-                                );
+                                    url: '$register3003/users/upload_file',
+                                    headers: Authorization.auth2,
+                                    files: [
+                                      http.MultipartFile.fromBytes(
+                                        'image',
+                                        File(pathSelfie).readAsBytesSync(),
+                                        filename: File(pathSelfie).path.split("/").last,
+                                      )
+                                    ],
+                                    context: context);
                                 fileNameSelfieID = resSelfieID['response']['data']['file_name'];
 
                                 resCreateUser = await PostAPI.call(
-                                  url: '$register3003/users',
-                                  headers: Authorization.auth2,
-                                  body: {
-                                    "id_card": idCardController.text,
-                                    "first_name": firstNameController.text,
-                                    "last_name": lastNameController.text,
-                                    "address": addressController.text,
-                                    "birthday": birthdayController.text,
-                                    "pin": "111222",
-                                    // "pin": pinController.text,
-                                    "send_otp_id": sendOtpId,
-                                    "laser": ocrBackLaser,
-                                    "province_id": '$indexProvince',
-                                    "district_id": '$indexDistric',
-                                    "sub_district_id": '$indexSubDistric',
-                                    "career_id": '$careerID',
-                                    "work_name": workNameController.text,
-                                    "work_address": '${workAddressController.text} ${workAddressSerchController.text}',
-                                    "file_front_citizen": fileNameFrontID,
-                                    "file_back_citizen": fileNameBackID,
-                                    "file_selfie": fileNameSelfieID,
-                                    "file_liveness": '',
-                                    "imei": StateStore.deviceSerial.value,
-                                    "fcm_token": StateStore.fcmToken.value,
-                                  },
-                                );
+                                    url: '$register3003/users',
+                                    headers: Authorization.auth2,
+                                    body: {
+                                      "id_card": idCardController.text,
+                                      "first_name": firstNameController.text,
+                                      "last_name": lastNameController.text,
+                                      "address": addressController.text,
+                                      "birthday": birthdayController.text,
+                                      "pin": "111222",
+                                      // "pin": pinController.text,
+                                      "send_otp_id": sendOtpId,
+                                      "laser": ocrBackLaser,
+                                      "province_id": '$indexProvince',
+                                      "district_id": '$indexDistric',
+                                      "sub_district_id": '$indexSubDistric',
+                                      "career_id": '$careerID',
+                                      "work_name": workNameController.text,
+                                      "work_address": '${workAddressController.text} ${workAddressSerchController.text}',
+                                      "file_front_citizen": fileNameFrontID,
+                                      "file_back_citizen": fileNameBackID,
+                                      "file_selfie": fileNameSelfieID,
+                                      "file_liveness": '',
+                                      "imei": StateStore.deviceSerial,
+                                      "fcm_token": StateStore.fcmToken,
+                                    },
+                                    context: context);
 
                                 setState(() => isLoading = false);
                                 if (resCreateUser['success']) {
@@ -953,9 +949,9 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                     barrierDismissible: false,
                                     context: context,
                                     builder: (context) => CustomDialog(
-                                      title: 'save_success'.tr,
-                                      content: 'congratulations_now'.tr,
-                                      textConfirm: "Close".tr,
+                                      title: 'save_success'.tr(),
+                                      content: 'congratulations_now'.tr(),
+                                      textConfirm: "Close".tr(),
                                       onPressedConfirm: () {
                                         Navigator.pop(context);
                                         Navigator.of(context, rootNavigator: true).pop({
@@ -970,11 +966,11 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                     barrierDismissible: false,
                                     context: context,
                                     builder: (context) => CustomDialog(
-                                      title: "Something_went_wrong".tr,
+                                      title: "Something_went_wrong".tr(),
                                       content: errorMessages(resCreateUser),
                                       avatar: false,
                                       onPressedConfirm: () {
-                                        Get.back();
+                                        Navigator.pop(context);
                                         setState(() {
                                           selectedStep = 2;
                                           isLoading = false;
@@ -1012,7 +1008,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
         child: Scaffold(
           appBar: AppBar(
             leading: BackButton(onPressed: () => onBackButton(selectedStep)),
-            title: Text('register'.tr),
+            title: Text('register'.tr()),
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(80),
               child: Container(
@@ -1023,7 +1019,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                   Stack(children: [
                     Center(
                       child: SizedBox(
-                        width: MediaQuery.of(context).size.width - Get.width / 5,
+                        width: MediaQuery.of(context).size.width - MediaQuery.of(context).size.width / 5,
                         child: const Divider(color: Color(0xFF02416D), thickness: 1.5, height: 30, indent: 25, endIndent: 25),
                       ),
                     ),
@@ -1048,14 +1044,14 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                     Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       //1
                       selectedStep == 1
-                          ? _buildIconCheckStep(selectedStep, 0, 'phone_number'.tr.replaceAll(' number', ''))
+                          ? _buildIconCheckStep(selectedStep, 0, 'phone_number'.tr().replaceAll(' number', ''))
                           : selectedStep == 2 || selectedStep == 5
-                              ? _buildIconCheckStep(selectedStep, 0, 'phone_number'.tr.replaceAll(' number', ''))
+                              ? _buildIconCheckStep(selectedStep, 0, 'phone_number'.tr().replaceAll(' number', ''))
                               : selectedStep == 3
-                                  ? _buildIconCheckStep(selectedStep, 0, 'phone_number'.tr.replaceAll(' number', ''))
+                                  ? _buildIconCheckStep(selectedStep, 0, 'phone_number'.tr().replaceAll(' number', ''))
                                   : selectedStep == 4
-                                      ? _buildIconCheckStep(selectedStep, 0, 'phone_number'.tr.replaceAll(' number', ''))
-                                      : _buildTextStep(selectedStep, 0, '1', 'phone_number'.tr.replaceAll(' number', ''), 0),
+                                      ? _buildIconCheckStep(selectedStep, 0, 'phone_number'.tr().replaceAll(' number', ''))
+                                      : _buildTextStep(selectedStep, 0, '1', 'phone_number'.tr().replaceAll(' number', ''), 0),
                       //2
                       selectedStep == 2 || selectedStep == 5
                           ? _buildIconCheckStep(selectedStep, 1, 'OTP')
@@ -1068,10 +1064,10 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                       : _buildTextStep(selectedStep, 1, '', 'OTP', 0),
                       //3
                       selectedStep == 3 || selectedStep == 4
-                          ? _buildIconCheckStep(selectedStep, 2, 'data'.tr)
+                          ? _buildIconCheckStep(selectedStep, 2, 'data'.tr())
                           : selectedStep == 2 || selectedStep == 5
-                              ? _buildTextStep(selectedStep, 2, '3', 'data'.tr, 0)
-                              : _buildTextStep(selectedStep, 2, '', 'data'.tr, 0),
+                              ? _buildTextStep(selectedStep, 2, '3', 'data'.tr(), 0)
+                              : _buildTextStep(selectedStep, 2, '', 'data'.tr(), 0),
                       //4
                       selectedStep == 4 ? _buildTextStep(selectedStep, 4, '4', 'KYC', 0) : _buildTextStep(selectedStep, 4, '', 'KYC', 0)
                     ])
@@ -1093,8 +1089,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('register'.tr, style: const TextStyle(fontSize: 24)),
-                        Text('enter_to_otp'.tr, style: const TextStyle(color: Colors.black54, fontSize: 16)),
+                        Text('register'.tr(), style: const TextStyle(fontSize: 24)),
+                        Text('enter_to_otp'.tr(), style: const TextStyle(color: Colors.black54, fontSize: 16)),
                         const SizedBox(height: 10),
                         Column(children: [
                           SizedBox(
@@ -1104,9 +1100,9 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                               maxLength: 12,
                               validator: (v) {
                                 if (v!.isEmpty) {
-                                  return 'please_enter'.tr;
+                                  return 'please_enter'.tr();
                                 } else if (v.length != 12 && validatePhonenumber) {
-                                  return 'pls_10digits'.tr;
+                                  return 'pls_10digits'.tr();
                                 }
                                 return null;
                               },
@@ -1117,7 +1113,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                   await autoSubmitPhoneNumber();
                                 }
                               },
-                              decoration: InputDecoration(labelText: 'phone_num'.tr),
+                              decoration: InputDecoration(labelText: 'phone_num'.tr()),
                               keyboardType: TextInputType.number,
                               inputFormatters: <TextInputFormatter>[MaskTextFormatter.phoneNumber],
                             ),
@@ -1137,11 +1133,11 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'confirm_phone_num'.tr,
+                        'confirm_phone_num'.tr(),
                         style: const TextStyle(fontSize: 24),
                       ),
                       Text(
-                        '${'enter_pin_sent_phone'.tr} ${phonenumberController.text}',
+                        '${'enter_pin_sent_phone'.tr()} ${phonenumberController.text}',
                         style: const TextStyle(color: Colors.black54, fontSize: 16),
                       ),
                       const SizedBox(height: 20),
@@ -1190,10 +1186,10 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                         datetimeOTP: datetimeOTP,
                         onPressed: () async {
                           var otpId = await PostAPI.call(
-                            url: '$register3003/send_otps',
-                            headers: Authorization.auth2,
-                            body: {"phone_number": txPhoneNumber, "country_code": countryCode},
-                          );
+                              url: '$register3003/send_otps',
+                              headers: Authorization.auth2,
+                              body: {"phone_number": txPhoneNumber, "country_code": countryCode},
+                              context: context);
 
                           if (otpId['success']) {
                             setState(() {
@@ -1220,23 +1216,23 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('idcard'.tr, style: const TextStyle(fontSize: 24)),
-                      Text('idcard_security'.tr, style: const TextStyle(color: Colors.black54, fontSize: 16)),
+                      Text('idcard'.tr(), style: const TextStyle(fontSize: 24)),
+                      Text('idcard_security'.tr(), style: const TextStyle(color: Colors.black54, fontSize: 16)),
                       const SizedBox(height: 10),
                       FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text('suggestion'.tr, style: const TextStyle(fontSize: 20)),
-                          _buildSuggestion('photolight'.tr),
-                          _buildSuggestion('photoandIDcard_info'.tr),
-                          _buildSuggestion('photoandIDcard_glare'.tr),
-                          _buildSuggestion('idcard_official'.tr),
+                          Text('suggestion'.tr(), style: const TextStyle(fontSize: 20)),
+                          _buildSuggestion('photolight'.tr()),
+                          _buildSuggestion('photoandIDcard_info'.tr()),
+                          _buildSuggestion('photoandIDcard_glare'.tr()),
+                          _buildSuggestion('idcard_official'.tr()),
                         ]),
                       ),
                       const SizedBox(height: 10),
                       FittedBox(
                         fit: BoxFit.scaleDown,
-                        child: Text('idcard_policy'.tr, style: const TextStyle(color: Colors.grey)),
+                        child: Text('idcard_policy'.tr(), style: const TextStyle(color: Colors.grey)),
                       ),
                     ],
                   ),
@@ -1280,18 +1276,18 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('scanface'.tr, style: const TextStyle(fontSize: 24)),
-                        Text('scanface_verify'.tr, style: const TextStyle(color: Colors.black54, fontSize: 16)),
+                        Text('scanface'.tr(), style: const TextStyle(fontSize: 24)),
+                        Text('scanface_verify'.tr(), style: const TextStyle(color: Colors.black54, fontSize: 16)),
                         const SizedBox(height: 20),
                         Row(children: [
                           const Icon(Icons.check_circle_outline, color: Color(0xFF27AE60)),
                           const SizedBox(width: 5),
-                          Text('photolight'.tr, style: const TextStyle(color: Colors.black54, fontSize: 16)),
+                          Text('photolight'.tr(), style: const TextStyle(color: Colors.black54, fontSize: 16)),
                         ]),
                         Row(children: [
                           const Icon(Icons.check_circle_outline, color: Color(0xFF27AE60)),
                           const SizedBox(width: 5),
-                          Text('faceposition'.tr, style: const TextStyle(color: Colors.black54, fontSize: 16)),
+                          Text('faceposition'.tr(), style: const TextStyle(color: Colors.black54, fontSize: 16)),
                         ]),
                         const SizedBox(height: 10),
                       ],
@@ -1301,12 +1297,12 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                       children: [
                         Column(children: [
                           Image.asset('assets/images/FaceScan-1.jpg', package: 'gbkyc', scale: 5),
-                          Text('Keep_your_face_straight'.tr, textAlign: TextAlign.center)
+                          Text('Keep_your_face_straight'.tr(), textAlign: TextAlign.center)
                         ]),
                         const SizedBox(width: 20),
                         Column(children: [
                           Image.asset('assets/images/FaceScan-2.jpg', package: 'gbkyc', scale: 5),
-                          Text('Shoot_in_a_well_lit_area'.tr, textAlign: TextAlign.center)
+                          Text('Shoot_in_a_well_lit_area'.tr(), textAlign: TextAlign.center)
                         ])
                       ],
                     ),
@@ -1331,7 +1327,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                       const Icon(Icons.error_outline_outlined),
                       const SizedBox(width: 5),
                       Text(
-                        "Make_sure_your_id_card_is_clear_and_without_a_scratch".tr,
+                        "Make_sure_your_id_card_is_clear_and_without_a_scratch".tr(),
                         style: const TextStyle(color: Colors.grey),
                       ),
                     ]),

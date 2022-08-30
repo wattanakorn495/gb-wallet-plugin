@@ -1,10 +1,8 @@
-import 'package:get/get_rx/src/rx_types/rx_types.dart';
-
 //ตัวแปรกองกลาง
 class StateStore {
-  static RxString deviceSerial = ''.obs;
-  static RxString fcmToken = ''.obs;
-  static RxString fileText = ''.obs;
+  static String deviceSerial = '';
+  static String fcmToken = '';
+  static String fileText = '';
 
-  static RxMap careers = {}.obs;
+  static Map careers = {};
 }

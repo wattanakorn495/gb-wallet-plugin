@@ -6,15 +6,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:gbkyc/pages/register.dart';
-import 'package:get/get.dart';
-import 'package:intl/intl.dart';
+import 'package:gbkyc/utils/file_uitility.dart';
 import 'package:loading_indicator/loading_indicator.dart';
 import 'package:responsive_framework/responsive_framework.dart';
-import 'package:intl/date_symbol_data_local.dart';
 
 import 'address_bloc.dart';
 import 'utils/device_serial.dart';
-import 'utils/translations.dart';
 
 class MyHttpOverrides extends HttpOverrides {
   @override
@@ -63,20 +60,21 @@ class _MyAppState extends State<MyApp> {
 
   getENV() async {
     await dotenv.load(fileName: 'packages/gbkyc/assets/.env');
+    await readStringFile();
   }
 
   @override
   Widget build(BuildContext context) {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]); //ปรับให้แอปเป็นแนวตั้ง
-    Intl.defaultLocale = Get.deviceLocale.toString(); //ตั้งภาษาแรกตามพื้นที่
-    initializeDateFormatting(Get.deviceLocale.toString(), null); //ตั้งปฏิทินแรกตามพื้นที่
+    // Intl.defaultLocale = Get.deviceLocale.toString(); //ตั้งภาษาแรกตามพื้นที่
+    // initializeDateFormatting(Get.deviceLocale.toString(), null); //ตั้งปฏิทินแรกตามพื้นที่
 
     return MultiBlocProvider(
       providers: [BlocProvider(create: (_) => AddressBloc())],
-      child: GetMaterialApp(
-        translations: Messages(),
-        locale: Get.deviceLocale,
-        fallbackLocale: const Locale('en', 'EN'),
+      child: MaterialApp(
+        // localizationsDelegates: context.localizationDelegates,
+        // supportedLocales: context.supportedLocales,
+        // locale: context.locale,
         debugShowCheckedModeBanner: false,
         builder: EasyLoading.init(
           builder: (context, child) => ResponsiveWrapper.builder(child,

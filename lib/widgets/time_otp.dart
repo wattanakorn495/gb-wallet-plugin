@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_utils/src/extensions/internacionalization.dart';
+import 'package:gbkyc/utils/file_uitility.dart';
 
 //แสดงระยะเวลาของ OTP
 Widget timeOTP({
@@ -29,7 +29,7 @@ Widget timeOTP({
                 color: Color(0xFF02416D),
               ),
               Text(
-                'sent_new_code'.tr,
+                'sent_new_code'.tr(),
                 style: const TextStyle(color: Color(0xFF02416D), fontSize: 15),
               ),
             ],
@@ -48,7 +48,7 @@ Widget timeOTP({
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            'sent_code_again'.tr,
+            'sent_code_again'.tr(),
             style: const TextStyle(color: Color(0xFFFF9F02), fontSize: 15),
           ),
           TweenAnimationBuilder<Duration>(
