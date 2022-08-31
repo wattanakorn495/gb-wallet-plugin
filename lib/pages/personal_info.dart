@@ -1,25 +1,25 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dotted_border/dotted_border.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gbkyc/address_bloc.dart';
 import 'package:gbkyc/api/config_api.dart';
 import 'package:gbkyc/api/get_api.dart';
-import 'package:gbkyc/personal_info_model.dart';
 import 'package:gbkyc/api/post_api.dart';
 import 'package:gbkyc/pages/register.dart';
+import 'package:gbkyc/personal_info_model.dart';
 import 'package:gbkyc/scan_id_card.dart';
-import 'package:gbkyc/state_store.dart';
 import 'package:gbkyc/utils/file_uitility.dart';
 import 'package:gbkyc/widgets/button_confirm.dart';
 import 'package:gbkyc/widgets/custom_dialog.dart';
 import 'package:gbkyc/widgets/select_address.dart';
 import 'package:get/get_utils/src/extensions/internacionalization.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter/services.dart';
-import 'package:dotted_border/dotted_border.dart';
 import 'package:get/route_manager.dart';
 import 'package:intl/intl.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
@@ -341,141 +341,161 @@ class _PersonalInfoState extends State<PersonalInfo> {
   }
 
   Widget dropdownCareer() {
-    if (StateStore.careers['success']) {
-      final dataCareer = StateStore.careers['response']['data']['careers'];
-      final data = dataCareer.map<DropdownMenuItem<int>>((item) {
-        int index = dataCareer.indexOf(item);
-        return DropdownMenuItem(
-          value: index + 1,
-          child: Text(
-            '${dataCareer[index]['name_${'language'.tr}']}',
-            style: const TextStyle(fontFamily: 'kanit', package: 'gbkyc'),
-          ),
+    return StreamBuilder<Map>(
+      initialData: const {"success": false},
+      stream: (() {
+        late final StreamController<Map> controller;
+        controller = StreamController<Map>(
+          onListen: () async {
+            Map data = await GetAPI.call(url: '$register3003/careers', headers: Authorization.auth2);
+            controller.add(data);
+          },
         );
-      }).toList();
-      return Stack(children: [
-        Container(
-          height: 60,
-          width: double.infinity,
-          margin: const EdgeInsets.only(top: 20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: validateCareer ? Colors.red : const Color(0xFF02416D),
+        return controller.stream;
+      })(),
+      builder: (context, snapshot) {
+        if (snapshot.data!['success']) {
+          final dataCareer = snapshot.data!['response']['data']['careers'];
+          final data = dataCareer.map<DropdownMenuItem<int>>((item) {
+            int index = dataCareer.indexOf(item);
+            return DropdownMenuItem(
+              value: index + 1,
+              child: Text('${dataCareer[index]['name_${'language'.tr}']}'),
+            );
+          }).toList();
+          return Stack(children: [
+            Container(
+              height: 60,
+              width: double.infinity,
+              margin: const EdgeInsets.only(top: 20),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: validateCareer ? Colors.red : const Color(0xFF02416D),
+                ),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton2(
+                  buttonPadding: const EdgeInsets.symmetric(horizontal: 12),
+                  dropdownMaxHeight: 400,
+                  dropdownWidth: 400,
+                  dropdownElevation: 8,
+                  dropdownDecoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
+                  isDense: true,
+                  isExpanded: true,
+                  value: indexCareer,
+                  hint: Text('- ${"career".tr} -'),
+                  icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                  style: const TextStyle(color: Colors.black, fontFamily: 'kanit', fontSize: 15),
+                  onChanged: (dynamic v) {
+                    if (indexCareer != null) widget.setCareerID!(indexCareer);
+                    setState(() {
+                      validateCareer = false;
+                      validateCareerChild = false;
+                      indexCareer = v;
+                      indexCareerChild = null;
+                      skipInfomation = dataCareer[v - 1]['skip_infomation'];
+                      careerId = dataCareer[v - 1]['id'];
+                      careerChildId = null;
+                      widget.setCareerID!(v);
+                    });
+                  },
+                  items: data,
+                ),
+              ),
             ),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton2(
-              buttonPadding: const EdgeInsets.symmetric(horizontal: 12),
-              dropdownMaxHeight: 400,
-              dropdownWidth: 400,
-              dropdownElevation: 8,
-              dropdownDecoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
-              isDense: true,
-              isExpanded: true,
-              value: indexCareer,
-              hint: Text('- ${"career".tr} -'),
-              icon: const Icon(Icons.keyboard_arrow_down_rounded),
-              style: const TextStyle(color: Colors.black, fontFamily: 'kanit', package: 'gbkyc', fontSize: 15),
-              onChanged: (dynamic v) {
-                if (indexCareer != null) widget.setCareerID!(indexCareer);
-                setState(() {
-                  validateCareer = false;
-                  validateCareerChild = false;
-                  indexCareer = v;
-                  indexCareerChild = null;
-                  skipInfomation = dataCareer[v - 1]['skip_infomation'];
-                  careerId = dataCareer[v - 1]['id'];
-                  careerChildId = null;
-                  widget.setCareerID!(v);
-                });
-              },
-              items: data,
-            ),
-          ),
-        ),
-        if (indexCareer != null)
-          Positioned(
-            top: 10,
-            left: 10,
-            child: Text(
-              ' ${"titlecareer".tr} ',
-              style: const TextStyle(fontSize: 12, color: Colors.black54, backgroundColor: Colors.white),
-            ),
-          )
-      ]);
-    }
-    return const SizedBox();
+            if (indexCareer != null)
+              Positioned(
+                top: 10,
+                left: 10,
+                child: Text(
+                  ' ${"titlecareer".tr} ',
+                  style: const TextStyle(fontSize: 12, color: Colors.black54, backgroundColor: Colors.white),
+                ),
+              )
+          ]);
+        }
+        return const SizedBox();
+      },
+    );
   }
 
   Widget dropdownCareerChild() {
-    return FutureBuilder<Map>(
-      future: GetAPI.call(url: '$register3003/careers/$careerId/child', headers: Authorization.auth2),
+    return StreamBuilder<Map>(
+      initialData: const {"success": false},
+      stream: (() {
+        late final StreamController<Map> controller;
+        controller = StreamController<Map>(
+          onListen: () async {
+            Map data = await GetAPI.call(url: '$register3003/careers/$careerId/child', headers: Authorization.auth2);
+            controller.add(data);
+          },
+        );
+        return controller.stream;
+      })(),
       builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          if (snapshot.data!['success']) {
-            final List dataCareerChild = snapshot.data!['response']['data']['careers'];
-            if (dataCareerChild.isNotEmpty) {
-              final data = dataCareerChild.map<DropdownMenuItem<int>>((item) {
-                int index = dataCareerChild.indexOf(item);
-                return DropdownMenuItem(
-                  value: index + 1,
-                  child: SizedBox(
-                    width: 300,
-                    child: Text(
-                      '${dataCareerChild[index]['name_${'language'.tr}']}',
-                      style: const TextStyle(fontFamily: 'kanit', package: 'gbkyc'),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                );
-              }).toList();
-              return Stack(children: [
-                Container(
-                  height: 60,
-                  width: double.infinity,
-                  margin: const EdgeInsets.only(top: 20),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: validateCareerChild ? Colors.red : const Color(0xFF02416D),
-                    ),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton2(
-                      buttonPadding: const EdgeInsets.symmetric(horizontal: 12),
-                      dropdownMaxHeight: 400,
-                      dropdownWidth: 400,
-                      dropdownElevation: 8,
-                      dropdownDecoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
-                      isDense: true,
-                      isExpanded: true,
-                      value: indexCareerChild,
-                      hint: Text('- ${"career_more".tr} -'),
-                      icon: const Icon(Icons.keyboard_arrow_down_rounded),
-                      style: const TextStyle(color: Colors.black, fontFamily: 'kanit', package: 'gbkyc', fontSize: 15),
-                      onChanged: (dynamic v) {
-                        setState(() {
-                          validateCareerChild = false;
-                          indexCareerChild = v;
-                          skipInfomation = dataCareerChild[v - 1]['skip_infomation'];
-                          careerChildId = dataCareerChild[v - 1]['id'];
-                        });
-                      },
-                      items: data,
-                    ),
+        if (snapshot.data!['success']) {
+          final List dataCareerChild = snapshot.data!['response']['data']['careers'];
+          if (dataCareerChild.isNotEmpty) {
+            final data = dataCareerChild.map<DropdownMenuItem<int>>((item) {
+              int index = dataCareerChild.indexOf(item);
+              return DropdownMenuItem(
+                value: index + 1,
+                child: SizedBox(
+                  width: 300,
+                  child: Text(
+                    '${dataCareerChild[index]['name_${'language'.tr}']}',
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                indexCareerChild != null
-                    ? Positioned(
-                        top: 10,
-                        left: 10,
-                        child: Text(' ${"career_more_choice".tr} ',
-                            style: const TextStyle(fontSize: 12, color: Colors.black54, backgroundColor: Colors.white)))
-                    : const SizedBox()
-              ]);
-            }
-            return const SizedBox();
+              );
+            }).toList();
+            return Stack(children: [
+              Container(
+                height: 60,
+                width: double.infinity,
+                margin: const EdgeInsets.only(top: 20),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: validateCareerChild ? Colors.red : const Color(0xFF02416D),
+                  ),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton2(
+                    buttonPadding: const EdgeInsets.symmetric(horizontal: 12),
+                    dropdownMaxHeight: 400,
+                    dropdownWidth: 400,
+                    dropdownElevation: 8,
+                    dropdownDecoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
+                    isDense: true,
+                    isExpanded: true,
+                    value: indexCareerChild,
+                    hint: Text('- ${"career_more".tr} -'),
+                    icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                    style: const TextStyle(color: Colors.black, fontFamily: 'kanit', fontSize: 15),
+                    onChanged: (dynamic v) {
+                      setState(() {
+                        validateCareerChild = false;
+                        indexCareerChild = v;
+                        skipInfomation = dataCareerChild[v - 1]['skip_infomation'];
+                        careerChildId = dataCareerChild[v - 1]['id'];
+                      });
+                    },
+                    items: data,
+                  ),
+                ),
+              ),
+              if (indexCareerChild != null)
+                Positioned(
+                  top: 10,
+                  left: 10,
+                  child: Text(
+                    ' ${"career_more_choice".tr} ',
+                    style: const TextStyle(fontSize: 12, color: Colors.black54, backgroundColor: Colors.white),
+                  ),
+                )
+            ]);
           }
         }
         return const SizedBox();
