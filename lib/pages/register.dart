@@ -11,6 +11,7 @@ import 'package:gbkyc/api/post_api.dart';
 import 'package:gbkyc/personal_info_model.dart';
 import 'package:gbkyc/scan_id_card.dart';
 import 'package:gbkyc/state_store.dart';
+import 'package:gbkyc/utils/check_permission.dart';
 import 'package:gbkyc/utils/error_messages.dart';
 import 'package:gbkyc/utils/file_uitility.dart';
 import 'package:gbkyc/widgets/button_cancel.dart';
@@ -344,15 +345,15 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                         ),
                       ),
                       child: MaterialButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  CameraScanIDCard(titleAppbar: 'Selfie_ID_Card'.tr(), enableButton: true, isFront: true, noFrame: true),
-                            ),
-                          ).then(
-                            (v) async {
+                        onPressed: () async {
+                          if (await CheckPermission.camera(context)) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    CameraScanIDCard(titleAppbar: 'Selfie_ID_Card'.tr(), enableButton: true, isFront: true, noFrame: true),
+                              ),
+                            ).then((v) async {
                               if (v != null) {
                                 int fileSize = await getFileSize(filepath: v);
                                 // if (pathSelfie.isNotEmpty) {
@@ -391,8 +392,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                   });
                                 }
                               }
-                            },
-                          );
+                            });
+                          }
                         },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -476,15 +477,9 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
       case 0:
         Navigator.of(context, rootNavigator: true).pop();
         break;
-      // case 1:
-      //   setState(() {
-      //     otpController.clear();
-      //     phonenumberController.clear();
-      //     selectedStep = 0;
-      //     _otpVisible = false;
-      //     hasError = false;
-      //   });
-      //   break;
+      case 1:
+        Navigator.of(context, rootNavigator: true).pop();
+        break;
       case 2:
         showDialog(
           context: context,
@@ -502,7 +497,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                   _dataVisible = false;
                 });
               } else {
-                Navigator.popUntil(context, (route) => false);
+                Navigator.of(context, rootNavigator: true).pop();
+                Navigator.of(context, rootNavigator: true).pop();
               }
             },
           ),
@@ -1000,6 +996,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
       child: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: Scaffold(
+          extendBody: true,
           appBar: AppBar(
             leading: BackButton(onPressed: () => onBackButton(selectedStep)),
             title: Text('register'.tr()),
