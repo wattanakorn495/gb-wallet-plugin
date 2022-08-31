@@ -2,30 +2,32 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gbkyc/api/config_api.dart';
-import 'package:gbkyc/api/get_api.dart';
 import 'package:gbkyc/api/post_api.dart';
+import 'package:gbkyc/local_storerage.dart';
+import 'package:gbkyc/pages/personal_info.dart';
 import 'package:gbkyc/personal_info_model.dart';
 import 'package:gbkyc/scan_id_card.dart';
 import 'package:gbkyc/state_store.dart';
 import 'package:gbkyc/utils/check_permission.dart';
+import 'package:gbkyc/utils/encryption.dart';
 import 'package:gbkyc/utils/error_messages.dart';
 import 'package:gbkyc/utils/file_uitility.dart';
+import 'package:gbkyc/utils/regular_expression.dart';
 import 'package:gbkyc/widgets/button_cancel.dart';
 import 'package:gbkyc/widgets/button_confirm.dart';
 import 'package:gbkyc/widgets/custom_dialog.dart';
+import 'package:gbkyc/widgets/numpad.dart';
 import 'package:gbkyc/widgets/page_loading.dart';
 import 'package:gbkyc/widgets/time_otp.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
-
-import 'personal_info.dart';
 
 class Register extends StatefulWidget {
   const Register({Key? key, this.phoneNumber}) : super(key: key);
@@ -38,23 +40,24 @@ class Register extends StatefulWidget {
 
 class _RegisterState extends State<Register> with WidgetsBindingObserver {
   static const facetecChannel = MethodChannel('gbkyc');
-
   File? imgFrontIDCard, imgBackIDCard, imgLiveness;
 
   dynamic resCreateUser, onTapRecognizer, imgLivenessUint8;
   final format = DateFormat('dd/MM/yyyy');
 
+  String? _userLoginID;
   String txPhoneNumber = "";
-  String sendOtpId = '';
+  String? sendOtpId;
   String countryCode = "+66";
-  String ocrBackLaser = '';
-  String pathFrontCitizen = '';
-  String pathBackCitizen = '';
+  String? ocrBackLaser;
+  late String pathFrontCitizen;
+  late String pathBackCitizen;
   String pathSelfie = '';
   String fileNameFrontID = '';
   String fileNameBackID = '';
   String fileNameSelfieID = '';
   String fileNameLiveness = '';
+
   int length = 6;
   int selectedStep = 1;
   int? careerID;
@@ -64,6 +67,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
   bool _otpVisible = true;
   bool _scanIDVisible = false;
   bool _dataVisible = false;
+  bool _pinSetVisible = false;
+  bool _pinConfirmVisible = false;
   bool _kycVisible = false;
   bool _kycVisibleFalse = false;
 
@@ -71,21 +76,21 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
   bool expiration = true;
   bool isSuccess = false;
   bool isLoading = false;
-
+  bool resetPIN = false;
   bool validatePhonenumber = false;
   bool ocrFailedAll = false;
 
   DateTime? datetimeOTP;
 
-  final GlobalKey<FormState> _formKeyPhoneNumber = GlobalKey();
   GlobalKey<FormState> formkeyOTP = GlobalKey();
 
   PersonalInfoModel personalInfo = PersonalInfoModel();
 
-  final phonenumberController = TextEditingController();
   final otpController = TextEditingController();
   final firstNameController = TextEditingController();
   final lastNameController = TextEditingController();
+  final firstNameENController = TextEditingController();
+  final lastNameENController = TextEditingController();
   final addressController = TextEditingController();
   final addressSearchController = TextEditingController();
   final idCardController = TextEditingController();
@@ -94,6 +99,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
   final workNameController = TextEditingController();
   final workAddressController = TextEditingController();
   final workAddressSerchController = TextEditingController();
+  final referralCodeController = TextEditingController();
 
   Timer? _timer;
   late StreamController<ErrorAnimationType> errorController;
@@ -101,12 +107,10 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    GetAPI.call(url: '$register3003/careers', headers: Authorization.auth2, context: context).then((v) => StateStore.careers = v);
     WidgetsBinding.instance.addObserver(this);
     onTapRecognizer = TapGestureRecognizer()..onTap = () => Navigator.pop(context);
     errorController = StreamController<ErrorAnimationType>();
-    phonenumberController.value = phonenumberController.value.copyWith(text: widget.phoneNumber);
-    autoSubmitPhoneNumber(widget.phoneNumber.toString());
+    autoSubmitPhoneNumber();
   }
 
   @override
@@ -126,8 +130,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
 
   setScanIDVisible(bool value) => setState(() => _scanIDVisible = value);
   setDataVisible(bool value) => setState(() => _dataVisible = value);
-  setPinVisible(bool value) => setState(() => _kycVisible = value);
-  // setPinVisible(bool value) => setState(() => _pinSetVisible = value);
+  setPinVisible(bool value) => setState(() => _pinSetVisible = value);
 
   setFirstName(String value) => firstNameController.text = value;
   setLastName(String value) => lastNameController.text = value;
@@ -140,6 +143,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
   setWorkName(String value) => workNameController.text = value;
   setWorkAddress(String value) => workAddressController.text = value;
   setWorkAddressSearch(String value) => workAddressSerchController.text = value;
+  setReferralCode(String value) => referralCodeController.text = value;
 
   setindexProvince(int value) => indexProvince = value;
   setindexDistric(int value) => indexDistric = value;
@@ -157,6 +161,10 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
     return _dataVisible;
   }
 
+  bool getPinVisible() {
+    return _pinSetVisible;
+  }
+
   String? getLaserCode() {
     return ocrBackLaser;
   }
@@ -164,11 +172,10 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
   getLivenessFacetec() async {
     try {
       isSuccess = false;
-      var result = await facetecChannel.invokeMethod<String>(
+      await facetecChannel.invokeMethod<String>(
         'getLivenessFacetec',
         {"local": /*context.locale.toString()*/ "en_US" == 'th_TH' ? "th" : "en"},
       );
-      debugPrint('getLivenessFacetec = $result');
     } on PlatformException catch (e) {
       debugPrint("Failed to get : '${e.message}'");
     }
@@ -177,7 +184,6 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
   getImageFacetec() async {
     try {
       var result = await facetecChannel.invokeMethod('getImageFacetec');
-      debugPrint('getImageFacetec = $result');
       imgLivenessUint8 = base64Decode(result);
       String dir = (await getApplicationDocumentsDirectory()).path;
       String fullPath = '$dir/imageFacetec.png';
@@ -190,8 +196,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
 
   getResultFacetec() async {
     try {
-      isSuccess = await facetecChannel.invokeMethod('getResultFacetec') ?? false;
-      debugPrint('getResultFacetec = $isSuccess');
+      isSuccess = await facetecChannel.invokeMethod('getResultFacetec');
       if (isSuccess) {
         setState(() => isLoading = true);
         await getImageFacetec();
@@ -207,7 +212,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
             context: context);
         final data = res['response']['data'];
 
-        if (data['similarity'] > 80) {
+        if (data['similarity'] >= 80) {
           fileNameFrontID = data['card_image_file_name'];
           final resBackID = await PostAPI.callFormData(
               url: '$register3003/users/upload_file',
@@ -223,6 +228,33 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
           fileNameBackID = resBackID['response']['data']['file_name'];
           fileNameLiveness = data['face_image_file_name'];
 
+          if (kDebugMode) {
+            print({
+              "id_card": idCardController.text,
+              "first_name": firstNameController.text,
+              "last_name": lastNameController.text,
+              "first_name_en": firstNameENController.text,
+              "last_name_en": lastNameENController.text,
+              "address": addressController.text,
+              "birthday": birthdayController.text,
+              "pin": pinController.text,
+              "send_otp_id": sendOtpId!,
+              "laser": ocrBackLaser!,
+              "province_id": '$indexProvince',
+              "district_id": '$indexDistric',
+              "sub_district_id": '$indexSubDistric',
+              "career_id": '$careerID',
+              "work_name": workNameController.text,
+              "work_address": '${workAddressController.text} ${workAddressSerchController.text}',
+              "file_front_citizen": fileNameFrontID,
+              "file_back_citizen": fileNameBackID,
+              "file_selfie": '',
+              "file_liveness": fileNameLiveness,
+              "imei": StateStore.deviceSerial,
+              "fcm_token": StateStore.fcmToken,
+            });
+          }
+
           resCreateUser = await PostAPI.call(
               url: '$register3003/users',
               headers: Authorization.auth2,
@@ -230,12 +262,13 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                 "id_card": idCardController.text,
                 "first_name": firstNameController.text,
                 "last_name": lastNameController.text,
+                "first_name_en": firstNameENController.text,
+                "last_name_en": lastNameENController.text,
                 "address": addressController.text,
                 "birthday": birthdayController.text,
-                "pin": "111222",
-                // "pin": pinController.text,
-                "send_otp_id": sendOtpId,
-                "laser": ocrBackLaser,
+                "pin": pinController.text,
+                "send_otp_id": sendOtpId!,
+                "laser": ocrBackLaser!,
                 "province_id": '$indexProvince',
                 "district_id": '$indexDistric',
                 "sub_district_id": '$indexSubDistric',
@@ -256,18 +289,48 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
             await imgFrontIDCard!.delete();
             await imgBackIDCard!.delete();
             await imgLiveness!.delete();
+            _userLoginID = resCreateUser['response']['data']['user_login_id'];
+            var data = await PostAPI.call(
+                url: '$register3003/user_logins/$_userLoginID/login',
+                headers: Authorization.none,
+                body: {"imei": StateStore.deviceSerial, "pin": pinController.text},
+                context: context);
+
+            if (data['success']) {
+              // await LocalStorage.setAutoPIN(false);
+              await LocalStorage.setUserLoginID(_userLoginID!);
+              await LocalStorage.setIsCorporate(false);
+              await LocalStorage.setTimeToken(DateTime.now().toString());
+
+              StateStore.role = data['response']['data']['role_code'];
+              StateStore.pin = encryptData(input: pinController.text);
+              StateStore.token = data['response']['data']['token'];
+              StateStore.approve = data['response']['data']['is_ocr_approve'];
+              StateStore.isCorporate = false;
+
+              showDialog(
+                barrierDismissible: false,
+                context: context,
+                builder: (context) => CustomDialog(
+                    title: 'save_success'.tr(),
+                    content: 'congratulations'.tr(),
+                    textConfirm: "back_to_main".tr(),
+                    onPressedConfirm: () => Navigator.pop(context)),
+              );
+            }
+          } else {
             showDialog(
               barrierDismissible: false,
               context: context,
               builder: (context) => CustomDialog(
-                title: 'save_success'.tr(),
-                content: 'congratulations'.tr(),
-                textConfirm: "Close".tr(),
+                title: "Something_went_wrong".tr(),
+                content: errorMessages(resCreateUser),
+                avatar: false,
                 onPressedConfirm: () {
                   Navigator.pop(context);
-                  Navigator.of(context, rootNavigator: true).pop({
-                    "success": true,
-                    "message": "รูปถ่ายบัตรประชาชนผ่าน Dopa และผ่านการทำ Liveness Detection",
+                  setState(() {
+                    selectedStep = 2;
+                    _kycVisible = false;
                   });
                 },
               ),
@@ -356,18 +419,16 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                             ).then((v) async {
                               if (v != null) {
                                 int fileSize = await getFileSize(filepath: v);
-                                // if (pathSelfie.isNotEmpty) {
-                                //   await File(pathSelfie).delete();
-                                // }
+
                                 if (!isImage(v)) {
                                   showDialog(
                                     barrierDismissible: true,
                                     context: context,
                                     builder: (context) {
                                       return CustomDialog(
-                                        title: "Extension_not_correct".tr(),
-                                        textConfirm: "ok".tr(),
-                                        onPressedConfirm: () => Navigator.pop(context),
+                                        title: 'Something_went_wrong'.tr(),
+                                        content: "Extension_not_correct".tr(),
+                                        exclamation: true,
                                       );
                                     },
                                   );
@@ -377,9 +438,9 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                     context: context,
                                     builder: (context) {
                                       return CustomDialog(
-                                        title: "File_size_larger".tr(),
-                                        textConfirm: "ok".tr(),
-                                        onPressedConfirm: () => Navigator.pop(context),
+                                        title: 'Something_went_wrong'.tr(),
+                                        content: "File_size_larger".tr(),
+                                        exclamation: true,
                                       );
                                     },
                                   );
@@ -423,27 +484,236 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
     );
   }
 
-  autoSubmitPhoneNumber(String phonenumber) async {
-    setState(() => validatePhonenumber = true);
-    if (phonenumber.length == 10) {
-      var otpId = await PostAPI.call(
-          url: '$register3003/send_otps',
-          headers: Authorization.auth2,
-          body: {"phone_number": phonenumber, "country_code": countryCode},
-          context: context);
+  onChangeSetPIN(String number) {
+    if (regExpPIN.hasMatch(number)) {
+      showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (context) => CustomDialog(
+          title: 'invalid_pin'.tr(),
+          content: 'You_set_a_PIN_that_is_too_strong_to_guess'.tr(),
+          avatar: false,
+          onPressedConfirm: () {
+            setState(() => resetPIN = true);
+            Navigator.pop(context);
+          },
+        ),
+      );
+    } else if (number.length == length) {
+      setState(() {
+        pinController.text = number;
+        _pinSetVisible = false;
+        _pinConfirmVisible = true;
+        resetPIN = true;
+      });
+    }
+  }
 
-      if (otpId['success']) {
-        var data = otpId['response']['data'];
-        setState(() {
-          sendOtpId = data['send_otp_id'];
-          datetimeOTP = DateTime.parse(data['expiration_at']);
+  onChangeConfirmPIN(String number) async {
+    if (number.length == length) {
+      if (number == pinController.text) {
+        if (pathSelfie.isNotEmpty) {
+          setState(() => isLoading = true);
 
-          selectedStep = 1;
-          // _phoneVisible = false;
-          _otpVisible = true;
-          expiration = false;
-        });
+          final resFrontID = await PostAPI.callFormData(
+              url: '$register3003/users/upload_file',
+              headers: Authorization.auth2,
+              files: [
+                http.MultipartFile.fromBytes(
+                  'image',
+                  File(pathFrontCitizen).readAsBytesSync(),
+                  filename: File(pathFrontCitizen).path.split("/").last,
+                )
+              ],
+              context: context);
+          fileNameFrontID = resFrontID['response']['data']['file_name'];
+
+          final resBackID = await PostAPI.callFormData(
+              url: '$register3003/users/upload_file',
+              headers: Authorization.auth2,
+              files: [
+                http.MultipartFile.fromBytes(
+                  'image',
+                  File(pathBackCitizen).readAsBytesSync(),
+                  filename: File(pathBackCitizen).path.split("/").last,
+                )
+              ],
+              context: context);
+          fileNameBackID = resBackID['response']['data']['file_name'];
+
+          final resSelfieID = await PostAPI.callFormData(
+              url: '$register3003/users/upload_file',
+              headers: Authorization.auth2,
+              files: [
+                http.MultipartFile.fromBytes(
+                  'image',
+                  File(pathSelfie).readAsBytesSync(),
+                  filename: File(pathSelfie).path.split("/").last,
+                )
+              ],
+              context: context);
+          fileNameSelfieID = resSelfieID['response']['data']['file_name'];
+          if (kDebugMode) {
+            print({
+              "id_card": idCardController.text,
+              "first_name": firstNameController.text,
+              "last_name": lastNameController.text,
+              "first_name_en": firstNameENController.text,
+              "last_name_en": lastNameENController.text,
+              "address": addressController.text,
+              "birthday": birthdayController.text,
+              "pin": pinController.text,
+              "send_otp_id": sendOtpId!,
+              "laser": ocrBackLaser!,
+              "province_id": '$indexProvince',
+              "district_id": '$indexDistric',
+              "sub_district_id": '$indexSubDistric',
+              "career_id": '$careerID',
+              "work_name": workNameController.text,
+              "work_address": '${workAddressController.text} ${workAddressSerchController.text}',
+              "file_front_citizen": fileNameFrontID,
+              "file_back_citizen": fileNameBackID,
+              "file_selfie": fileNameSelfieID,
+              "file_liveness": '',
+              "imei": StateStore.deviceSerial,
+              "fcm_token": StateStore.fcmToken,
+            });
+          }
+
+          resCreateUser = await PostAPI.call(
+              url: '$register3003/users',
+              headers: Authorization.auth2,
+              body: {
+                "id_card": idCardController.text,
+                "first_name": firstNameController.text,
+                "last_name": lastNameController.text,
+                "first_name_en": firstNameENController.text,
+                "last_name_en": lastNameENController.text,
+                "address": addressController.text,
+                "birthday": birthdayController.text,
+                "pin": pinController.text,
+                "send_otp_id": sendOtpId!,
+                "laser": ocrBackLaser!,
+                "province_id": '$indexProvince',
+                "district_id": '$indexDistric',
+                "sub_district_id": '$indexSubDistric',
+                "career_id": '$careerID',
+                "work_name": workNameController.text,
+                "work_address": '${workAddressController.text} ${workAddressSerchController.text}',
+                "file_front_citizen": fileNameFrontID,
+                "file_back_citizen": fileNameBackID,
+                "file_selfie": fileNameSelfieID,
+                "file_liveness": '',
+                "imei": StateStore.deviceSerial,
+                "fcm_token": StateStore.fcmToken,
+              },
+              context: context);
+
+          if (resCreateUser['success']) {
+            await File(pathFrontCitizen).delete();
+            await File(pathBackCitizen).delete();
+            await File(pathSelfie).delete();
+            _userLoginID = resCreateUser['response']['data']['user_login_id'];
+            var data = await PostAPI.call(
+                url: '$register3003/user_logins/$_userLoginID/login',
+                headers: Authorization.none,
+                body: {"imei": StateStore.deviceSerial, "pin": pinController.text},
+                context: context);
+
+            if (data['success']) {
+              StateStore.token = data['response']['data']['token'];
+              StateStore.approve = data['response']['data']['is_ocr_approve'];
+              StateStore.role = data['response']['data']['role_code'];
+              StateStore.lastLoginAt = data['response']['data']['last_login_at'] ?? '';
+              await LocalStorage.setUserLoginID('');
+              // await LocalStorage.setAutoPIN(false);
+              await LocalStorage.setTimeToken(DateTime.now().toString());
+
+              showDialog(
+                barrierDismissible: false,
+                context: context,
+                builder: (context) => CustomDialog(
+                    title: 'save_success'.tr(),
+                    content: 'congratulations_now'.tr(),
+                    textConfirm: "back_to_main".tr(),
+                    onPressedConfirm: () {
+                      Navigator.pop(context);
+                    }),
+              );
+            }
+          } else {
+            setState(() {
+              isLoading = false;
+              resetPIN = true;
+            });
+            showDialog(
+              barrierDismissible: false,
+              context: context,
+              builder: (context) => CustomDialog(
+                title: "Something_went_wrong".tr(),
+                content: errorMessages(resCreateUser),
+                avatar: false,
+                onPressedConfirm: () {
+                  Navigator.pop(context);
+                  setState(() {
+                    selectedStep = 2;
+                    _pinConfirmVisible = false;
+                  });
+                },
+              ),
+            );
+          }
+        } else {
+          showDialog(
+            barrierDismissible: false,
+            context: context,
+            builder: (context) => CustomDialog(
+              title: 'success_pin'.tr(),
+              content: 'sub_success_pin'.tr(),
+              onPressedConfirm: () => setState(() {
+                Navigator.pop(context);
+                selectedStep = 4;
+                _pinConfirmVisible = false;
+                _kycVisible = true;
+                resetPIN = true;
+              }),
+            ),
+          );
+        }
+      } else {
+        showDialog(
+          barrierDismissible: false,
+          context: context,
+          builder: (context) => CustomDialog(
+            title: 'invalid_pin'.tr(),
+            content: 'please_enter_again'.tr(),
+            avatar: false,
+            onPressedConfirm: () {
+              setState(() => resetPIN = true);
+              Navigator.of(context).pop();
+            },
+          ),
+        );
       }
+    }
+  }
+
+  autoSubmitPhoneNumber() async {
+    txPhoneNumber = widget.phoneNumber.toString();
+    var otpId = await PostAPI.call(
+      url: '$register3003/send_otps',
+      headers: Authorization.auth2,
+      body: {"phone_number": txPhoneNumber, "country_code": countryCode},
+      context: context,
+    );
+
+    if (otpId['success']) {
+      var data = otpId['response']['data'];
+      setState(() {
+        expiration = false;
+        sendOtpId = data['send_otp_id'];
+        datetimeOTP = DateTime.parse(data['expiration_at']);
+      });
     }
   }
 
@@ -472,6 +742,15 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
     }
   }
 
+  checkResetPIN(state) {
+    if (state) {
+      Future.delayed(
+        const Duration(milliseconds: 500),
+        () => setState(() => resetPIN = false),
+      );
+    }
+  }
+
   onBackButton(int step) {
     switch (step) {
       case 0:
@@ -488,11 +767,10 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
             content: 'Do_you_want_to_go_back_previous_step'.tr(),
             exclamation: true,
             buttonCancel: true,
-            onPressedConfirm: () async {
+            onPressedConfirm: () {
               if (!_scanIDVisible) {
-                await Permission.camera.request();
                 setState(() {
-                  Navigator.pop(context);
+                  Navigator.of(context, rootNavigator: true).pop();
                   _scanIDVisible = true;
                   _dataVisible = false;
                 });
@@ -504,21 +782,34 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
           ),
         );
         break;
+      case 3:
+        if (_pinConfirmVisible) {
+          setState(() {
+            _pinSetVisible = true;
+            _pinConfirmVisible = false;
+          });
+        } else {
+          setState(() {
+            selectedStep = 2;
+            _pinSetVisible = false;
+          });
+        }
+        break;
       case 4:
         setState(() {
-          selectedStep = 2;
+          selectedStep = 3;
           _kycVisible = false;
           _kycVisibleFalse = false;
-          _dataVisible = true;
+          _pinSetVisible = true;
           isLoading = false;
         });
         break;
       case 5:
         setState(() {
-          selectedStep = 2;
+          selectedStep = 3;
           _kycVisible = false;
           _kycVisibleFalse = false;
-          _dataVisible = true;
+          _pinSetVisible = true;
           isLoading = false;
         });
         break;
@@ -551,7 +842,13 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildTextStep(int step, int state, String number, String name, double padd) {
+  Widget _buildTextStep(
+    int step,
+    int state,
+    String number,
+    String name,
+    double padd,
+  ) {
     return Expanded(
       child: Column(children: [
         Text(
@@ -609,7 +906,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
         height: 22,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: const Color.fromRGBO(2, 65, 109, 1)),
+          border: Border.all(width: 1, color: const Color.fromRGBO(2, 65, 109, 1)),
           color: Colors.white,
         ),
       ),
@@ -629,7 +926,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
               child: ButtonConfirm(
                 text: 'continue'.tr(),
                 onPressed: () async {
-                  await autoSubmitPhoneNumber(widget.phoneNumber.toString());
+                  await autoSubmitPhoneNumber();
                 },
               ),
             )
@@ -643,22 +940,11 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Expanded(
-                child: ButtonCancel(
-                  text: 'back'.tr(),
-                  onPressed: () {
-                    setState(() {
-                      otpController.clear();
-                      phonenumberController.clear();
-                      selectedStep = 0;
-                      // _phoneVisible = true;
-                      _otpVisible = false;
-                      hasError = false;
-                    });
-                  },
+                child: ButtonConfirm(
+                  text: 'continue'.tr(),
+                  onPressed: autoSubmitOTP,
                 ),
               ),
-              const SizedBox(width: 20),
-              Expanded(child: ButtonConfirm(text: 'continue'.tr(), onPressed: autoSubmitOTP)),
             ],
           ),
         );
@@ -690,6 +976,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                               personalInfo.idCard = data['ocrFrontID'];
                               personalInfo.firstName = data['ocrFrontName'];
                               personalInfo.lastName = data['ocrFrontSurname'];
+
                               personalInfo.address = data['ocrFrontAddress'];
                               personalInfo.filterAddress = data['ocrFilterAddress'];
                               personalInfo.birthday = data['ocrBirthDay'];
@@ -713,6 +1000,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                               personalInfo.idCard = '';
                               personalInfo.firstName = '';
                               personalInfo.lastName = '';
+
                               personalInfo.address = '';
                               personalInfo.birthday = '';
                               personalInfo.ocrBackLaser = '';
@@ -741,24 +1029,29 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                 ? Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                     Expanded(
                       child: Container(
-                        height: 60,
                         width: double.infinity,
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(30),
+                          borderRadius: BorderRadius.circular(25),
                           gradient: const LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
-                            colors: [Color(0xFF115899), Color(0xFF02416D)],
+                            colors: [
+                              Color(0xFF115899),
+                              Color(0xFF02416D),
+                            ],
                           ),
                         ),
                         child: MaterialButton(
-                          height: 60,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                           onPressed: () async {
                             _timer?.cancel();
                             setState(() => isLoading = true);
                             getLivenessFacetec();
 
+                            if (Platform.isIOS) {
+                              Future.delayed(const Duration(seconds: 50), () {
+                                setState(() => isLoading = false);
+                              });
+                            }
                             _timer = Timer.periodic(const Duration(seconds: 3), (Timer t) {
                               if (isSuccess) {
                                 _timer?.cancel();
@@ -783,10 +1076,9 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                     ? Row(children: [
                         Expanded(
                           child: MaterialButton(
-                            height: 60,
                             color: Colors.white,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
+                              borderRadius: BorderRadius.circular(25),
                               side: const BorderSide(color: Color(0xFF115899)),
                             ),
                             child: Text('Re-take_photo'.tr(), style: const TextStyle(color: Color(0xFF115899))),
@@ -811,9 +1103,9 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                         context: context,
                                         builder: (context) {
                                           return CustomDialog(
-                                            title: "Extension_not_correct".tr(),
-                                            textConfirm: "ok".tr(),
-                                            onPressedConfirm: () => Navigator.pop(context),
+                                            title: 'Something_went_wrong'.tr(),
+                                            content: "Extension_not_correct".tr(),
+                                            exclamation: true,
                                           );
                                         },
                                       );
@@ -823,9 +1115,9 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                         context: context,
                                         builder: (context) {
                                           return CustomDialog(
-                                            title: "File_size_larger".tr(),
-                                            textConfirm: "ok".tr(),
-                                            onPressedConfirm: () => Navigator.pop(context),
+                                            title: 'Something_went_wrong'.tr(),
+                                            content: "File_size_larger".tr(),
+                                            exclamation: true,
                                           );
                                         },
                                       );
@@ -834,6 +1126,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                         _kycVisible = false;
                                         _kycVisibleFalse = true;
                                         pathSelfie = v;
+                                        isLoading = false;
                                       });
                                     }
                                   }
@@ -845,9 +1138,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                         const SizedBox(width: 20),
                         Expanded(
                           child: Container(
-                            height: 60,
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(30),
+                              borderRadius: BorderRadius.circular(25),
                               gradient: const LinearGradient(
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
@@ -858,8 +1150,6 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                               ),
                             ),
                             child: MaterialButton(
-                              height: 60,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                               child: Text('continue'.tr()),
                               onPressed: () async {
                                 final resFrontID = await PostAPI.callFormData(
@@ -901,6 +1191,33 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                     context: context);
                                 fileNameSelfieID = resSelfieID['response']['data']['file_name'];
 
+                                if (kDebugMode) {
+                                  print({
+                                    "id_card": idCardController.text,
+                                    "first_name": firstNameController.text,
+                                    "last_name": lastNameController.text,
+                                    "first_name_en": firstNameENController.text,
+                                    "last_name_en": lastNameENController.text,
+                                    "address": addressController.text,
+                                    "birthday": birthdayController.text,
+                                    "pin": pinController.text,
+                                    "send_otp_id": sendOtpId!,
+                                    "laser": ocrBackLaser!,
+                                    "province_id": '$indexProvince',
+                                    "district_id": '$indexDistric',
+                                    "sub_district_id": '$indexSubDistric',
+                                    "career_id": '$careerID',
+                                    "work_name": workNameController.text,
+                                    "work_address": '${workAddressController.text} ${workAddressSerchController.text}',
+                                    "file_front_citizen": fileNameFrontID,
+                                    "file_back_citizen": fileNameBackID,
+                                    "file_selfie": fileNameSelfieID,
+                                    "file_liveness": '',
+                                    "imei": StateStore.deviceSerial,
+                                    "fcm_token": StateStore.fcmToken,
+                                  });
+                                }
+
                                 resCreateUser = await PostAPI.call(
                                     url: '$register3003/users',
                                     headers: Authorization.auth2,
@@ -910,10 +1227,9 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                       "last_name": lastNameController.text,
                                       "address": addressController.text,
                                       "birthday": birthdayController.text,
-                                      "pin": "111222",
-                                      // "pin": pinController.text,
-                                      "send_otp_id": sendOtpId,
-                                      "laser": ocrBackLaser,
+                                      "pin": pinController.text,
+                                      "send_otp_id": sendOtpId!,
+                                      "laser": ocrBackLaser!,
                                       "province_id": '$indexProvince',
                                       "district_id": '$indexDistric',
                                       "sub_district_id": '$indexSubDistric',
@@ -934,22 +1250,38 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                   await imgFrontIDCard!.delete();
                                   await imgBackIDCard!.delete();
                                   await File(pathSelfie).delete();
-                                  showDialog(
-                                    barrierDismissible: false,
-                                    context: context,
-                                    builder: (context) => CustomDialog(
-                                      title: 'save_success'.tr(),
-                                      content: 'congratulations_now'.tr(),
-                                      textConfirm: "Close".tr(),
-                                      onPressedConfirm: () {
-                                        Navigator.pop(context);
-                                        Navigator.of(context, rootNavigator: true).pop({
-                                          "success": true,
-                                          "message": "รูปถ่ายบัตรประชาชนไม่ผ่าน Dopa, ส่งภาพถ่ายรูปคู่บัตรประชาชน รอตรวจสอบ",
-                                        });
-                                      },
-                                    ),
-                                  );
+                                  _userLoginID = resCreateUser['response']['data']['user_login_id'];
+                                  var data = await PostAPI.call(
+                                      url: '$register3003/user_logins/$_userLoginID/login',
+                                      headers: Authorization.none,
+                                      body: {"imei": StateStore.deviceSerial, "pin": pinController.text},
+                                      context: context);
+
+                                  if (data['success']) {
+                                    // await LocalStorage.setAutoPIN(false);
+                                    await LocalStorage.setUserLoginID(_userLoginID!);
+                                    await LocalStorage.setIsCorporate(false);
+                                    await LocalStorage.setTimeToken(DateTime.now().toString());
+
+                                    StateStore.role = data['response']['data']['role_code'];
+                                    StateStore.pin = encryptData(input: pinController.text);
+                                    StateStore.token = data['response']['data']['token'];
+                                    StateStore.approve = data['response']['data']['is_ocr_approve'];
+                                    StateStore.isCorporate = false;
+
+                                    showDialog(
+                                      barrierDismissible: false,
+                                      context: context,
+                                      builder: (context) => CustomDialog(
+                                          title: 'save_success'.tr(),
+                                          content: 'congratulations_now'.tr(),
+                                          textConfirm: "back_to_main".tr(),
+                                          onPressedConfirm: () {
+                                            Navigator.pop(context);
+                                            Navigator.pop(context);
+                                          }),
+                                    );
+                                  }
                                 } else {
                                   showDialog(
                                     barrierDismissible: false,
@@ -962,10 +1294,10 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                         Navigator.pop(context);
                                         setState(() {
                                           selectedStep = 2;
-                                          isLoading = false;
                                           _kycVisible = false;
                                           _kycVisibleFalse = false;
                                           pathSelfie = '';
+                                          isLoading = false;
                                         });
                                       },
                                     ),
@@ -987,6 +1319,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    checkResetPIN(resetPIN);
     return WillPopScope(
       key: Key('Register_plugin_${DateTime.now().toString()}'),
       onWillPop: () async {
@@ -1008,32 +1341,33 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: Column(children: [
                   Stack(children: [
-                    Center(
-                      child: SizedBox(
-                        width: MediaQuery.of(context).size.width - MediaQuery.of(context).size.width / 5,
-                        child: const Divider(color: Color(0xFF02416D), thickness: 1.5, height: 30, indent: 25, endIndent: 25),
-                      ),
+                    const Divider(
+                      color: Color(0xFF02416D),
+                      thickness: 1.5,
+                      height: 30,
+                      indent: 50,
+                      endIndent: 50,
                     ),
                     Row(children: [
-                      //1
                       selectedStep == 0 ? _buildSelectedStep() : _buildDoneStep(),
-                      //2
                       selectedStep == 1
                           ? _buildSelectedStep()
                           : selectedStep == 2 || selectedStep == 3 || selectedStep == 4 || selectedStep == 5
                               ? _buildDoneStep()
                               : _buildUnselectedStep(),
-                      //3
                       selectedStep == 2 || selectedStep == 5
                           ? _buildSelectedStep()
                           : selectedStep == 3 || selectedStep == 4
                               ? _buildDoneStep()
                               : _buildUnselectedStep(),
-                      //4
+                      selectedStep == 3
+                          ? _buildSelectedStep()
+                          : selectedStep == 4
+                              ? _buildDoneStep()
+                              : _buildUnselectedStep(),
                       selectedStep == 4 ? _buildSelectedStep() : _buildUnselectedStep()
                     ]),
                     Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      //1
                       selectedStep == 1
                           ? _buildIconCheckStep(selectedStep, 0, 'phone_number'.tr().replaceAll(' number', ''))
                           : selectedStep == 2 || selectedStep == 5
@@ -1053,14 +1387,17 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                   : selectedStep == 1
                                       ? _buildTextStep(selectedStep, 1, '2', 'OTP', 0)
                                       : _buildTextStep(selectedStep, 1, '', 'OTP', 0),
-                      //3
                       selectedStep == 3 || selectedStep == 4
                           ? _buildIconCheckStep(selectedStep, 2, 'data'.tr())
                           : selectedStep == 2 || selectedStep == 5
                               ? _buildTextStep(selectedStep, 2, '3', 'data'.tr(), 0)
                               : _buildTextStep(selectedStep, 2, '', 'data'.tr(), 0),
-                      //4
-                      selectedStep == 4 ? _buildTextStep(selectedStep, 4, '4', 'KYC', 0) : _buildTextStep(selectedStep, 4, '', 'KYC', 0)
+                      selectedStep == 4
+                          ? _buildIconCheckStep(selectedStep, 3, 'pin'.tr())
+                          : selectedStep == 3
+                              ? _buildTextStep(selectedStep, 3, '4', 'pin'.tr(), 0)
+                              : _buildTextStep(selectedStep, 3, '', 'pin'.tr(), 0),
+                      selectedStep == 4 ? _buildTextStep(selectedStep, 4, '5', 'KYC', 0) : _buildTextStep(selectedStep, 4, '', 'KYC', 0)
                     ])
                   ]),
                 ]),
@@ -1083,7 +1420,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                         style: const TextStyle(fontSize: 24),
                       ),
                       Text(
-                        '${'enter_pin_sent_phone'.tr()} ${phonenumberController.text}',
+                        '${'enter_pin_sent_phone'.tr} $txPhoneNumber',
                         style: const TextStyle(color: Colors.black54, fontSize: 16),
                       ),
                       const SizedBox(height: 20),
@@ -1092,7 +1429,10 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                         child: PinCodeTextField(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           appContext: context,
-                          pastedTextStyle: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                          pastedTextStyle: const TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
                           length: 6,
                           obscureText: false,
                           obscuringCharacter: '*',
@@ -1124,7 +1464,9 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                             setState(() => hasError = false);
                             if (v.length == 6) autoSubmitOTP();
                           },
-                          beforeTextPaste: (text) => true,
+                          beforeTextPaste: (text) {
+                            return true;
+                          },
                         ),
                       ),
                       timeOTP(
@@ -1191,7 +1533,6 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                   person: personalInfo,
                   setDataVisible: setDataVisible,
                   setPinVisible: setPinVisible,
-                  setSelectedStep: setSelectedStep,
                   setFirstName: setFirstName,
                   setLastName: setLastName,
                   setAddress: setAddress,
@@ -1212,6 +1553,31 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                 ),
               ),
               Visibility(
+                visible: _pinSetVisible,
+                child: Container(
+                  color: Colors.white,
+                  child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    Text('set_pin'.tr(), style: const TextStyle(fontSize: 30)),
+                    Text('enter_pin'.tr(), style: const TextStyle(color: Colors.grey)),
+                    Numpad(length: length, onChange: onChangeSetPIN, reset: resetPIN)
+                  ]),
+                ),
+              ),
+              Visibility(
+                visible: _pinConfirmVisible,
+                child: Container(
+                  color: Colors.white,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('confirm_pin'.tr(), style: const TextStyle(fontSize: 30)),
+                      Text('confirm_enter_pin'.tr(), style: const TextStyle(color: Colors.grey)),
+                      Numpad(length: length, onChange: onChangeConfirmPIN, reset: resetPIN)
+                    ],
+                  ),
+                ),
+              ),
+              Visibility(
                 visible: _kycVisible,
                 maintainState: true,
                 child: Container(
@@ -1226,12 +1592,18 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                         Text('scanface_verify'.tr(), style: const TextStyle(color: Colors.black54, fontSize: 16)),
                         const SizedBox(height: 20),
                         Row(children: [
-                          const Icon(Icons.check_circle_outline, color: Color(0xFF27AE60)),
+                          const Icon(
+                            Icons.check_circle_outline,
+                            color: Color(0xFF27AE60),
+                          ),
                           const SizedBox(width: 5),
                           Text('photolight'.tr(), style: const TextStyle(color: Colors.black54, fontSize: 16)),
                         ]),
                         Row(children: [
-                          const Icon(Icons.check_circle_outline, color: Color(0xFF27AE60)),
+                          const Icon(
+                            Icons.check_circle_outline,
+                            color: Color(0xFF27AE60),
+                          ),
                           const SizedBox(width: 5),
                           Text('faceposition'.tr(), style: const TextStyle(color: Colors.black54, fontSize: 16)),
                         ]),
@@ -1265,8 +1637,17 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: pathSelfie == ''
-                          ? Image.asset('assets/icons/idCardD.png', package: 'gbkyc', height: 300)
-                          : Image.file(File(pathSelfie), height: 300, fit: BoxFit.cover),
+                          ? Image.asset(
+                              'assets/icons/idCardD.png',
+                              package: 'gbkyc',
+                              height: 300,
+                              // fit: BoxFit.cover,
+                            )
+                          : Image.file(
+                              File(pathSelfie),
+                              height: 300,
+                              fit: BoxFit.cover,
+                            ),
                     ),
                     const SizedBox(height: 10),
                     Row(children: [
@@ -1280,7 +1661,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                   ]),
                 ),
               ),
-              if (isLoading) pageLoading(),
+              isLoading ? pageLoading() : const SizedBox(),
             ]),
           ),
           bottomNavigationBar: selectBottomView(selectedStep),
