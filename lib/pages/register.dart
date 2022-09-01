@@ -1420,7 +1420,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                         style: const TextStyle(fontSize: 24),
                       ),
                       Text(
-                        '${'enter_pin_sent_phone'.tr} $txPhoneNumber',
+                        '${'enter_pin_sent_phone'.tr()} $txPhoneNumber',
                         style: const TextStyle(color: Colors.black54, fontSize: 16),
                       ),
                       const SizedBox(height: 20),

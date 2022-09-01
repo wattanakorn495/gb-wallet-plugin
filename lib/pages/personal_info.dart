@@ -358,7 +358,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
             int index = dataCareer.indexOf(item);
             return DropdownMenuItem(
               value: index + 1,
-              child: Text('${dataCareer[index]['name_${'language'.tr}']}'),
+              child: Text('${dataCareer[index]['name_${'language'.tr()}']}'),
             );
           }).toList();
           return Stack(children: [
@@ -382,7 +382,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                   isDense: true,
                   isExpanded: true,
                   value: indexCareer,
-                  hint: Text('- ${"career".tr} -'),
+                  hint: Text('- ${"career".tr()} -'),
                   icon: const Icon(Icons.keyboard_arrow_down_rounded),
                   style: const TextStyle(color: Colors.black, fontFamily: 'kanit', fontSize: 15),
                   onChanged: (dynamic v) {
@@ -407,13 +407,13 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 top: 10,
                 left: 10,
                 child: Text(
-                  ' ${"titlecareer".tr} ',
+                  ' ${"titlecareer".tr()} ',
                   style: const TextStyle(fontSize: 12, color: Colors.black54, backgroundColor: Colors.white),
                 ),
               )
           ]);
         }
-        return SizedBox();
+        return const SizedBox();
       },
     );
   }
@@ -442,7 +442,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 child: SizedBox(
                   width: 300,
                   child: Text(
-                    '${dataCareerChild[index]['name_${'language'.tr}']}',
+                    '${dataCareerChild[index]['name_${'language'.tr()}']}',
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -469,7 +469,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                     isDense: true,
                     isExpanded: true,
                     value: indexCareerChild,
-                    hint: Text('- ${"career_more".tr} -'),
+                    hint: Text('- ${"career_more".tr()} -'),
                     icon: const Icon(Icons.keyboard_arrow_down_rounded),
                     style: const TextStyle(color: Colors.black, fontFamily: 'kanit', fontSize: 15),
                     onChanged: (dynamic v) {
@@ -489,7 +489,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                   top: 10,
                   left: 10,
                   child: Text(
-                    ' ${"career_more_choice".tr} ',
+                    ' ${"career_more_choice".tr()} ',
                     style: const TextStyle(fontSize: 12, color: Colors.black54, backgroundColor: Colors.white),
                   ),
                 )
