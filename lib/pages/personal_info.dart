@@ -15,6 +15,7 @@ import 'package:gbkyc/api/post_api.dart';
 import 'package:gbkyc/pages/register.dart';
 import 'package:gbkyc/personal_info_model.dart';
 import 'package:gbkyc/scan_id_card.dart';
+import 'package:gbkyc/state_store.dart';
 import 'package:gbkyc/utils/file_uitility.dart';
 import 'package:gbkyc/widgets/button_confirm.dart';
 import 'package:gbkyc/widgets/custom_dialog.dart';
@@ -26,8 +27,6 @@ class PersonalInfo extends StatefulWidget {
   final dynamic ocrAllFailed;
   final PersonalInfoModel? person;
   final Function? setSelectedStep;
-  final Function? setDataVisible;
-  final Function? setScanIDVisible;
   final Function? setPinVisible;
   final Function? setFirstName;
   final Function? setLastName;
@@ -50,8 +49,6 @@ class PersonalInfo extends StatefulWidget {
   const PersonalInfo({
     this.ocrAllFailed,
     this.person,
-    this.setDataVisible,
-    this.setScanIDVisible,
     this.setPinVisible,
     this.setSelectedStep,
     this.setCareerID,
@@ -339,83 +336,71 @@ class _PersonalInfoState extends State<PersonalInfo> {
   }
 
   Widget dropdownCareer() {
-    return StreamBuilder<Map>(
-      initialData: const {"success": false},
-      stream: (() {
-        late final StreamController<Map> controller;
-        controller = StreamController<Map>(
-          onListen: () async {
-            Map data = await GetAPI.call(url: '$register3003/careers', headers: Authorization.auth2, context: context);
-            controller.add(data);
-          },
+    if (StateStore.careers['success']) {
+      final dataCareer = StateStore.careers['response']['data']['careers'];
+      final data = dataCareer.map<DropdownMenuItem<int>>((item) {
+        int index = dataCareer.indexOf(item);
+        return DropdownMenuItem(
+          value: index + 1,
+          child: Text(
+            '${dataCareer[index]['name_${'language'.tr()}']}',
+            style: const TextStyle(fontFamily: 'kanit', package: 'gbkyc'),
+          ),
         );
-        return controller.stream;
-      })(),
-      builder: (context, snapshot) {
-        if (snapshot.data!['success']) {
-          final dataCareer = snapshot.data!['response']['data']['careers'];
-          final data = dataCareer.map<DropdownMenuItem<int>>((item) {
-            int index = dataCareer.indexOf(item);
-            return DropdownMenuItem(
-              value: index + 1,
-              child: Text('${dataCareer[index]['name_${'language'.tr()}']}'),
-            );
-          }).toList();
-          return Stack(children: [
-            Container(
-              height: 60,
-              width: double.infinity,
-              margin: const EdgeInsets.only(top: 20),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: validateCareer ? Colors.red : const Color(0xFF02416D),
-                ),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton2(
-                  buttonPadding: const EdgeInsets.symmetric(horizontal: 12),
-                  dropdownMaxHeight: 400,
-                  dropdownWidth: 400,
-                  dropdownElevation: 8,
-                  dropdownDecoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
-                  isDense: true,
-                  isExpanded: true,
-                  value: indexCareer,
-                  hint: Text('- ${"career".tr()} -'),
-                  icon: const Icon(Icons.keyboard_arrow_down_rounded),
-                  style: const TextStyle(color: Colors.black, fontFamily: 'kanit', fontSize: 15),
-                  onChanged: (dynamic v) {
-                    if (indexCareer != null) widget.setCareerID!(indexCareer);
-                    setState(() {
-                      validateCareer = false;
-                      validateCareerChild = false;
-                      indexCareer = v;
-                      indexCareerChild = null;
-                      skipInfomation = dataCareer[v - 1]['skip_infomation'];
-                      careerId = dataCareer[v - 1]['id'];
-                      careerChildId = null;
-                      widget.setCareerID!(v);
-                    });
-                  },
-                  items: data,
-                ),
-              ),
+      }).toList();
+      return Stack(children: [
+        Container(
+          height: 60,
+          width: double.infinity,
+          margin: const EdgeInsets.only(top: 20),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: validateCareer ? Colors.red : const Color(0xFF02416D),
             ),
-            if (indexCareer != null)
-              Positioned(
-                top: 10,
-                left: 10,
-                child: Text(
-                  ' ${"titlecareer".tr()} ',
-                  style: const TextStyle(fontSize: 12, color: Colors.black54, backgroundColor: Colors.white),
-                ),
-              )
-          ]);
-        }
-        return const SizedBox();
-      },
-    );
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton2(
+              buttonPadding: const EdgeInsets.symmetric(horizontal: 12),
+              dropdownMaxHeight: 400,
+              dropdownWidth: 400,
+              dropdownElevation: 8,
+              dropdownDecoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
+              isDense: true,
+              isExpanded: true,
+              value: indexCareer,
+              hint: Text('- ${"career".tr()} -'),
+              icon: const Icon(Icons.keyboard_arrow_down_rounded),
+              style: const TextStyle(color: Colors.black, fontFamily: 'kanit', package: 'gbkyc', fontSize: 15),
+              onChanged: (dynamic v) {
+                if (indexCareer != null) widget.setCareerID!(indexCareer);
+                setState(() {
+                  validateCareer = false;
+                  validateCareerChild = false;
+                  indexCareer = v;
+                  indexCareerChild = null;
+                  skipInfomation = dataCareer[v - 1]['skip_infomation'];
+                  careerId = dataCareer[v - 1]['id'];
+                  careerChildId = null;
+                  widget.setCareerID!(v);
+                });
+              },
+              items: data,
+            ),
+          ),
+        ),
+        if (indexCareer != null)
+          Positioned(
+            top: 10,
+            left: 10,
+            child: Text(
+              ' ${"titlecareer".tr()} ',
+              style: const TextStyle(fontSize: 12, color: Colors.black54, backgroundColor: Colors.white),
+            ),
+          )
+      ]);
+    }
+    return const SizedBox();
   }
 
   Widget dropdownCareerChild() {
@@ -442,7 +427,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 child: SizedBox(
                   width: 300,
                   child: Text(
-                    '${dataCareerChild[index]['name_${'language'.tr()}']}',
+                    '${dataCareerChild[index]['name_${'language'.tr}']}',
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -469,7 +454,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                     isDense: true,
                     isExpanded: true,
                     value: indexCareerChild,
-                    hint: Text('- ${"career_more".tr()} -'),
+                    hint: Text('- ${"career_more".tr} -'),
                     icon: const Icon(Icons.keyboard_arrow_down_rounded),
                     style: const TextStyle(color: Colors.black, fontFamily: 'kanit', fontSize: 15),
                     onChanged: (dynamic v) {
@@ -489,7 +474,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                   top: 10,
                   left: 10,
                   child: Text(
-                    ' ${"career_more_choice".tr()} ',
+                    ' ${"career_more_choice".tr} ',
                     style: const TextStyle(fontSize: 12, color: Colors.black54, backgroundColor: Colors.white),
                   ),
                 )
@@ -899,18 +884,6 @@ class _PersonalInfoState extends State<PersonalInfo> {
         if (indexCareer != null) workLable(),
         const SizedBox(height: 50),
         Row(children: [
-          // Expanded(
-          //   child: ButtonCancel(
-          //       text: 'back'.tr(),
-          //       onPressed: () {
-          //         Navigator.pushReplacement(
-          //           context,
-          //           MaterialPageRoute(
-          //               builder: (BuildContext context) => Register()),
-          //         );
-          //       }),
-          // ),
-          // SizedBox(width: 20),
           Expanded(
             child: ButtonConfirm(
               text: 'continue'.tr(),
@@ -1006,20 +979,16 @@ class _PersonalInfoState extends State<PersonalInfo> {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenheight = MediaQuery.of(context).size.height;
 
-    return ListView(
-        key: Key('PersonalInfo_plugin_${DateTime.now().toString()}'),
-        physics: const ClampingScrollPhysics(),
-        padding: const EdgeInsets.only(top: 5, bottom: 30),
-        children: [
-          Form(
-              key: _formKey,
-              child: Column(children: [
-                personInformation(screenWidth),
-                widget.ocrAllFailed ? Container(height: 20, width: double.infinity, color: Colors.grey[100]) : Container(),
-                widget.ocrAllFailed ? idCardCapturing(screenWidth: screenWidth, screenheight: screenheight) : Container(),
-                Container(height: 20, width: double.infinity, color: Colors.grey[100]),
-                workInformation(),
-              ]))
-        ]);
+    return ListView(physics: const ClampingScrollPhysics(), padding: const EdgeInsets.only(top: 5, bottom: 30), children: [
+      Form(
+          key: _formKey,
+          child: Column(children: [
+            personInformation(screenWidth),
+            widget.ocrAllFailed ? Container(height: 20, width: double.infinity, color: Colors.grey[100]) : Container(),
+            widget.ocrAllFailed ? idCardCapturing(screenWidth: screenWidth, screenheight: screenheight) : Container(),
+            Container(height: 20, width: double.infinity, color: Colors.grey[100]),
+            workInformation(),
+          ]))
+    ]);
   }
 }

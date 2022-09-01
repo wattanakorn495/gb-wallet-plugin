@@ -7,6 +7,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gbkyc/api/config_api.dart';
+import 'package:gbkyc/api/get_api.dart';
 import 'package:gbkyc/api/post_api.dart';
 import 'package:gbkyc/local_storerage.dart';
 import 'package:gbkyc/pages/personal_info.dart';
@@ -107,6 +108,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    GetAPI.call(url: '$register3003/careers', headers: Authorization.auth2, context: context).then((v) => StateStore.careers = v);
     WidgetsBinding.instance.addObserver(this);
     onTapRecognizer = TapGestureRecognizer()..onTap = () => Navigator.pop(context);
     errorController = StreamController<ErrorAnimationType>();
@@ -1531,7 +1533,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                 child: PersonalInfo(
                   ocrAllFailed: ocrFailedAll,
                   person: personalInfo,
-                  setDataVisible: setDataVisible,
+                  setSelectedStep: setSelectedStep,
                   setPinVisible: setPinVisible,
                   setFirstName: setFirstName,
                   setLastName: setLastName,

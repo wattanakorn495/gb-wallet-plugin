@@ -148,8 +148,11 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
         //   isInputScan = true;
         //   _controller?.startImageStream(_processCameraImage);
         // }
-        _controller!.setFlashMode(FlashMode.off);
-
+        try {
+          _controller!.setFlashMode(FlashMode.off);
+        } catch (e) {
+          debugPrint('camera Error : $e');
+        }
         setState(() {});
       });
     } else {
@@ -197,12 +200,16 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
                         : Expanded(
                             child: GestureDetector(
                               onTap: () {
-                                if (_controller!.value.flashMode == FlashMode.off) {
-                                  _controller!.setFlashMode(FlashMode.torch);
-                                } else {
-                                  _controller!.setFlashMode(FlashMode.off);
+                                try {
+                                  if (_controller!.value.flashMode == FlashMode.off) {
+                                    _controller!.setFlashMode(FlashMode.torch);
+                                  } else {
+                                    _controller!.setFlashMode(FlashMode.off);
+                                  }
+                                  setState(() => flashStatus = !flashStatus);
+                                } catch (e) {
+                                  debugPrint('camera Error : $e');
                                 }
-                                setState(() => flashStatus = !flashStatus);
                               },
                               child: Icon(
                                 flashStatus ? Icons.flash_on : Icons.flash_off,
@@ -327,12 +334,16 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
           : Expanded(
               child: GestureDetector(
                 onTap: () {
-                  if (_controller!.value.flashMode == FlashMode.off) {
-                    _controller!.setFlashMode(FlashMode.torch);
-                  } else {
-                    _controller!.setFlashMode(FlashMode.off);
+                  try {
+                    if (_controller!.value.flashMode == FlashMode.off) {
+                      _controller!.setFlashMode(FlashMode.torch);
+                    } else {
+                      _controller!.setFlashMode(FlashMode.off);
+                    }
+                    setState(() => flashStatus = !flashStatus);
+                  } catch (e) {
+                    debugPrint('camera Error : $e');
                   }
-                  setState(() => flashStatus = !flashStatus);
                 },
                 child: Icon(flashStatus ? Icons.flash_on : Icons.flash_off),
               ),
