@@ -12,7 +12,7 @@ public class SwiftGbkycPlugin: NSObject, FlutterPlugin {
         let instance = SwiftGbkycPlugin()
         registrar.addMethodCallDelegate(instance, channel: channel)
         
-        let url = URL(string: "https://api-uat-villa.gbwallet.co/register-api/users/liveness_config")!
+        let url = URL(string: "https://api-uat.gbwallet.co/register-api/users/liveness_config")!
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.allHTTPHeaderFields = [
