@@ -134,6 +134,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
 
   final firstNameController = TextEditingController();
   final lastNameController = TextEditingController();
+  final firstnameEngController = TextEditingController();
+  final lastnameEngController = TextEditingController();
   final addressController = TextEditingController();
   final addressShowController = TextEditingController();
   final idCardController = TextEditingController();
@@ -169,6 +171,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
   void dispose() {
     firstNameController.clear();
     lastNameController.clear();
+    firstnameEngController.clear();
+    lastnameEngController.clear();
     addressController.clear();
     addressShowController.clear();
     birthdayController.clear();
@@ -231,6 +235,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
     idCardController.text = idCardFormatter.maskText(widget.person!.idCard ?? "");
     firstNameController.text = widget.person!.firstName ?? "";
     lastNameController.text = widget.person!.lastName ?? "";
+    firstnameEngController.text = widget.person!.firstNameEng ?? "";
+    lastnameEngController.text = widget.person!.lastNameEng ?? "";
     addressController.text = widget.person!.address ?? "";
     birthdayController.text = widget.person!.birthday ?? "";
     laserCodeController.text = laserCodeFormatter.maskText(widget.person!.ocrBackLaser ?? "");
@@ -558,6 +564,41 @@ class _PersonalInfoState extends State<PersonalInfo> {
                     textInputAction: TextInputAction.next,
                     decoration: InputDecoration(labelText: 'last_name'.tr())))
           ]),
+          Row(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+            Expanded(
+                child: TextFormField(
+                    controller: firstnameEngController,
+                    style: const TextStyle(fontSize: 15),
+                    validator: (v) {
+                      if (v!.isEmpty && checkValidate) {
+                        return 'please_enter'.tr();
+                      }
+                      return null;
+                    },
+                    onChanged: (v) {
+                      _formKey.currentState!.validate();
+                      const Register().createState().setFirstNameEng(v);
+                    },
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(labelText: 'name'.tr()))),
+            const SizedBox(width: 20),
+            Expanded(
+                child: TextFormField(
+                    controller: lastnameEngController,
+                    style: const TextStyle(fontSize: 15),
+                    validator: (v) {
+                      if (v!.isEmpty && checkValidate) {
+                        return 'please_enter'.tr();
+                      }
+                      return null;
+                    },
+                    onChanged: (v) {
+                      _formKey.currentState!.validate();
+                      const Register().createState().setLastnameEng(v);
+                    },
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(labelText: 'last_name'.tr())))
+          ]),
           const SizedBox(height: 20),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -616,7 +657,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 child: TextFormField(
                     controller: birthdayController,
                     readOnly: true,
-                    onTap: () => widget.ocrAllFailed ? _selectDate(context) : null,
+                    onTap: () => _selectDate(context),
                     style: const TextStyle(fontSize: 15),
                     validator: (v) {
                       if (v!.isEmpty && checkValidate) return 'please_enter'.tr();
@@ -631,7 +672,6 @@ class _PersonalInfoState extends State<PersonalInfo> {
             Expanded(
               child: TextFormField(
                 controller: idCardController,
-                readOnly: !widget.ocrAllFailed,
                 style: const TextStyle(fontSize: 15),
                 validator: (v) {
                   if (v!.isEmpty && checkValidate) return 'please_enter'.tr();
@@ -655,7 +695,6 @@ class _PersonalInfoState extends State<PersonalInfo> {
             margin: EdgeInsets.only(left: screenWidth * 0.475),
             child: TextFormField(
               controller: laserCodeController,
-              readOnly: !widget.ocrAllFailed,
               style: const TextStyle(fontSize: 15),
               validator: (v) {
                 if (v!.isEmpty && checkValidate) return 'please_enter'.tr();
