@@ -632,5 +632,7 @@ Map<String, String> en() {
     "You have successfully disabled the Virtual Card": "You have successfully disabled the Virtual Card.",
     "You have successfully enabled the Virtual Card": "You have successfully enabled the Virtual Card.",
     "You_set_a_PIN_that_is_too_strong_to_guess": "You set a PIN that is too strong to guess",
+    'eng_name': 'English name',
+    'eng_lastname': 'English surname',
   };
 }

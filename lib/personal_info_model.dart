@@ -9,5 +9,5 @@ class PersonalInfoModel {
     this.ocrBackLaser,
   });
 
-  String? idCard, firstName, lastName, address, filterAddress, birthday, ocrBackLaser;
+  String? idCard, firstName, lastName, firstNameEng, lastNameEng, address, filterAddress, birthday, ocrBackLaser;
 }

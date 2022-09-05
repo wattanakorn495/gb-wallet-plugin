@@ -182,6 +182,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
 
   setFirstName(String value) => firstNameController.text = value;
   setLastName(String value) => lastNameController.text = value;
+  setFirstNameEng(String value) => firstNameENController.text = value;
+  setLastnameEng(String value) => lastNameENController.text = value;
   setAddress(String value) => addressController.text = value;
   setAddressSearch(String value) => addressSearchController.text = value;
   setBirthday(String value) => birthdayController.text = value;
@@ -1017,6 +1019,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                             personalInfo.idCard = data['ocrFrontID'];
                             personalInfo.firstName = data['ocrFrontName'];
                             personalInfo.lastName = data['ocrFrontSurname'];
+                            personalInfo.firstNameEng = data[''];
+                            personalInfo.lastNameEng = data[''];
                             personalInfo.address = data['ocrFrontAddress'];
                             personalInfo.filterAddress = data['ocrFilterAddress'];
                             personalInfo.birthday = data['ocrBirthDay'];
@@ -1040,6 +1044,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                             personalInfo.idCard = '';
                             personalInfo.firstName = '';
                             personalInfo.lastName = '';
+                            personalInfo.firstNameEng = '';
+                            personalInfo.lastNameEng = '';
                             personalInfo.address = '';
                             personalInfo.birthday = '';
                             personalInfo.ocrBackLaser = '';

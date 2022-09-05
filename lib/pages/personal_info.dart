@@ -27,6 +27,8 @@ class PersonalInfo extends StatefulWidget {
   final Function? setPinVisible;
   final Function? setFirstName;
   final Function? setLastName;
+  final Function? setFirstNameEng;
+  final Function? setLastNameEng;
   final Function? setAddress;
   final Function? setAddressSearch;
   final Function? setBirthday;
@@ -65,6 +67,8 @@ class PersonalInfo extends StatefulWidget {
     this.setFileSelfie,
     this.setFirstName,
     this.setLastName,
+    this.setFirstNameEng,
+    this.setLastNameEng,
     this.setAddress,
     this.setAddressSearch,
     this.setBirthday,
@@ -136,11 +140,14 @@ class _PersonalInfoState extends State<PersonalInfo> {
   bool skipInfomation = false;
   bool validateCareer = false;
   bool validateCareerChild = false;
+  bool isChecked = false;
 
   final GlobalKey<FormState> _formKey = GlobalKey();
 
   final firstNameController = TextEditingController();
   final lastNameController = TextEditingController();
+  final firstnameEngController = TextEditingController();
+  final lastnameEngController = TextEditingController();
   final addressController = TextEditingController();
   final addressShowController = TextEditingController();
   final idCardController = TextEditingController();
@@ -174,6 +181,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
   void dispose() {
     firstNameController.clear();
     lastNameController.clear();
+    firstnameEngController.clear();
+    lastnameEngController.clear();
     addressController.clear();
     addressShowController.clear();
     birthdayController.clear();
@@ -209,6 +218,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
     idCardController.text = idCardFormatter.maskText(widget.person!.idCard ?? "");
     firstNameController.text = widget.person!.firstName ?? "";
     lastNameController.text = widget.person!.lastName ?? "";
+    firstnameEngController.text = widget.person!.firstNameEng ?? "";
+    lastnameEngController.text = widget.person!.lastNameEng ?? "";
     addressController.text = widget.person!.address ?? "";
     birthdayController.text = widget.person!.birthday ?? "";
     laserCodeController.text = laserCodeFormatter.maskText(widget.person!.ocrBackLaser ?? "");
@@ -532,6 +543,35 @@ class _PersonalInfoState extends State<PersonalInfo> {
                     textInputAction: TextInputAction.next,
                     decoration: InputDecoration(labelText: 'last_name'.tr())))
           ]),
+          Row(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+            Expanded(
+                child: TextFormField(
+                    controller: firstnameEngController,
+                    style: const TextStyle(fontSize: 15),
+                    validator: (v) {
+                      if (v!.isEmpty && checkValidate) {
+                        return 'please_enter'.tr();
+                      }
+                      return null;
+                    },
+                    onChanged: (v) => _formKey.currentState!.validate(),
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(labelText: 'eng_name'.tr()))),
+            const SizedBox(width: 20),
+            Expanded(
+                child: TextFormField(
+                    controller: lastnameEngController,
+                    style: const TextStyle(fontSize: 15),
+                    validator: (v) {
+                      if (v!.isEmpty && checkValidate) {
+                        return 'please_enter'.tr();
+                      }
+                      return null;
+                    },
+                    onChanged: (v) => _formKey.currentState!.validate(),
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(labelText: 'eng_lastname'.tr())))
+          ]),
           const SizedBox(height: 20),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -587,7 +627,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 child: TextFormField(
                     controller: birthdayController,
                     readOnly: true,
-                    onTap: () => widget.ocrAllFailed ? _selectDate(context) : null,
+                    onTap: () => _selectDate(context),
                     style: const TextStyle(fontSize: 15),
                     validator: (v) {
                       if (v!.isEmpty && checkValidate) return 'please_enter'.tr();
@@ -602,7 +642,6 @@ class _PersonalInfoState extends State<PersonalInfo> {
             Expanded(
               child: TextFormField(
                 controller: idCardController,
-                readOnly: !widget.ocrAllFailed,
                 style: const TextStyle(fontSize: 15),
                 validator: (v) {
                   if (v!.isEmpty && checkValidate) return 'please_enter'.tr();
@@ -626,7 +665,6 @@ class _PersonalInfoState extends State<PersonalInfo> {
             margin: EdgeInsets.only(left: screenWidth * 0.475),
             child: TextFormField(
               controller: laserCodeController,
-              readOnly: !widget.ocrAllFailed,
               style: const TextStyle(fontSize: 15),
               validator: (v) {
                 if (v!.isEmpty && checkValidate) return 'please_enter'.tr();
@@ -928,6 +966,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
 
                       widget.setFirstName!(firstNameController.text);
                       widget.setLastName!(lastNameController.text);
+                      widget.setFirstNameEng!(firstnameEngController.text);
+                      widget.setLastNameEng!(lastnameEngController.text);
                       widget.setAddress!(addressController.text);
                       widget.setBirthday!(birthdayController.text);
                       widget.setIDCard!(idCardController.text.replaceAll('-', ''));
@@ -960,6 +1000,13 @@ class _PersonalInfoState extends State<PersonalInfo> {
             widget.ocrAllFailed ? idCardCapturing(screenWidth: screenWidth, screenheight: screenheight) : Container(),
             Container(height: 20, width: double.infinity, color: Colors.grey[100]),
             workInformation(),
+            Checkbox(
+                value: isChecked,
+                onChanged: (value) {
+                  setState(() {
+                    isChecked = value!;
+                  });
+                }),
           ]))
     ]);
   }
