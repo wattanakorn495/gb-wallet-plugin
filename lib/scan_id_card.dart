@@ -59,6 +59,8 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
   String? ocrFrontID;
   String? ocrFrontName;
   String? ocrFrontSurname;
+  String? ocrFrontNameEng;
+  String? ocrFrontSurnameEng;
   String? ocrFrontAddress;
   String? ocrFilterAddress;
   String? ocrFrontBirthdayD;
@@ -74,6 +76,8 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
     data['ocrFrontID'] = ocrFrontID ?? '';
     data['ocrFrontName'] = ocrFrontName ?? '';
     data['ocrFrontSurname'] = ocrFrontSurname ?? '';
+    data['ocrFrontNameEng'] = ocrFrontNameEng ?? '';
+    data['ocrFrontSurnameEng'] = ocrFrontSurnameEng ?? '';
     data['ocrFrontAddress'] = ocrFrontAddress ?? '';
     data['ocrFilterAddress'] = ocrFilterAddress ?? '';
     data['ocrBirthDay'] = birthDay ?? '';
@@ -394,14 +398,11 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
         if (resFront['date_of_birth_en'].toString().contains(' ')) arrBirthday = resFront['date_of_birth_en'].split(' ');
 
         if (arrName.isNotEmpty) {
-          if (/*context.locale.toString()*/ "en_US" == 'th_TH') {
-            ocrFrontName = arrName[arrName.length - 2];
-            ocrFrontSurname = arrName[arrName.length - 1];
-          } else {
-            List arrEnName = resFront['first_name_en'].split(' ');
-            ocrFrontName = arrEnName[arrEnName.length - 1];
-            ocrFrontSurname = resFront['last_name_en'];
-          }
+          ocrFrontName = arrName[arrName.length - 2];
+          ocrFrontSurname = arrName[arrName.length - 1];
+          List arrEnName = resFront['first_name_en'].split(' ');
+          ocrFrontNameEng = arrEnName[arrEnName.length - 1];
+          ocrFrontSurnameEng = resFront['last_name_en'];
 
           dopaFirstName = arrName[arrName.length - 2];
           dopaLastName = arrName[arrName.length - 1];

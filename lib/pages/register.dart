@@ -1019,8 +1019,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                             personalInfo.idCard = data['ocrFrontID'];
                             personalInfo.firstName = data['ocrFrontName'];
                             personalInfo.lastName = data['ocrFrontSurname'];
-                            personalInfo.firstNameEng = data[''];
-                            personalInfo.lastNameEng = data[''];
+                            personalInfo.firstNameEng = data['ocrFrontNameEng'];
+                            personalInfo.lastNameEng = data['ocrFrontSurnameEng'];
                             personalInfo.address = data['ocrFrontAddress'];
                             personalInfo.filterAddress = data['ocrFilterAddress'];
                             personalInfo.birthday = data['ocrBirthDay'];
@@ -1031,6 +1031,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                               idCardController.text = data['ocrFrontID'];
                               firstNameController.text = data['ocrFrontName'];
                               lastNameController.text = data['ocrFrontSurname'];
+                              firstNameENController.text = data['ocrFrontNameEng'];
+                              lastNameENController.text = data['ocrFrontSurnameEng'];
                               addressController.text = data['ocrFrontAddress'];
                               birthdayController.text = data['ocrBirthDay'];
                               ocrBackLaser = data['ocrBackLaser'];
@@ -1581,6 +1583,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                   setPinVisible: setPinVisible,
                   setFirstName: setFirstName,
                   setLastName: setLastName,
+                  setFirstNameEng: setFirstNameEng,
+                  setLastNameEng: setLastnameEng,
                   setAddress: setAddress,
                   setAddressSearch: setAddressSearch,
                   setBirthday: setBirthday,

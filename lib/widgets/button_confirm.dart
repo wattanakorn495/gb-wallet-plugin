@@ -9,6 +9,8 @@ class ButtonConfirm extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   final EdgeInsetsGeometry margin;
   final Color? colorText;
+  final Color? colorDisableText;
+  final bool enable;
 
   const ButtonConfirm({
     Key? key,
@@ -19,6 +21,8 @@ class ButtonConfirm extends StatelessWidget {
     this.padding = EdgeInsets.zero,
     this.margin = EdgeInsets.zero,
     this.colorText,
+    this.colorDisableText = Colors.black,
+    this.enable = true,
   }) : super(key: key);
 
   @override
@@ -31,19 +35,28 @@ class ButtonConfirm extends StatelessWidget {
       margin: margin,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(radius),
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF115899),
-            Color(0xFF02416D),
-          ],
-        ),
+        gradient: enable
+            ? const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xFF115899),
+                  Color(0xFF02416D),
+                ],
+              )
+            : const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color.fromARGB(255, 233, 233, 233),
+                  Color.fromARGB(255, 197, 197, 197),
+                ],
+              ),
       ),
       child: MaterialButton(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius)),
-        onPressed: onPressed,
-        child: FittedBox(fit: BoxFit.scaleDown, child: Text(text, style: TextStyle(color: colorText))),
+        onPressed: enable ? onPressed : null,
+        child: FittedBox(fit: BoxFit.scaleDown, child: Text(text, style: TextStyle(color: enable ? colorText : colorDisableText))),
       ),
     );
   }

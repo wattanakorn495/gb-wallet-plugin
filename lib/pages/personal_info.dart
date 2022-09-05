@@ -543,6 +543,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                     textInputAction: TextInputAction.next,
                     decoration: InputDecoration(labelText: 'last_name'.tr())))
           ]),
+          const SizedBox(height: 20),
           Row(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
             Expanded(
                 child: TextFormField(
@@ -635,9 +636,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                     },
                     onChanged: (v) => _formKey.currentState!.validate(),
                     decoration: InputDecoration(
-                        fillColor: widget.ocrAllFailed ? Colors.white : Colors.grey[200],
-                        labelText: 'birthday'.tr(),
-                        suffixIcon: const Icon(Icons.calendar_today, color: Colors.black54)))),
+                        fillColor: Colors.white, labelText: 'birthday'.tr(), suffixIcon: const Icon(Icons.calendar_today, color: Colors.black54)))),
             const SizedBox(width: 20),
             Expanded(
               child: TextFormField(
@@ -653,7 +652,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 maxLength: 17,
                 inputFormatters: [idCardFormatter],
                 decoration: InputDecoration(
-                  fillColor: widget.ocrAllFailed ? Colors.white : Colors.grey[200],
+                  fillColor: Colors.white,
                   labelText: 'id_card_code'.tr(),
                 ),
               ),
@@ -673,7 +672,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
               onChanged: (v) => _formKey.currentState!.validate(),
               maxLength: 14,
               inputFormatters: [laserCodeFormatter],
-              decoration: InputDecoration(fillColor: widget.ocrAllFailed ? Colors.white : Colors.grey[200], labelText: "id_card_laserNo".tr()),
+              decoration: InputDecoration(fillColor: Colors.white, labelText: "id_card_laserNo".tr()),
             ),
           )
         ]));
@@ -891,11 +890,25 @@ class _PersonalInfoState extends State<PersonalInfo> {
         dropdownCareer(),
         if (careerId != null) dropdownCareerChild(),
         if (indexCareer != null) workLable(),
-        const SizedBox(height: 50),
+        const SizedBox(height: 40),
+        Row(
+          children: [
+            Checkbox(
+                value: isChecked,
+                onChanged: (value) {
+                  setState(() {
+                    isChecked = value!;
+                  });
+                }),
+            Text('confirm_information_correct'.tr()),
+          ],
+        ),
+        const SizedBox(height: 20),
         Row(children: [
           Expanded(
             child: ButtonConfirm(
               text: 'continue'.tr(),
+              enable: isChecked,
               onPressed: () async {
                 FocusScope.of(context).unfocus();
                 checkValidate = true;
@@ -1000,13 +1013,6 @@ class _PersonalInfoState extends State<PersonalInfo> {
             widget.ocrAllFailed ? idCardCapturing(screenWidth: screenWidth, screenheight: screenheight) : Container(),
             Container(height: 20, width: double.infinity, color: Colors.grey[100]),
             workInformation(),
-            Checkbox(
-                value: isChecked,
-                onChanged: (value) {
-                  setState(() {
-                    isChecked = value!;
-                  });
-                }),
           ]))
     ]);
   }
