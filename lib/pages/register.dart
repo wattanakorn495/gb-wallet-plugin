@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:gbkyc/api/config_api.dart';
 import 'package:gbkyc/api/get_api.dart';
 import 'package:gbkyc/api/post_api.dart';
@@ -19,7 +20,6 @@ import 'package:gbkyc/utils/encryption.dart';
 import 'package:gbkyc/utils/error_messages.dart';
 import 'package:gbkyc/utils/file_uitility.dart';
 import 'package:gbkyc/utils/regular_expression.dart';
-import 'package:gbkyc/widgets/button_cancel.dart';
 import 'package:gbkyc/widgets/button_confirm.dart';
 import 'package:gbkyc/widgets/custom_dialog.dart';
 import 'package:gbkyc/widgets/numpad.dart';
@@ -105,14 +105,20 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
   Timer? _timer;
   late StreamController<ErrorAnimationType> errorController;
 
+  dynamic address;
+
   @override
   void initState() {
     super.initState();
     GetAPI.call(url: '$register3003/careers', headers: Authorization.auth2, context: context).then((v) => StateStore.careers = v);
     WidgetsBinding.instance.addObserver(this);
-    onTapRecognizer = TapGestureRecognizer()..onTap = () => Navigator.pop(context);
+    onTapRecognizer = TapGestureRecognizer()
+      ..onTap = () {
+        debugPrint('on tap recognizer');
+        Navigator.pop(context);
+      };
     errorController = StreamController<ErrorAnimationType>();
-    autoSubmitPhoneNumber();
+    sendOTP();
   }
 
   @override
@@ -125,12 +131,52 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && !isSuccess) setState(() => isLoading = false);
+    if (state == AppLifecycleState.resumed && !isSuccess) {
+      debugPrint('Lifecycle onResume & isSuccess = false');
+      setState(() => isLoading = false);
+    }
+  }
+
+  getAddress(PersonalInfoModel person) async {
+    EasyLoading.show();
+    final response = await rootBundle.loadString('packages/gbkyc/assets/thai-province-data.json');
+    address = jsonDecode(response);
+
+    List dataProvince = address['province'];
+    List dataDistrict = address['district'];
+    List dataSubDistrict = address['sub_district'];
+
+    if (person.filterAddress!.isNotEmpty) {
+      List filter = person.filterAddress!.split(' ');
+      String filterProvince = filter[2];
+      String filterDistrict = filter[1];
+      String filterSubDistrict = filter[0];
+
+      for (var e in dataProvince) {
+        if (RegExp(filterProvince.replaceAll('จ.', '')).hasMatch(e['name_th'])) {
+          int provinceID = e['id'];
+          for (var e in dataDistrict) {
+            if ((RegExp(filterDistrict.replaceAll('อ.', '')).hasMatch(e['name_th']) ||
+                    RegExp(filterDistrict.replaceAll('เขต', '')).hasMatch(e['name_th'])) &&
+                e['province_id'] == provinceID) {
+              int codeDistrict = e['code'];
+              for (var e in dataSubDistrict) {
+                if (RegExp(filterSubDistrict).hasMatch(e['name_th']) && e['code'].toString().substring(0, 4) == codeDistrict.toString()) {
+                  setindexProvince(e['province_id']);
+                  setindexDistric(e['district_id']);
+                  setindexSubDistric(e['id']);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    EasyLoading.dismiss();
   }
 
   setSelectedStep(int index) => setState(() => selectedStep = index);
 
-  setScanIDVisible(bool value) => setState(() => _scanIDVisible = value);
   setDataVisible(bool value) => setState(() => _dataVisible = value);
   setPinVisible(bool value) => setState(() => _pinSetVisible = value);
 
@@ -313,11 +359,14 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
               showDialog(
                 barrierDismissible: false,
                 context: context,
-                builder: (context) => CustomDialog(
+                builder: (dialogContext) => CustomDialog(
                     title: 'save_success'.tr(),
                     content: 'congratulations'.tr(),
                     textConfirm: "back_to_main".tr(),
-                    onPressedConfirm: () => Navigator.pop(context)),
+                    onPressedConfirm: () {
+                      Navigator.pop(dialogContext);
+                      Navigator.pop(context);
+                    }),
               );
             }
           } else {
@@ -333,6 +382,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                   setState(() {
                     selectedStep = 2;
                     _kycVisible = false;
+                    _pinConfirmVisible = false;
+                    _dataVisible = true;
                   });
                 },
               ),
@@ -609,6 +660,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                 "imei": StateStore.deviceSerial,
                 "fcm_token": StateStore.fcmToken,
               },
+              alert: false,
               context: context);
 
           if (resCreateUser['success']) {
@@ -640,6 +692,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                     textConfirm: "back_to_main".tr(),
                     onPressedConfirm: () {
                       Navigator.pop(context);
+                      Navigator.pop(context);
                     }),
               );
             }
@@ -660,6 +713,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                   setState(() {
                     selectedStep = 2;
                     _pinConfirmVisible = false;
+                    _dataVisible = true;
                   });
                 },
               ),
@@ -700,7 +754,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
     }
   }
 
-  autoSubmitPhoneNumber() async {
+  sendOTP() async {
     txPhoneNumber = widget.phoneNumber.toString();
     var otpId = await PostAPI.call(
       url: '$register3003/send_otps',
@@ -793,6 +847,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
         } else {
           setState(() {
             selectedStep = 2;
+            _dataVisible = true;
             _pinSetVisible = false;
           });
         }
@@ -918,22 +973,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
   selectBottomView(int step) {
     switch (step) {
       case 0:
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 20),
-          decoration: BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: Colors.grey[300]!))),
-          child: Row(children: [
-            Expanded(child: ButtonCancel(text: 'back'.tr(), onPressed: () => Navigator.of(context, rootNavigator: true).pop())),
-            const SizedBox(width: 20),
-            Expanded(
-              child: ButtonConfirm(
-                text: 'continue'.tr(),
-                onPressed: () async {
-                  await autoSubmitPhoneNumber();
-                },
-              ),
-            )
-          ]),
-        );
+        return const SizedBox();
       case 1:
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 20),
@@ -972,18 +1012,18 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                               scanID: true,
                             ),
                           ),
-                        ).then((data) {
+                        ).then((data) async {
                           if (data != null && !data['ocrFailedAll']) {
+                            personalInfo.idCard = data['ocrFrontID'];
+                            personalInfo.firstName = data['ocrFrontName'];
+                            personalInfo.lastName = data['ocrFrontSurname'];
+                            personalInfo.address = data['ocrFrontAddress'];
+                            personalInfo.filterAddress = data['ocrFilterAddress'];
+                            personalInfo.birthday = data['ocrBirthDay'];
+                            personalInfo.ocrBackLaser = data['ocrBackLaser'];
+                            await getAddress(personalInfo);
+
                             setState(() {
-                              personalInfo.idCard = data['ocrFrontID'];
-                              personalInfo.firstName = data['ocrFrontName'];
-                              personalInfo.lastName = data['ocrFrontSurname'];
-
-                              personalInfo.address = data['ocrFrontAddress'];
-                              personalInfo.filterAddress = data['ocrFilterAddress'];
-                              personalInfo.birthday = data['ocrBirthDay'];
-                              personalInfo.ocrBackLaser = data['ocrBackLaser'];
-
                               idCardController.text = data['ocrFrontID'];
                               firstNameController.text = data['ocrFrontName'];
                               lastNameController.text = data['ocrFrontSurname'];
@@ -993,23 +1033,21 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                               ocrFailedAll = data['ocrFailedAll'];
                               imgFrontIDCard = File(data['frontIDPath']);
                               imgBackIDCard = File(data['backIDPath']);
-
                               _scanIDVisible = false;
                               _dataVisible = true;
                             });
                           } else if (data != null && data['ocrFailedAll']) {
+                            personalInfo.idCard = '';
+                            personalInfo.firstName = '';
+                            personalInfo.lastName = '';
+                            personalInfo.address = '';
+                            personalInfo.birthday = '';
+                            personalInfo.ocrBackLaser = '';
+                            personalInfo.filterAddress = '';
+                            await getAddress(personalInfo);
+
                             setState(() {
-                              personalInfo.idCard = '';
-                              personalInfo.firstName = '';
-                              personalInfo.lastName = '';
-
-                              personalInfo.address = '';
-                              personalInfo.birthday = '';
-                              personalInfo.ocrBackLaser = '';
-                              personalInfo.filterAddress = '';
-
                               ocrFailedAll = data['ocrFailedAll'];
-
                               _scanIDVisible = false;
                               _dataVisible = true;
                             });
@@ -1300,6 +1338,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                           _kycVisibleFalse = false;
                                           pathSelfie = '';
                                           isLoading = false;
+                                          _dataVisible = true;
                                         });
                                       },
                                     ),
@@ -1323,7 +1362,6 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     checkResetPIN(resetPIN);
     return WillPopScope(
-      key: Key('Register_plugin_${DateTime.now().toString()}'),
       onWillPop: () async {
         onBackButton(selectedStep);
         return true;
@@ -1552,6 +1590,11 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                   setFileFrontCitizen: setFileFrontCitizen,
                   setFileBackCitizen: setFileBackCitizen,
                   setFileSelfie: setFileSelfie,
+                  setDataVisible: setDataVisible,
+                  address: address,
+                  provinceID: indexProvince,
+                  districtId: indexDistric,
+                  subDistrictId: indexSubDistric,
                 ),
               ),
               Visibility(

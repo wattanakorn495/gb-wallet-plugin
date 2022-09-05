@@ -23,25 +23,59 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
+
+  @override
+  HomePageState createState() => HomePageState();
+}
+
+class HomePageState extends State<HomePage> {
+  final GlobalKey<FormState> _formKey = GlobalKey();
+  final phoneController = TextEditingController(text: '0971796690');
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Test GB SDK')),
-      body: Center(
-        child: MaterialButton(
-          height: 60,
-          minWidth: double.infinity,
-          color: Colors.blue,
-          onPressed: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => Gbkyc.show('0971796690')))
-                .then((v) => debugPrint('ค่าที่ได้กลับจาก SDK $v'));
-          },
-          child: const Text(
-            'Open GB SDK',
-            style: TextStyle(color: Colors.white),
+      body: Form(
+        key: _formKey,
+        child: Padding(
+          padding: const EdgeInsets.all(40.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              TextFormField(
+                  controller: phoneController,
+                  style: const TextStyle(fontSize: 16),
+                  textInputAction: TextInputAction.next,
+                  validator: (v) {
+                    if (v?.length != 10) {
+                      return 'please enter number equal 10';
+                    }
+                    return null;
+                  },
+                  maxLength: 10,
+                  keyboardType: TextInputType.number,
+                  onChanged: ((value) => _formKey.currentState?.validate()),
+                  decoration: const InputDecoration(labelText: 'Phone number')),
+              MaterialButton(
+                height: 60,
+                minWidth: double.infinity,
+                color: Colors.blue,
+                onPressed: () {
+                  if (_formKey.currentState!.validate() && phoneController.text.length == 10) {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => Gbkyc.show(phoneController.text)))
+                        .then((v) => debugPrint('ค่าที่ได้กลับจาก SDK $v'));
+                  }
+                },
+                child: const Text(
+                  'Open GB SDK',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
           ),
         ),
       ),

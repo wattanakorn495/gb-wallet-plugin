@@ -1,5 +1,3 @@
-import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:dotted_border/dotted_border.dart';
@@ -12,7 +10,6 @@ import 'package:gbkyc/address_bloc.dart';
 import 'package:gbkyc/api/config_api.dart';
 import 'package:gbkyc/api/get_api.dart';
 import 'package:gbkyc/api/post_api.dart';
-import 'package:gbkyc/pages/register.dart';
 import 'package:gbkyc/personal_info_model.dart';
 import 'package:gbkyc/scan_id_card.dart';
 import 'package:gbkyc/state_store.dart';
@@ -45,6 +42,11 @@ class PersonalInfo extends StatefulWidget {
   final Function? setFileFrontCitizen;
   final Function? setFileBackCitizen;
   final Function? setFileSelfie;
+  final Function? setDataVisible;
+  final dynamic address;
+  final int? provinceID;
+  final int? districtId;
+  final int? subDistrictId;
 
   const PersonalInfo({
     this.ocrAllFailed,
@@ -68,6 +70,11 @@ class PersonalInfo extends StatefulWidget {
     this.setBirthday,
     this.setIDCard,
     this.setLaserCode,
+    this.setDataVisible,
+    this.address,
+    this.provinceID,
+    this.districtId,
+    this.subDistrictId,
     Key? key,
   }) : super(key: key);
 
@@ -143,8 +150,6 @@ class _PersonalInfoState extends State<PersonalInfo> {
   final workAddressController = TextEditingController();
   final workAddressShowController = TextEditingController();
 
-  dynamic address;
-
   MaskTextInputFormatter laserCodeFormatter = MaskTextInputFormatter(
     mask: '###-#######-##',
     filter: {"#": RegExp(r'[a-zA-Z0-9]')},
@@ -159,10 +164,10 @@ class _PersonalInfoState extends State<PersonalInfo> {
 
   @override
   void initState() {
+    super.initState();
+
     onLoad();
     getAddress();
-    SystemChannels.textInput.invokeMethod('TextInput.hide');
-    super.initState();
   }
 
   @override
@@ -182,52 +187,25 @@ class _PersonalInfoState extends State<PersonalInfo> {
     super.dispose();
   }
 
-  getAddress() async {
-    final response = await rootBundle.loadString('packages/gbkyc/assets/thai-province-data.json');
-    address = jsonDecode(response);
+  getAddress() {
+    List dataProvince = widget.address['province'];
+    List dataDistrict = widget.address['district'];
+    List dataSubDistrict = widget.address['sub_district'];
 
-    List dataProvince = address['province'];
-    List dataDistrict = address['district'];
-    List dataSubDistrict = address['sub_district'];
+    final provinceName = dataProvince.firstWhere((province) => province['id'] == widget.provinceID, orElse: (() => null));
+    final districtName = dataDistrict.firstWhere((district) => district['id'] == widget.districtId, orElse: (() => null));
+    final subDistricModel = dataSubDistrict.firstWhere((subDistrict) => subDistrict['id'] == widget.subDistrictId, orElse: (() => null));
+    addressShowController.text =
+        provinceName == null ? '' : "${provinceName?['name']}/${districtName?['name']}/${subDistricModel?['name']}/${subDistricModel?['post_code']}";
 
-    if (widget.person!.filterAddress!.isNotEmpty) {
-      List filter = widget.person!.filterAddress!.split(' ');
-      String filterProvince = filter[2];
-      String filterDistrict = filter[1];
-      String filterSubDistrict = filter[0];
-
-      for (var e in dataProvince) {
-        if (RegExp(filterProvince.replaceAll('จ.', '')).hasMatch(e['name_th'])) {
-          int provinceID = e['id'];
-          String province = e['name${'lang'.tr()}'];
-          for (var e in dataDistrict) {
-            if ((RegExp(filterDistrict.replaceAll('อ.', '')).hasMatch(e['name_th']) ||
-                    RegExp(filterDistrict.replaceAll('เขต', '')).hasMatch(e['name_th'])) &&
-                e['province_id'] == provinceID) {
-              int codeDistrict = e['code'];
-              String district = e['name${'lang'.tr()}'];
-              for (var e in dataSubDistrict) {
-                if (RegExp(filterSubDistrict).hasMatch(e['name_th']) && e['code'].toString().substring(0, 4) == codeDistrict.toString()) {
-                  widget.setindexProvince!(e['province_id']);
-                  widget.setindexDistric!(e['district_id']);
-                  widget.setindexSubDistric!(e['id']);
-                  addressShowController.text = "$province/$district/${e['name${'lang'.tr()}']}/${e['post_code']}";
-                }
-              }
-            }
-          }
-        }
-      }
-    }
     dataProvince.sort((a, b) => a['name${'lang'.tr()}'].compareTo(b['name${'lang'.tr()}']));
-
     context.read<AddressBloc>().add(const ClearProvince());
     for (var item in dataProvince) {
       context.read<AddressBloc>().add(SetProvince(item));
     }
   }
 
-  onLoad() {
+  onLoad() async {
     idCardController.text = idCardFormatter.maskText(widget.person!.idCard ?? "");
     firstNameController.text = widget.person!.firstName ?? "";
     lastNameController.text = widget.person!.lastName ?? "";
@@ -240,18 +218,19 @@ class _PersonalInfoState extends State<PersonalInfo> {
   _selectDate(BuildContext context) async {
     showCupertinoModalPopup(
       context: context,
-      builder: (_) => Container(
-        height: 270,
+      builder: (popupContext) => Container(
+        height: MediaQuery.of(context).size.width / 1.2,
         alignment: Alignment.center,
         color: Colors.white,
         child: Column(mainAxisSize: MainAxisSize.max, children: [
           ButtonConfirm(
             text: 'ok'.tr(),
+            colorText: Colors.white,
             radius: 0,
             onPressed: () {
               birthdayController.text = textBirthday!;
               _formKey.currentState!.validate();
-              Navigator.of(context).pop();
+              Navigator.pop(popupContext);
             },
           ),
           SizedBox(
@@ -404,84 +383,85 @@ class _PersonalInfoState extends State<PersonalInfo> {
   }
 
   Widget dropdownCareerChild() {
-    return StreamBuilder<Map>(
-      initialData: const {"success": false},
-      stream: (() {
-        late final StreamController<Map> controller;
-        controller = StreamController<Map>(
-          onListen: () async {
-            Map data = await GetAPI.call(url: '$register3003/careers/$careerId/child', headers: Authorization.auth2, context: context);
-            controller.add(data);
-          },
-        );
-        return controller.stream;
-      })(),
+    return FutureBuilder<Map>(
+      future: GetAPI.call(url: '$register3003/careers/$careerId/child', headers: Authorization.auth2, context: context),
       builder: (context, snapshot) {
-        if (snapshot.data!['success']) {
-          final List dataCareerChild = snapshot.data!['response']['data']['careers'];
-          if (dataCareerChild.isNotEmpty) {
-            final data = dataCareerChild.map<DropdownMenuItem<int>>((item) {
-              int index = dataCareerChild.indexOf(item);
-              return DropdownMenuItem(
-                value: index + 1,
-                child: SizedBox(
-                  width: 300,
-                  child: Text(
-                    '${dataCareerChild[index]['name_${'language'.tr}']}',
-                    overflow: TextOverflow.ellipsis,
+        switch (snapshot.connectionState) {
+          case ConnectionState.none:
+            return const SizedBox();
+
+          case ConnectionState.active:
+            return const SizedBox();
+          case ConnectionState.waiting:
+            return const SizedBox();
+          case ConnectionState.done:
+            if (snapshot.data!['success']) {
+              final List dataCareerChild = snapshot.data!['response']['data']['careers'];
+              if (dataCareerChild.isNotEmpty) {
+                final data = dataCareerChild.map<DropdownMenuItem<int>>((item) {
+                  int index = dataCareerChild.indexOf(item);
+                  return DropdownMenuItem(
+                    value: index + 1,
+                    child: SizedBox(
+                      width: 300,
+                      child: Text(
+                        '${dataCareerChild[index]['name_${'language'.tr}']}',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  );
+                }).toList();
+                return Stack(children: [
+                  Container(
+                    height: 60,
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(top: 20),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: validateCareerChild ? Colors.red : const Color(0xFF02416D),
+                      ),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton2(
+                        buttonPadding: const EdgeInsets.symmetric(horizontal: 12),
+                        dropdownMaxHeight: 400,
+                        dropdownWidth: 400,
+                        dropdownElevation: 8,
+                        dropdownDecoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
+                        isDense: true,
+                        isExpanded: true,
+                        value: indexCareerChild,
+                        hint: Text('- ${"career_more".tr} -'),
+                        icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                        style: const TextStyle(color: Colors.black, fontFamily: 'kanit', fontSize: 15),
+                        onChanged: (dynamic v) {
+                          setState(() {
+                            validateCareerChild = false;
+                            indexCareerChild = v;
+                            skipInfomation = dataCareerChild[v - 1]['skip_infomation'];
+                            careerChildId = dataCareerChild[v - 1]['id'];
+                          });
+                        },
+                        items: data,
+                      ),
+                    ),
                   ),
-                ),
-              );
-            }).toList();
-            return Stack(children: [
-              Container(
-                height: 60,
-                width: double.infinity,
-                margin: const EdgeInsets.only(top: 20),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: validateCareerChild ? Colors.red : const Color(0xFF02416D),
-                  ),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton2(
-                    buttonPadding: const EdgeInsets.symmetric(horizontal: 12),
-                    dropdownMaxHeight: 400,
-                    dropdownWidth: 400,
-                    dropdownElevation: 8,
-                    dropdownDecoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
-                    isDense: true,
-                    isExpanded: true,
-                    value: indexCareerChild,
-                    hint: Text('- ${"career_more".tr} -'),
-                    icon: const Icon(Icons.keyboard_arrow_down_rounded),
-                    style: const TextStyle(color: Colors.black, fontFamily: 'kanit', fontSize: 15),
-                    onChanged: (dynamic v) {
-                      setState(() {
-                        validateCareerChild = false;
-                        indexCareerChild = v;
-                        skipInfomation = dataCareerChild[v - 1]['skip_infomation'];
-                        careerChildId = dataCareerChild[v - 1]['id'];
-                      });
-                    },
-                    items: data,
-                  ),
-                ),
-              ),
-              if (indexCareerChild != null)
-                Positioned(
-                  top: 10,
-                  left: 10,
-                  child: Text(
-                    ' ${"career_more_choice".tr} ',
-                    style: const TextStyle(fontSize: 12, color: Colors.black54, backgroundColor: Colors.white),
-                  ),
-                )
-            ]);
-          }
+                  if (indexCareerChild != null)
+                    Positioned(
+                      top: 10,
+                      left: 10,
+                      child: Text(
+                        ' ${"career_more_choice".tr} ',
+                        style: const TextStyle(fontSize: 12, color: Colors.black54, backgroundColor: Colors.white),
+                      ),
+                    )
+                ]);
+              }
+              return const SizedBox();
+            }
+            return const SizedBox();
         }
-        return const SizedBox();
       },
     );
   }
@@ -493,7 +473,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
-      builder: (context) => SelectAddress(address),
+      builder: (context) => SelectAddress(widget.address),
     ).then((v) {
       if (v != null) {
         _formKey.currentState!.validate();
@@ -534,10 +514,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                       }
                       return null;
                     },
-                    onChanged: (v) {
-                      _formKey.currentState!.validate();
-                      const Register().createState().setFirstName(v);
-                    },
+                    onChanged: (v) => _formKey.currentState!.validate(),
                     textInputAction: TextInputAction.next,
                     decoration: InputDecoration(labelText: 'name'.tr()))),
             const SizedBox(width: 20),
@@ -551,10 +528,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                       }
                       return null;
                     },
-                    onChanged: (v) {
-                      _formKey.currentState!.validate();
-                      const Register().createState().setLastName(v);
-                    },
+                    onChanged: (v) => _formKey.currentState!.validate(),
                     textInputAction: TextInputAction.next,
                     decoration: InputDecoration(labelText: 'last_name'.tr())))
           ]),
@@ -567,7 +541,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 child: TextFormField(
                   controller: addressShowController,
                   readOnly: true,
-                  style: const TextStyle(fontSize: 15),
+                  style: const TextStyle(fontSize: 16),
                   textInputAction: TextInputAction.next,
                   decoration: InputDecoration(
                     labelText: "district_address".tr(),
@@ -586,7 +560,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                   onChanged: (v) => _formKey.currentState!.validate(),
                   onTap: () => showModalSearchAddress('address'),
                 ),
-              )
+              ),
             ],
           ),
           const SizedBox(height: 20),
@@ -601,10 +575,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                   }
                   return null;
                 },
-                onChanged: (v) {
-                  _formKey.currentState!.validate();
-                  const Register().createState().setAddress(v);
-                },
+                onChanged: (v) => _formKey.currentState!.validate(),
                 textInputAction: TextInputAction.next,
                 decoration: InputDecoration(labelText: 'address'.tr(), hintText: 'house_number_floor_village_road'.tr()),
               ),
@@ -962,7 +933,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
                       widget.setIDCard!(idCardController.text.replaceAll('-', ''));
                       widget.setLaserCode!(laserCodeController.text.replaceAll('-', ''));
                       widget.setPinVisible!(true);
-                      widget.setSelectedStep!(4);
+                      widget.setSelectedStep!(3);
+                      widget.setDataVisible!(false);
                     }
                   }
                 }

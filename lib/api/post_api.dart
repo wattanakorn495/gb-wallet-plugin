@@ -14,12 +14,12 @@ import '../widgets/custom_dialog.dart';
 
 class PostAPI {
   //Call raw
-  static Future<Map> call({
-    required String url,
-    required Authorization headers,
-    required Map<String, String> body,
-    required BuildContext context,
-  }) async {
+  static Future<Map> call(
+      {required String url,
+      required Authorization headers,
+      required Map<String, String> body,
+      required BuildContext context,
+      bool alert = true}) async {
     try {
       await EasyLoading.show();
       final response = await http.post(Uri.parse(url), headers: setHeaders(headers), body: body).timeout(const Duration(seconds: 30));
@@ -29,29 +29,35 @@ class PostAPI {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         await EasyLoading.dismiss();
-        if (!data['success']) {
+        if (!data['success'] && alert) {
           await showDialog(
               context: context, builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(data), avatar: false));
         }
         return data;
       } else {
         await EasyLoading.dismiss();
-        await showDialog(
-            context: context,
-            builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(errorNotFound), avatar: false));
+        if (alert) {
+          await showDialog(
+              context: context,
+              builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(errorNotFound), avatar: false));
+        }
         return errorNotFound;
       }
     } on TimeoutException catch (_) {
       await EasyLoading.dismiss();
-      await showDialog(
-          context: context,
-          builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(errorTimeout), avatar: false));
+      if (alert) {
+        await showDialog(
+            context: context,
+            builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(errorTimeout), avatar: false));
+      }
       return errorTimeout;
     } on SocketException catch (_) {
       await EasyLoading.dismiss();
-      await showDialog(
-          context: context,
-          builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(messageOffline), avatar: false));
+      if (alert) {
+        await showDialog(
+            context: context,
+            builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(messageOffline), avatar: false));
+      }
       return messageOffline;
     }
   }
@@ -84,6 +90,7 @@ class PostAPI {
       if (response.statusCode == 200) {
         final resStr = await response.stream.bytesToString();
         final data = json.decode(resStr);
+        debugPrint('$url $data');
         await EasyLoading.dismiss();
         if (!data['success']) {
           await showDialog(
