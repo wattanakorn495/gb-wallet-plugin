@@ -630,5 +630,7 @@ Map<String, String> th() {
     "You have successfully disabled the Virtual Card": "คุณได้ปิดการใช้ Virtual Card เรียบร้อยแล้ว",
     "You have successfully enabled the Virtual Card": "คุณได้เปิดการใช้ Virtual Card เรียบร้อยแล้ว",
     "You_set_a_PIN_that_is_too_strong_to_guess": "คุณตั้งรหัส PIN ที่คาดเดาได้ง่ายเกินไป",
+    'eng_name': 'ชื่อภาษาอังกฤษ',
+    'eng_lastname': 'นามสกุลภาษาอังกฤษ',
   };
 }

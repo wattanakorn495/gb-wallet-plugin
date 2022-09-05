@@ -129,6 +129,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
   bool skipInfomation = false;
   bool validateCareer = false;
   bool validateCareerChild = false;
+  bool isChecked = false;
 
   final GlobalKey<FormState> _formKey = GlobalKey();
 
@@ -580,7 +581,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                       const Register().createState().setFirstNameEng(v);
                     },
                     textInputAction: TextInputAction.next,
-                    decoration: InputDecoration(labelText: 'name'.tr()))),
+                    decoration: InputDecoration(labelText: 'eng_name'.tr()))),
             const SizedBox(width: 20),
             Expanded(
                 child: TextFormField(
@@ -597,7 +598,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                       const Register().createState().setLastnameEng(v);
                     },
                     textInputAction: TextInputAction.next,
-                    decoration: InputDecoration(labelText: 'last_name'.tr())))
+                    decoration: InputDecoration(labelText: 'eng_lastname'.tr())))
           ]),
           const SizedBox(height: 20),
           Row(
@@ -996,6 +997,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
 
                       widget.setFirstName!(firstNameController.text);
                       widget.setLastName!(lastNameController.text);
+
                       widget.setAddress!(addressController.text);
                       widget.setBirthday!(birthdayController.text);
                       widget.setIDCard!(idCardController.text.replaceAll('-', ''));
@@ -1027,6 +1029,13 @@ class _PersonalInfoState extends State<PersonalInfo> {
             widget.ocrAllFailed ? idCardCapturing(screenWidth: screenWidth, screenheight: screenheight) : Container(),
             Container(height: 20, width: double.infinity, color: Colors.grey[100]),
             workInformation(),
+            Checkbox(
+                value: isChecked,
+                onChanged: (value) {
+                  setState(() {
+                    isChecked = value!;
+                  });
+                }),
           ]))
     ]);
   }
