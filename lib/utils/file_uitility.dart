@@ -15,12 +15,18 @@ bool isImage(String path) {
 }
 
 dynamic data;
+bool isThai = false;
 
-readStringFile() async {
-  final String response = await rootBundle.loadString('packages/gbkyc/assets/lang/en-US.json');
+readStringFile(bool isTh) async {
+  isThai = isTh;
+  final String response = isTh
+      ? await rootBundle.loadString('packages/gbkyc/assets/lang/th-TH.json')
+      : await rootBundle.loadString('packages/gbkyc/assets/lang/en-US.json');
   data = await json.decode(response);
 }
 
-extension strTr on String {
-  String tr() => data[this];
+extension StrTr on String {
+  String tr() {
+    return (data == null || data[this] == null) ? ' ' : data[this];
+  }
 }

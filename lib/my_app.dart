@@ -40,8 +40,9 @@ void configLoading() {
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({Key? key, required this.phoneNumber}) : super(key: key);
+  const MyApp({Key? key, required this.phoneNumber, required this.isThai}) : super(key: key);
   final String phoneNumber;
+  final bool isThai;
   @override
   State<MyApp> createState() => _MyAppState();
 }
@@ -60,7 +61,7 @@ class _MyAppState extends State<MyApp> {
 
   getENV() async {
     await dotenv.load(fileName: 'packages/gbkyc/assets/.env');
-    await readStringFile();
+    // await readStringFile(widget.isThai);
   }
 
   @override
@@ -74,7 +75,6 @@ class _MyAppState extends State<MyApp> {
       child: MaterialApp(
         // localizationsDelegates: context.localizationDelegates,
         // supportedLocales: context.supportedLocales,
-        // locale: context.locale,
         debugShowCheckedModeBanner: false,
         builder: EasyLoading.init(
           builder: (context, child) => ResponsiveWrapper.builder(child,
@@ -88,9 +88,11 @@ class _MyAppState extends State<MyApp> {
               ],
               background: Container(color: const Color(0xFFF5F5F5))),
         ),
-        home: Register(
-          phoneNumber: widget.phoneNumber,
-        ),
+        home: FutureBuilder(
+            future: readStringFile(widget.isThai),
+            builder: ((context, snapshot) => Register(
+                  phoneNumber: widget.phoneNumber,
+                ))),
         title: 'GB Wallet',
         theme: ThemeData(
           primaryColor: const Color(0xFF02416D),

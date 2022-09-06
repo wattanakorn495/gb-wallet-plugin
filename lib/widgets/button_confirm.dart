@@ -28,7 +28,6 @@ class ButtonConfirm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      key: Key('ButtonConfirm_plugin_${DateTime.now().toString()}'),
       height: 60,
       width: width,
       padding: padding,

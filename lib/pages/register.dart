@@ -224,7 +224,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
       isSuccess = false;
       await facetecChannel.invokeMethod<String>(
         'getLivenessFacetec',
-        {"local": /*context.locale.toString()*/ "en_US" == 'th_TH' ? "th" : "en"},
+        {"local": isThai ? "th" : "en"},
       );
     } on PlatformException catch (e) {
       debugPrint("Failed to get : '${e.message}'");

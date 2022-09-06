@@ -69,3 +69,4 @@ flutter:
     - assets/thai-province-data.json
     - assets/.env
     - assets/lang/en-US.json
+    - assets/lang/th-TH.json
