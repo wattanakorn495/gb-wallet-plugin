@@ -10,13 +10,11 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:gbkyc/api/config_api.dart';
 import 'package:gbkyc/api/get_api.dart';
 import 'package:gbkyc/api/post_api.dart';
-import 'package:gbkyc/local_storerage.dart';
 import 'package:gbkyc/pages/personal_info.dart';
 import 'package:gbkyc/personal_info_model.dart';
 import 'package:gbkyc/scan_id_card.dart';
 import 'package:gbkyc/state_store.dart';
 import 'package:gbkyc/utils/check_permission.dart';
-import 'package:gbkyc/utils/encryption.dart';
 import 'package:gbkyc/utils/error_messages.dart';
 import 'package:gbkyc/utils/file_uitility.dart';
 import 'package:gbkyc/utils/regular_expression.dart';
@@ -332,6 +330,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                 "imei": StateStore.deviceSerial,
                 "fcm_token": StateStore.fcmToken,
               },
+              alert: false,
               context: context);
 
           setState(() => isLoading = false);
@@ -347,17 +346,6 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                 context: context);
 
             if (data['success']) {
-              // await LocalStorage.setAutoPIN(false);
-              await LocalStorage.setUserLoginID(_userLoginID!);
-              await LocalStorage.setIsCorporate(false);
-              await LocalStorage.setTimeToken(DateTime.now().toString());
-
-              StateStore.role = data['response']['data']['role_code'];
-              StateStore.pin = encryptData(input: pinController.text);
-              StateStore.token = data['response']['data']['token'];
-              StateStore.approve = data['response']['data']['is_ocr_approve'];
-              StateStore.isCorporate = false;
-
               showDialog(
                 barrierDismissible: false,
                 context: context,
@@ -367,7 +355,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                     textConfirm: "back_to_main".tr(),
                     onPressedConfirm: () {
                       Navigator.pop(dialogContext);
-                      Navigator.pop(context);
+                      Navigator.of(context, rootNavigator: true).pop(_userLoginID);
                     }),
               );
             }
@@ -677,24 +665,16 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                 context: context);
 
             if (data['success']) {
-              StateStore.token = data['response']['data']['token'];
-              StateStore.approve = data['response']['data']['is_ocr_approve'];
-              StateStore.role = data['response']['data']['role_code'];
-              StateStore.lastLoginAt = data['response']['data']['last_login_at'] ?? '';
-              await LocalStorage.setUserLoginID('');
-              // await LocalStorage.setAutoPIN(false);
-              await LocalStorage.setTimeToken(DateTime.now().toString());
-
               showDialog(
                 barrierDismissible: false,
                 context: context,
-                builder: (context) => CustomDialog(
+                builder: (dialogContext) => CustomDialog(
                     title: 'save_success'.tr(),
                     content: 'congratulations_now'.tr(),
                     textConfirm: "back_to_main".tr(),
                     onPressedConfirm: () {
-                      Navigator.pop(context);
-                      Navigator.pop(context);
+                      Navigator.pop(dialogContext);
+                      Navigator.of(context, rootNavigator: true).pop(_userLoginID);
                     }),
               );
             }
@@ -1291,6 +1271,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                       "imei": StateStore.deviceSerial,
                                       "fcm_token": StateStore.fcmToken,
                                     },
+                                    alert: false,
                                     context: context);
 
                                 setState(() => isLoading = false);
@@ -1306,27 +1287,16 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                       context: context);
 
                                   if (data['success']) {
-                                    // await LocalStorage.setAutoPIN(false);
-                                    await LocalStorage.setUserLoginID(_userLoginID!);
-                                    await LocalStorage.setIsCorporate(false);
-                                    await LocalStorage.setTimeToken(DateTime.now().toString());
-
-                                    StateStore.role = data['response']['data']['role_code'];
-                                    StateStore.pin = encryptData(input: pinController.text);
-                                    StateStore.token = data['response']['data']['token'];
-                                    StateStore.approve = data['response']['data']['is_ocr_approve'];
-                                    StateStore.isCorporate = false;
-
                                     showDialog(
                                       barrierDismissible: false,
                                       context: context,
-                                      builder: (context) => CustomDialog(
+                                      builder: (dialogContext) => CustomDialog(
                                           title: 'save_success'.tr(),
                                           content: 'congratulations_now'.tr(),
                                           textConfirm: "back_to_main".tr(),
                                           onPressedConfirm: () {
-                                            Navigator.pop(context);
-                                            Navigator.pop(context);
+                                            Navigator.pop(dialogContext);
+                                            Navigator.of(context, rootNavigator: true).pop(_userLoginID);
                                           }),
                                     );
                                   }

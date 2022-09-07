@@ -66,8 +66,11 @@ class HomePageState extends State<HomePage> {
                 color: Colors.blue,
                 onPressed: () {
                   if (_formKey.currentState!.validate() && phoneController.text.length == 10) {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => Gbkyc.register(phoneController.text, isThai: false)))
-                        .then((v) => debugPrint('ค่าที่ได้กลับจาก SDK $v'));
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => Gbkyc.register(phoneController.text, isThai: true))).then((v) {
+                      if (v != null) {
+                        debugPrint('สมัครสำเร็จ : $v');
+                      }
+                    });
                   }
                 },
                 child: const Text(

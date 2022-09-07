@@ -891,17 +891,22 @@ class _PersonalInfoState extends State<PersonalInfo> {
         if (careerId != null) dropdownCareerChild(),
         if (indexCareer != null) workLable(),
         const SizedBox(height: 40),
-        Row(
-          children: [
-            Checkbox(
-                value: isChecked,
-                onChanged: (value) {
-                  setState(() {
-                    isChecked = value!;
-                  });
-                }),
-            Text('confirm_information_correct'.tr()),
-          ],
+        GestureDetector(
+          onTap: () => setState(() {
+            isChecked = !isChecked;
+          }),
+          child: Row(
+            children: [
+              Checkbox(
+                  value: isChecked,
+                  onChanged: (value) {
+                    setState(() {
+                      isChecked = !isChecked;
+                    });
+                  }),
+              Text('confirm_information_correct'.tr()),
+            ],
+          ),
         ),
         const SizedBox(height: 20),
         Row(children: [
