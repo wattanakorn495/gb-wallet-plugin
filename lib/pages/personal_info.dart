@@ -645,13 +645,21 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 validator: (v) {
                   if (v!.isEmpty && checkValidate) return 'please_enter'.tr();
                   if (v.length != 17 && checkValidate) return "Please_enter_13_digit".tr();
-                  debugPrint('on change id card : $v ,controller : ${idCardController.text}');
                   return null;
                 },
-                onChanged: (v) => _formKey.currentState!.validate(),
+                onChanged: (v) {
+                  _formKey.currentState!.validate();
+                },
                 keyboardType: TextInputType.number,
                 maxLength: 17,
-                inputFormatters: [idCardFormatter, LengthLimitingTextInputFormatter(17)],
+                inputFormatters: [
+                  MaskTextInputFormatter(
+                    initialText: idCardController.text,
+                    mask: '#-####-#####-##-#',
+                    filter: {"#": RegExp(r'[0-9]')},
+                  ),
+                  LengthLimitingTextInputFormatter(17)
+                ],
                 decoration: InputDecoration(
                   fillColor: Colors.white,
                   labelText: 'id_card_code'.tr(),
@@ -668,12 +676,17 @@ class _PersonalInfoState extends State<PersonalInfo> {
               style: const TextStyle(fontSize: 15),
               validator: (v) {
                 if (v!.isEmpty && checkValidate) return 'please_enter'.tr();
-                debugPrint('on change id card laser : $v ,controller : ${laserCodeController.text}');
                 return null;
               },
               onChanged: (v) => _formKey.currentState!.validate(),
               maxLength: 14,
-              inputFormatters: [laserCodeFormatter],
+              inputFormatters: [
+                MaskTextInputFormatter(
+                  initialText: laserCodeController.text,
+                  mask: '###-#######-##',
+                  filter: {"#": RegExp(r'[a-zA-Z0-9]')},
+                )
+              ],
               decoration: InputDecoration(fillColor: Colors.white, labelText: "id_card_laserNo".tr()),
               textCapitalization: TextCapitalization.characters,
             ),
