@@ -645,12 +645,13 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 validator: (v) {
                   if (v!.isEmpty && checkValidate) return 'please_enter'.tr();
                   if (v.length != 17 && checkValidate) return "Please_enter_13_digit".tr();
+                  debugPrint('on change id card : $v ,controller : ${idCardController.text}');
                   return null;
                 },
                 onChanged: (v) => _formKey.currentState!.validate(),
                 keyboardType: TextInputType.number,
                 maxLength: 17,
-                inputFormatters: [idCardFormatter],
+                inputFormatters: [idCardFormatter, LengthLimitingTextInputFormatter(17)],
                 decoration: InputDecoration(
                   fillColor: Colors.white,
                   labelText: 'id_card_code'.tr(),
@@ -667,12 +668,14 @@ class _PersonalInfoState extends State<PersonalInfo> {
               style: const TextStyle(fontSize: 15),
               validator: (v) {
                 if (v!.isEmpty && checkValidate) return 'please_enter'.tr();
+                debugPrint('on change id card laser : $v ,controller : ${laserCodeController.text}');
                 return null;
               },
               onChanged: (v) => _formKey.currentState!.validate(),
               maxLength: 14,
               inputFormatters: [laserCodeFormatter],
               decoration: InputDecoration(fillColor: Colors.white, labelText: "id_card_laserNo".tr()),
+              textCapitalization: TextCapitalization.characters,
             ),
           )
         ]));
@@ -961,38 +964,40 @@ class _PersonalInfoState extends State<PersonalInfo> {
                       },
                     );
                   } else {
-                    final res = await PostAPI.call(
-                        url: '$register3003/users/pre_verify',
-                        headers: Authorization.auth2,
-                        body: {"id_card": idCardController.text.replaceAll('-', '')},
-                        context: context);
+                    if (await _callVerifyDopa()) {
+                      final res = await PostAPI.call(
+                          url: '$register3003/users/pre_verify',
+                          headers: Authorization.auth2,
+                          body: {"id_card": idCardController.text.replaceAll('-', '')},
+                          context: context);
 
-                    if (res['success']) {
-                      if (careerChildId != null) {
-                        careerId = careerChildId;
-                        widget.setCareerID!(careerId);
-                      }
-                      if (frontIDCardImage.isNotEmpty) {
-                        widget.setFileFrontCitizen!(frontIDCardImage);
-                      }
-                      if (backIDCardImage.isNotEmpty) {
-                        widget.setFileBackCitizen!(backIDCardImage);
-                      }
-                      if (selfieIDCard.isNotEmpty) {
-                        widget.setFileSelfie!(selfieIDCard);
-                      }
+                      if (res['success']) {
+                        if (careerChildId != null) {
+                          careerId = careerChildId;
+                          widget.setCareerID!(careerId);
+                        }
+                        if (frontIDCardImage.isNotEmpty) {
+                          widget.setFileFrontCitizen!(frontIDCardImage);
+                        }
+                        if (backIDCardImage.isNotEmpty) {
+                          widget.setFileBackCitizen!(backIDCardImage);
+                        }
+                        if (selfieIDCard.isNotEmpty) {
+                          widget.setFileSelfie!(selfieIDCard);
+                        }
 
-                      widget.setFirstName!(firstNameController.text);
-                      widget.setLastName!(lastNameController.text);
-                      widget.setFirstNameEng!(firstnameEngController.text);
-                      widget.setLastNameEng!(lastnameEngController.text);
-                      widget.setAddress!(addressController.text);
-                      widget.setBirthday!(birthdayController.text);
-                      widget.setIDCard!(idCardController.text.replaceAll('-', ''));
-                      widget.setLaserCode!(laserCodeController.text.replaceAll('-', ''));
-                      widget.setPinVisible!(true);
-                      widget.setSelectedStep!(3);
-                      widget.setDataVisible!(false);
+                        widget.setFirstName!(firstNameController.text);
+                        widget.setLastName!(lastNameController.text);
+                        widget.setFirstNameEng!(firstnameEngController.text);
+                        widget.setLastNameEng!(lastnameEngController.text);
+                        widget.setAddress!(addressController.text);
+                        widget.setBirthday!(birthdayController.text);
+                        widget.setIDCard!(idCardController.text.replaceAll('-', ''));
+                        widget.setLaserCode!(laserCodeController.text.replaceAll('-', ''));
+                        widget.setPinVisible!(true);
+                        widget.setSelectedStep!(3);
+                        widget.setDataVisible!(false);
+                      }
                     }
                   }
                 }
@@ -1002,6 +1007,22 @@ class _PersonalInfoState extends State<PersonalInfo> {
         ])
       ]),
     );
+  }
+
+  Future<bool> _callVerifyDopa() async {
+    var verifyDOPA = await PostAPI.call(
+        url: '$register3003/users/verify_dopa',
+        headers: Authorization.auth2,
+        body: {
+          "id_card": idCardController.text.replaceAll('-', ''),
+          "first_name": firstNameController.text,
+          "last_name": lastNameController.text,
+          "birthday": birthdayController.text,
+          "laser": laserCodeController.text.replaceAll('-', ''),
+        },
+        context: context);
+
+    return verifyDOPA['success'];
   }
 
   @override

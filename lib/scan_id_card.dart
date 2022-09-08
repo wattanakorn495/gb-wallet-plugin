@@ -5,7 +5,6 @@ import 'package:camera/camera.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:gbkyc/api/config_api.dart';
-import 'package:gbkyc/api/post_api.dart';
 import 'package:gbkyc/utils/crop_image_path.dart';
 import 'package:gbkyc/utils/file_uitility.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -31,7 +30,6 @@ class CameraScanIDCard extends StatefulWidget {
 }
 
 class _CameraScanIDCardState extends State<CameraScanIDCard> {
-  BuildContext? currentContext;
   bool? visibleFront = true;
   bool visibleBack = false;
   bool isBusy = false;
@@ -111,7 +109,6 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
   void initState() {
     super.initState();
 
-    currentContext = context;
     cameraCount = 0;
     cameraBackCount = 0;
     noFrame = widget.noFrame;
@@ -389,49 +386,58 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
       String base64 = base64Encode(toJPG);
 
       final resFront = await ocrThaiID(image: base64, side: "front");
+      debugPrint('on Capture front card : $resFront');
       if (resFront.isNotEmpty) {
-        String fullAddress = resFront['address_th'];
-        List address = fullAddress.split(RegExp(r" ต.| แขวง"));
-        List arrName = [], arrBirthday = [];
+        try {
+          String fullAddress = resFront['address_th'];
+          List address = fullAddress.split(RegExp(r" ต.| แขวง"));
+          List arrName = [], arrBirthday = [], arrEnName = [];
 
-        if (resFront['name_th'].toString().contains(' ')) arrName = resFront['name_th'].split(' ');
-        if (resFront['date_of_birth_en'].toString().contains(' ')) arrBirthday = resFront['date_of_birth_en'].split(' ');
+          if (resFront['name_th'].toString().contains(' ')) arrName = resFront['name_th'].split(' ');
+          if (resFront['first_name_en'].toString().contains(' ')) arrEnName = resFront['first_name_en'].split(' ');
+          if (resFront['date_of_birth_en'].toString().contains(' ')) arrBirthday = resFront['date_of_birth_en'].split(' ');
 
-        if (arrName.isNotEmpty) {
-          ocrFrontName = arrName[arrName.length - 2];
-          ocrFrontSurname = arrName[arrName.length - 1];
-          List arrEnName = resFront['first_name_en'].split(' ');
-          ocrFrontNameEng = arrEnName[arrEnName.length - 1];
+          if (arrName.isNotEmpty && arrName.length > 2) {
+            ocrFrontName = arrName[arrName.length - 2];
+            ocrFrontSurname = arrName[arrName.length - 1];
+
+            dopaFirstName = arrName[arrName.length - 2];
+            dopaLastName = arrName[arrName.length - 1];
+          }
+          if (arrEnName.isNotEmpty && arrEnName.length > 1) {
+            ocrFrontNameEng = arrEnName[arrEnName.length - 1];
+          }
           ocrFrontSurnameEng = resFront['last_name_en'];
 
-          dopaFirstName = arrName[arrName.length - 2];
-          dopaLastName = arrName[arrName.length - 1];
+          ocrFrontID = resFront['id_number'].replaceAll(RegExp(r"\s+\b|\b\s"), "");
+          if (address.isNotEmpty) {
+            ocrFrontAddress = address[0] ?? '';
+            ocrFilterAddress = address[1] ?? '';
+          }
+          if (arrBirthday.isNotEmpty) {
+            ocrFrontBirthdayD = arrBirthday[0] ?? '';
+            ocrFrontBirthdayM = arrBirthday[1] ?? '';
+            ocrFrontBirthdayY = arrBirthday[2] ?? '';
+          }
+        } catch (e) {
+          debugPrint('on capture font card error : $e');
         }
-
-        ocrFrontID = resFront['id_number'].replaceAll(RegExp(r"\s+\b|\b\s"), "");
-        ocrFrontAddress = address[0];
-        ocrFilterAddress = address[1];
-        ocrFrontBirthdayD = arrBirthday[0];
-        ocrFrontBirthdayM = arrBirthday[1];
-        ocrFrontBirthdayY = arrBirthday[2];
-
         setState(() {
           isLoading = false;
           visibleFront = false;
           visibleBack = true;
         });
-
         await _startLiveFeed();
       } else {
         showDialog(
           barrierDismissible: false,
           context: context,
-          builder: (context) => CustomDialog(
+          builder: (dialogContext) => CustomDialog(
             title: 'Something_went_wrong'.tr(),
             content: 'ID_card_scan_failed_Please_try_again'.tr(),
             avatar: false,
             onPressedConfirm: () async {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
 
               setState(() {
                 cameraCount++;
@@ -441,7 +447,7 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
 
               if (cameraCount == 3) {
                 ocrFailedAll = true;
-                Navigator.pop(this.context, callBackData());
+                Navigator.pop(context, callBackData());
               } else {
                 await _startLiveFeed();
               }
@@ -455,9 +461,6 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
   }
 
   _onCaptureBackPressed() async {
-    // if (_controller!.value.isStreamingImages) {
-    //   await _controller?.stopImageStream();
-    // }
     try {
       setState(() => isLoading = true);
       await _controller!.takePicture().then((v) => backIDPath = v.path);
@@ -466,7 +469,7 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
       String base64 = base64Encode(toJPG);
 
       final resBack = await ocrThaiID(image: base64, side: 'back');
-
+      debugPrint('on Capture back card : $resBack');
       if (resBack.isNotEmpty) {
         ocrBackLaser = resBack['laser_number'].replaceAll(RegExp("-"), "");
         final convertFrontBirthdayM = ocrFrontBirthdayM == 'Jan.'
@@ -512,54 +515,18 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
                                             ? '09'
                                             : ocrFrontBirthdayD;
         birthDay = '$convertFrontBirthdayD/$convertFrontBirthdayM/$ocrFrontBirthdayY';
-
-        var verifyDOPA = await PostAPI.call(
-            url: '$register3003/users/verify_dopa',
-            headers: Authorization.auth2,
-            body: {
-              "id_card": ocrFrontID!,
-              "first_name": dopaFirstName!,
-              "last_name": dopaLastName!,
-              "birthday": birthDay!,
-              "laser": ocrBackLaser!,
-            },
-            context: context);
-
-        if (verifyDOPA['success']) {
-          Navigator.pop(this.context, callBackData());
-        } else {
-          // if (File(backIDPath) != null) {
-          //   await File(backIDPath).delete();
-          // }
-          setState(() {
-            cameraBackCount++;
-            isLoading = false;
-            // _takeBack = false;
-          });
-
-          if (cameraBackCount == 3) {
-            // await File(frontIDPath).delete();
-            ocrFailedAll = true;
-            Navigator.pop(this.context, callBackData());
-          } else {
-            await _startLiveFeed();
-          }
-        }
+        if (birthDay!.contains('null')) birthDay = null;
+        Navigator.pop(context, callBackData());
       } else {
         showDialog(
           barrierDismissible: false,
           context: context,
-          builder: (context) => CustomDialog(
+          builder: (dialogContext) => CustomDialog(
             title: 'Something_went_wrong'.tr(),
             content: 'ID_card_scan_failed_Please_try_again'.tr(),
             avatar: false,
             onPressedConfirm: () async {
-              Navigator.pop(context);
-
-              // if (File(backIDPath) != null) {
-              //   await File(backIDPath).delete();
-              // }
-
+              Navigator.pop(dialogContext);
               setState(() {
                 cameraBackCount++;
                 isLoading = false;
@@ -569,7 +536,7 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
               if (cameraBackCount == 3) {
                 // await File(frontIDPath).delete();
                 ocrFailedAll = true;
-                Navigator.pop(this.context, callBackData());
+                Navigator.pop(context, callBackData());
               } else {
                 await _startLiveFeed();
               }
