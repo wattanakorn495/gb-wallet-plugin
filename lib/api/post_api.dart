@@ -51,8 +51,9 @@ class PostAPI {
             builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(errorTimeout), avatar: false));
       }
       return errorTimeout;
-    } on SocketException catch (_) {
+    } on SocketException catch (e) {
       await EasyLoading.dismiss();
+      debugPrint('socket error : $e');
       if (alert) {
         await showDialog(
             context: context,

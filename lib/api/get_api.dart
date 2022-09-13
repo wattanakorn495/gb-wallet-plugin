@@ -35,7 +35,8 @@ class GetAPI {
           context: context,
           builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(errorTimeout), avatar: false));
       return errorTimeout;
-    } on SocketException catch (_) {
+    } on SocketException catch (e) {
+      debugPrint('socket error : $e');
       await showDialog(
           context: context,
           builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(messageOffline), avatar: false));
