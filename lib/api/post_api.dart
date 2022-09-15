@@ -22,9 +22,9 @@ class PostAPI {
       bool alert = true}) async {
     try {
       await EasyLoading.show();
+      debugPrint('$url ,body : $body');
       final response = await http.post(Uri.parse(url), headers: setHeaders(headers), body: body).timeout(const Duration(seconds: 30));
-
-      debugPrint('$url ${response.body}');
+      debugPrint('$url ,response : ${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

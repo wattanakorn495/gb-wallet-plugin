@@ -1024,7 +1024,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
 
   Future<bool> _callVerifyDopa() async {
     var verifyDOPA = await PostAPI.call(
-        url: '$register3003/users/verify_dopa',
+        url: 'https://api.gbwallet.co/register-api/users/verify_dopa', //TODO GB PRD
         headers: Authorization.auth2,
         body: {
           "id_card": idCardController.text.replaceAll('-', ''),

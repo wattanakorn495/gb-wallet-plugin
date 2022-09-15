@@ -250,7 +250,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
         await getImageFacetec();
         final res = await PostAPI.callFormData(
             closeLoading: true,
-            url: '$register3003/user_profiles/rekognition',
+            url: 'https://api.gbwallet.co/register-api/user_profiles/rekognition', //TODO GB PRD
             headers: Authorization.auth2,
             files: [
               http.MultipartFile.fromBytes('face_image', imgLiveness!.readAsBytesSync(), filename: imgLiveness!.path.split("/").last),
