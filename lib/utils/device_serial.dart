@@ -10,7 +10,7 @@ Future<void> initDeviceSerial() async {
   try {
     if (Platform.isAndroid) {
       var data = await DeviceInfoPlugin().androidInfo;
-      StateStore.deviceSerial = data.androidId!;
+      StateStore.deviceSerial = data.id!;
       debugPrint('IMEI : ${StateStore.deviceSerial}');
     } else if (Platform.isIOS) {
       var data = await DeviceInfoPlugin().iosInfo;
