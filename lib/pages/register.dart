@@ -220,42 +220,21 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
   getLivenessFacetec() async {
     try {
       isSuccess = false;
-      final isSuccessOpen = await facetecChannel.invokeMethod(
+      await facetecChannel.invokeMethod(
         'getLivenessFacetec',
         {"local": isThai ? "th" : "en"},
       );
-      if (!isSuccessOpen) {
-        failFacematch++;
-        if (failFacematch > 2) {
-          showDialog(barrierDismissible: false, context: context, builder: (contextDialog) => dialogKYCfail(contextDialog));
-        } else {
-          showDialog(
-            barrierDismissible: false,
-            context: context,
-            builder: (context) => CustomDialog(
-              title: 'facetec_can_not_open'.tr(),
-              content: 'system_error_try_again'.tr(),
-              avatar: false,
-            ),
-          );
-        }
-      }
     } on PlatformException catch (e) {
       debugPrint("Failed to get : '${e.message}'");
-      failFacematch++;
-      if (failFacematch > 2) {
-        showDialog(barrierDismissible: false, context: context, builder: (contextDialog) => dialogKYCfail(contextDialog));
-      } else {
-        showDialog(
-          barrierDismissible: false,
-          context: context,
-          builder: (context) => CustomDialog(
-            title: 'facematch'.tr(),
-            content: 'sub_facematch'.tr(),
-            avatar: false,
-          ),
-        );
-      }
+      showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (context) => CustomDialog(
+          title: 'facetec_can_not_open'.tr(),
+          content: 'system_error_try_again'.tr(),
+          avatar: false,
+        ),
+      );
     }
   }
 

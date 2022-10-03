@@ -29,7 +29,7 @@ public class Config {
     public static String productionKeyText = "";
     public static String DeviceKeyIdentifier = "d0ROAIJuEB3zug5WFGF0iKzXPpdyeB4D";
     public static String BaseURL = "https://api.gbwallet.co/facetec";
-    private static String livessConfig = "https://api-uat-villa.gbwallet.co/register-api/users/liveness_config";
+    private static String livessConfig = "https://api.gbwallet.co/register-api/users/liveness_config";
 
     // FaceScan Encryption Key Test
     static String PublicFaceScanEncryptionKey = "-----BEGIN PUBLIC KEY-----\n" +

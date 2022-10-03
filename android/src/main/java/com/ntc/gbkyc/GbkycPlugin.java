@@ -71,7 +71,6 @@ public class GbkycPlugin
                 latestProcessor = new SetSuccessFalse();
                 onLivenessCheckPressed();
                 Log.e("FaceTecSDK", "getLivenessFacetec : " + Boolean.toString(latestProcessor.isSuccess()));
-                result.success(latestProcessor.isSuccess());
                 break;
             case "getImageFacetec":
                 Log.e("FaceTecSDK", "getImageFacetec : " + latestSessionResult.getAuditTrailCompressedBase64()[0]);
