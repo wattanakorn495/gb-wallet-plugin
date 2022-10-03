@@ -621,5 +621,7 @@
     "You_set_a_PIN_that_is_too_strong_to_guess": "คุณตั้งรหัส PIN ที่คาดเดาได้ง่ายเกินไป",
     "eng_name": "ชื่อภาษาอังกฤษ",
     "eng_lastname": "นามสกุลภาษาอังกฤษ",
-    "confirm_information_correct": "ข้าพเจ้าขอยืนยันว่าข้อมูลดังกล่าวข้างต้นนี้ถูกต้อง"
+    "confirm_information_correct": "ข้าพเจ้าขอยืนยันว่าข้อมูลดังกล่าวข้างต้นนี้ถูกต้อง",
+    "facetec_can_not_open": "เปิดสแกนใบหน้าไม่สำเร็จ",
+    "system_error_try_again": "พบปัญหาจากระบบ กรุณาลองใหม่อีกครั้ง"
 }

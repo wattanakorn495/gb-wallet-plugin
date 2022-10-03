@@ -624,5 +624,7 @@
     "You_set_a_PIN_that_is_too_strong_to_guess": "You set a PIN that is too strong to guess",
     "eng_name": "English name",
     "eng_lastname": "English surname",
-    "confirm_information_correct": "I confirm the above information is correct."
+    "confirm_information_correct": "I confirm the above information is correct.",
+    "facetec_can_not_open": "Cannot open Face Scan",
+    "system_error_try_again": "Found a problem from the system ,Please try again."
 }

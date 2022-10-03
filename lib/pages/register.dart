@@ -220,12 +220,42 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
   getLivenessFacetec() async {
     try {
       isSuccess = false;
-      await facetecChannel.invokeMethod<String>(
+      final isSuccessOpen = await facetecChannel.invokeMethod(
         'getLivenessFacetec',
         {"local": isThai ? "th" : "en"},
       );
+      if (!isSuccessOpen) {
+        failFacematch++;
+        if (failFacematch > 2) {
+          showDialog(barrierDismissible: false, context: context, builder: (contextDialog) => dialogKYCfail(contextDialog));
+        } else {
+          showDialog(
+            barrierDismissible: false,
+            context: context,
+            builder: (context) => CustomDialog(
+              title: 'facetec_can_not_open'.tr(),
+              content: 'system_error_try_again'.tr(),
+              avatar: false,
+            ),
+          );
+        }
+      }
     } on PlatformException catch (e) {
       debugPrint("Failed to get : '${e.message}'");
+      failFacematch++;
+      if (failFacematch > 2) {
+        showDialog(barrierDismissible: false, context: context, builder: (contextDialog) => dialogKYCfail(contextDialog));
+      } else {
+        showDialog(
+          barrierDismissible: false,
+          context: context,
+          builder: (context) => CustomDialog(
+            title: 'facematch'.tr(),
+            content: 'sub_facematch'.tr(),
+            avatar: false,
+          ),
+        );
+      }
     }
   }
 
@@ -383,7 +413,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
           setState(() => isLoading = false);
           failFacematch++;
           if (failFacematch > 2) {
-            showDialog(barrierDismissible: false, context: context, builder: (context) => dialogKYCfail());
+            showDialog(barrierDismissible: false, context: context, builder: (contextDialog) => dialogKYCfail(contextDialog));
           } else {
             showDialog(
               barrierDismissible: false,
@@ -402,7 +432,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
     }
   }
 
-  dialogKYCfail() {
+  dialogKYCfail(BuildContext contextDialog) {
     return Dialog(
       elevation: 0,
       backgroundColor: Colors.transparent,
@@ -452,6 +482,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                       ),
                       child: MaterialButton(
                         onPressed: () async {
+                          Navigator.pop(contextDialog);
                           if (await CheckPermission.camera(context)) {
                             Navigator.push(
                               context,
@@ -488,7 +519,6 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                     },
                                   );
                                 } else {
-                                  Navigator.pop(context);
                                   setState(() {
                                     _kycVisible = false;
                                     _kycVisibleFalse = true;
@@ -1665,12 +1695,12 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                           ? Image.asset(
                               'assets/icons/idCardD.png',
                               package: 'gbkyc',
-                              height: 300,
+                              height: MediaQuery.of(context).size.width,
                               // fit: BoxFit.cover,
                             )
                           : Image.file(
                               File(pathSelfie),
-                              height: 300,
+                              height: MediaQuery.of(context).size.width,
                               fit: BoxFit.cover,
                             ),
                     ),
