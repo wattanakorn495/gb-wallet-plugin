@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:dotted_border/dotted_border.dart';
-import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -153,6 +152,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
   final idCardController = TextEditingController();
   final laserCodeController = TextEditingController();
   final birthdayController = TextEditingController();
+  final careerController = TextEditingController();
+  final careerChildController = TextEditingController();
   final workNameController = TextEditingController();
   final workAddressController = TextEditingController();
   final workAddressShowController = TextEditingController();
@@ -187,6 +188,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
     addressShowController.clear();
     birthdayController.clear();
     idCardController.clear();
+    careerController.clear();
+    careerChildController.clear();
     workNameController.clear();
     workAddressController.clear();
     workAddressShowController.clear();
@@ -338,57 +341,41 @@ class _PersonalInfoState extends State<PersonalInfo> {
           ),
         );
       }).toList();
-      return Stack(children: [
-        Container(
-          height: 60,
-          width: double.infinity,
-          margin: const EdgeInsets.only(top: 20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: validateCareer ? Colors.red : const Color(0xFF02416D),
-            ),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton2(
-              buttonPadding: const EdgeInsets.symmetric(horizontal: 12),
-              dropdownMaxHeight: 400,
-              dropdownWidth: 400,
-              dropdownElevation: 8,
-              dropdownDecoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
-              isDense: true,
-              isExpanded: true,
-              value: indexCareer,
-              hint: Text('- ${"career".tr()} -'),
-              icon: const Icon(Icons.keyboard_arrow_down_rounded),
-              style: const TextStyle(color: Colors.black, fontFamily: 'kanit', package: 'gbkyc', fontSize: 15),
-              onChanged: (dynamic v) {
-                if (indexCareer != null) widget.setCareerID!(indexCareer);
-                setState(() {
-                  validateCareer = false;
-                  validateCareerChild = false;
-                  indexCareer = v;
-                  indexCareerChild = null;
-                  skipInfomation = dataCareer[v - 1]['skip_infomation'];
-                  careerId = dataCareer[v - 1]['id'];
-                  careerChildId = null;
-                  widget.setCareerID!(v);
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Expanded(
+            child: TextFormField(
+              readOnly: true,
+              controller: careerController,
+              style: const TextStyle(fontSize: 15),
+              textInputAction: TextInputAction.next,
+              decoration: InputDecoration(labelText: "career".tr(), suffixIcon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.black54)),
+              onTap: () {
+                showBottomDialog(data, indexCareer, "career".tr(), (v) {
+                  if (v != null && v['selectedIndex'] != null) {
+                    final int index = v['selectedIndex'];
+                    final String selectItem = '${dataCareer[index - 1]['name_${'language'.tr()}']}';
+                    careerController.text = selectItem;
+                    if (indexCareer != null) widget.setCareerID!(index);
+                    setState(() {
+                      validateCareer = false;
+                      validateCareerChild = false;
+                      indexCareer = index - 1;
+                      indexCareerChild = null;
+                      skipInfomation = dataCareer[index - 1]['skip_infomation'];
+                      careerId = dataCareer[index - 1]['id'];
+                      careerChildId = null;
+                      widget.setCareerID!(index);
+                    });
+                  }
                 });
               },
-              items: data,
-            ),
-          ),
-        ),
-        if (indexCareer != null)
-          Positioned(
-            top: 10,
-            left: 10,
-            child: Text(
-              ' ${"titlecareer".tr()} ',
-              style: const TextStyle(fontSize: 12, color: Colors.black54, backgroundColor: Colors.white),
             ),
           )
-      ]);
+        ],
+      );
     }
     return const SizedBox();
   }
@@ -416,58 +403,47 @@ class _PersonalInfoState extends State<PersonalInfo> {
                     child: SizedBox(
                       width: 300,
                       child: Text(
-                        '${dataCareerChild[index]['name_${'language'.tr}']}',
+                        '${dataCareerChild[index]['name_${'language'.tr()}']}',
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   );
                 }).toList();
-                return Stack(children: [
-                  Container(
-                    height: 60,
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(top: 20),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: validateCareerChild ? Colors.red : const Color(0xFF02416D),
-                      ),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton2(
-                        buttonPadding: const EdgeInsets.symmetric(horizontal: 12),
-                        dropdownMaxHeight: 400,
-                        dropdownWidth: 400,
-                        dropdownElevation: 8,
-                        dropdownDecoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
-                        isDense: true,
-                        isExpanded: true,
-                        value: indexCareerChild,
-                        hint: Text('- ${"career_more".tr} -'),
-                        icon: const Icon(Icons.keyboard_arrow_down_rounded),
-                        style: const TextStyle(color: Colors.black, fontFamily: 'kanit', fontSize: 15),
-                        onChanged: (dynamic v) {
-                          setState(() {
-                            validateCareerChild = false;
-                            indexCareerChild = v;
-                            skipInfomation = dataCareerChild[v - 1]['skip_infomation'];
-                            careerChildId = dataCareerChild[v - 1]['id'];
-                          });
-                        },
-                        items: data,
-                      ),
-                    ),
+                return Padding(
+                  padding: const EdgeInsets.only(top: 20),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Expanded(
+                        child: TextFormField(
+                          readOnly: true,
+                          controller: careerChildController,
+                          style: const TextStyle(fontSize: 15),
+                          textInputAction: TextInputAction.next,
+                          decoration: InputDecoration(
+                              labelText: '- ${'career_more'.tr()} -',
+                              suffixIcon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.black54)),
+                          onTap: () {
+                            showBottomDialog(data, indexCareerChild, '- ${'career_more'.tr()} -', (v) {
+                              if (v != null && v['selectedIndex'] != null) {
+                                final int index = v['selectedIndex'];
+                                final String selectItem = '${dataCareerChild[index - 1]['name_${'language'.tr()}']}';
+                                careerChildController.text = selectItem;
+                                setState(() {
+                                  validateCareerChild = false;
+                                  indexCareerChild = index;
+                                  skipInfomation = dataCareerChild[index - 1]['skip_infomation'];
+                                  careerChildId = dataCareerChild[index - 1]['id'];
+                                });
+                              }
+                            });
+                          },
+                        ),
+                      )
+                    ],
                   ),
-                  if (indexCareerChild != null)
-                    Positioned(
-                      top: 10,
-                      left: 10,
-                      child: Text(
-                        ' ${"career_more_choice".tr} ',
-                        style: const TextStyle(fontSize: 12, color: Colors.black54, backgroundColor: Colors.white),
-                      ),
-                    )
-                ]);
+                );
               }
               return const SizedBox();
             }
@@ -902,7 +878,6 @@ class _PersonalInfoState extends State<PersonalInfo> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text("titlecareer".tr(), style: const TextStyle(fontSize: 16)),
         dropdownCareer(),
         if (careerId != null) dropdownCareerChild(),
         if (indexCareer != null) workLable(),
@@ -1036,6 +1011,57 @@ class _PersonalInfoState extends State<PersonalInfo> {
         context: context);
 
     return verifyDOPA['success'];
+  }
+
+  showBottomDialog(List<DropdownMenuItem> dataListDropdown, int? selectedIndex, String title, Function callback) {
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
+      builder: (context) => SizedBox(
+        height: MediaQuery.of(context).size.height * 0.75,
+        width: double.infinity,
+        child: Column(children: [
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const SizedBox(),
+                Text(
+                  title,
+                  style: const TextStyle(fontSize: 16),
+                ),
+                GestureDetector(
+                  child: const Icon(Icons.close),
+                  onTap: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: dataListDropdown.length,
+              itemBuilder: (BuildContext context, int index) {
+                return ListTile(
+                    title: dataListDropdown[index].child,
+                    selected: index == selectedIndex,
+                    trailing: index == selectedIndex
+                        ? const Image(image: AssetImage('assets/images/Check.png', package: 'gbkyc'), width: 25, height: 25)
+                        : const SizedBox(),
+                    onTap: () {
+                      selectedIndex = dataListDropdown[index].value;
+                      Navigator.pop(context, {
+                        "selectedIndex": selectedIndex,
+                      });
+                    });
+              },
+            ),
+          ),
+        ]),
+      ),
+    ).then((value) => callback(value));
   }
 
   @override
