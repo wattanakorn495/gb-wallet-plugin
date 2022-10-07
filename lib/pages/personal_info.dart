@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:gbkyc/address_bloc.dart';
 import 'package:gbkyc/api/config_api.dart';
 import 'package:gbkyc/api/get_api.dart';
@@ -169,6 +170,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
   );
 
   DateTime selectedDate = DateTime.now();
+
+  Map<dynamic, dynamic>? dataCareerChildMap;
 
   @override
   void initState() {
@@ -353,19 +356,21 @@ class _PersonalInfoState extends State<PersonalInfo> {
               textInputAction: TextInputAction.next,
               decoration: InputDecoration(labelText: "career".tr(), suffixIcon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.black54)),
               onTap: () {
-                showBottomDialog(data, indexCareer, "career".tr(), (v) {
+                showBottomDialog(data, indexCareer, "career".tr(), (v) async {
                   if (v != null && v['selectedIndex'] != null) {
                     final int index = v['selectedIndex'];
                     final String selectItem = '${dataCareer[index - 1]['name_${'language'.tr()}']}';
+
                     careerController.text = selectItem;
                     if (indexCareer != null) widget.setCareerID!(index);
+                    careerId = dataCareer[index - 1]['id'];
+                    await clearAndLoadCareerChild(careerId ?? 0);
                     setState(() {
                       validateCareer = false;
-                      validateCareerChild = false;
+                      validateCareerChild = true;
                       indexCareer = index - 1;
                       indexCareerChild = null;
                       skipInfomation = dataCareer[index - 1]['skip_infomation'];
-                      careerId = dataCareer[index - 1]['id'];
                       careerChildId = null;
                       widget.setCareerID!(index);
                     });
@@ -380,77 +385,73 @@ class _PersonalInfoState extends State<PersonalInfo> {
     return const SizedBox();
   }
 
-  Widget dropdownCareerChild() {
-    return FutureBuilder<Map>(
-      future: GetAPI.call(url: '$register3003/careers/$careerId/child', headers: Authorization.auth2, context: context),
-      builder: (context, snapshot) {
-        switch (snapshot.connectionState) {
-          case ConnectionState.none:
-            return const SizedBox();
+  clearAndLoadCareerChild(int mainCareerId) async {
+    EasyLoading.show();
+    careerChildController.clear();
+    indexCareerChild = null;
+    workNameController.clear();
+    workAddressShowController.clear();
+    workAddressController.clear();
+    dataCareerChildMap = null;
+    dataCareerChildMap = await GetAPI.call(url: '$register3003/careers/$careerId/child', headers: Authorization.auth2, context: context);
+    EasyLoading.dismiss();
+  }
 
-          case ConnectionState.active:
-            return const SizedBox();
-          case ConnectionState.waiting:
-            return const SizedBox();
-          case ConnectionState.done:
-            if (snapshot.data!['success']) {
-              final List dataCareerChild = snapshot.data!['response']['data']['careers'];
-              if (dataCareerChild.isNotEmpty) {
-                final data = dataCareerChild.map<DropdownMenuItem<int>>((item) {
-                  int index = dataCareerChild.indexOf(item);
-                  return DropdownMenuItem(
-                    value: index + 1,
-                    child: SizedBox(
-                      width: 300,
-                      child: Text(
-                        '${dataCareerChild[index]['name_${'language'.tr()}']}',
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  );
-                }).toList();
-                return Padding(
-                  padding: const EdgeInsets.only(top: 20),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Expanded(
-                        child: TextFormField(
-                          readOnly: true,
-                          controller: careerChildController,
-                          style: const TextStyle(fontSize: 15),
-                          textInputAction: TextInputAction.next,
-                          decoration: InputDecoration(
-                              labelText: '- ${'career_more'.tr()} -',
-                              suffixIcon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.black54)),
-                          onTap: () {
-                            showBottomDialog(data, indexCareerChild, '- ${'career_more'.tr()} -', (v) {
-                              if (v != null && v['selectedIndex'] != null) {
-                                final int index = v['selectedIndex'];
-                                final String selectItem = '${dataCareerChild[index - 1]['name_${'language'.tr()}']}';
-                                careerChildController.text = selectItem;
-                                setState(() {
-                                  validateCareerChild = false;
-                                  indexCareerChild = index;
-                                  skipInfomation = dataCareerChild[index - 1]['skip_infomation'];
-                                  careerChildId = dataCareerChild[index - 1]['id'];
-                                });
-                              }
-                            });
-                          },
-                        ),
-                      )
-                    ],
-                  ),
-                );
-              }
-              return const SizedBox();
-            }
-            return const SizedBox();
-        }
-      },
-    );
+  Widget dropdownCareerChild() {
+    if (dataCareerChildMap != null && dataCareerChildMap!['success']) {
+      final List dataCareerChild = dataCareerChildMap!['response']['data']['careers'];
+      if (dataCareerChild.isNotEmpty) {
+        final data = dataCareerChild.map<DropdownMenuItem<int>>((item) {
+          int index = dataCareerChild.indexOf(item);
+          return DropdownMenuItem(
+            value: index + 1,
+            child: SizedBox(
+              width: 300,
+              child: Text(
+                '${dataCareerChild[index]['name_${'language'.tr()}']}',
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          );
+        }).toList();
+        return Padding(
+          padding: const EdgeInsets.only(top: 20),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Expanded(
+                child: TextFormField(
+                  readOnly: true,
+                  controller: careerChildController,
+                  style: const TextStyle(fontSize: 15),
+                  textInputAction: TextInputAction.next,
+                  decoration: InputDecoration(
+                      labelText: 'career_more'.tr(), suffixIcon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.black54)),
+                  onTap: () {
+                    showBottomDialog(data, indexCareerChild, '- ${'career_more'.tr()} -', (v) {
+                      if (v != null && v['selectedIndex'] != null) {
+                        final int index = v['selectedIndex'];
+                        final String selectItem = '${dataCareerChild[index - 1]['name_${'language'.tr()}']}';
+                        careerChildController.text = selectItem;
+                        setState(() {
+                          validateCareerChild = false;
+                          indexCareerChild = index - 1;
+                          skipInfomation = dataCareerChild[index - 1]['skip_infomation'];
+                          careerChildId = dataCareerChild[index - 1]['id'];
+                        });
+                      }
+                    });
+                  },
+                ),
+              )
+            ],
+          ),
+        );
+      }
+      return const SizedBox();
+    }
+    return const SizedBox();
   }
 
   void showModalSearchAddress(String from) {
@@ -879,7 +880,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         dropdownCareer(),
-        if (careerId != null) dropdownCareerChild(),
+        dropdownCareerChild(),
         if (indexCareer != null) workLable(),
         const SizedBox(height: 40),
         GestureDetector(
@@ -912,11 +913,6 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 if (careerId == null) {
                   setState(() => validateCareer = true);
                 }
-
-                if ((indexCareer == 19 || indexCareer == 20) && careerChildId == null) {
-                  setState(() => validateCareerChild = true);
-                }
-
                 if (_formKey.currentState!.validate()) {
                   if (widget.ocrAllFailed && (frontIDCardImage.isEmpty || backIDCardImage.isEmpty || selfieIDCard.isEmpty)) {
                     showDialog(
