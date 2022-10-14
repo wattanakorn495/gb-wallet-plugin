@@ -5,7 +5,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:gbkyc/address_bloc.dart';
 import 'package:gbkyc/api/config_api.dart';
 import 'package:gbkyc/api/get_api.dart';
@@ -372,7 +371,6 @@ class _PersonalInfoState extends State<PersonalInfo> {
   }
 
   clearAndLoadCareerChild(int mainCareerId) async {
-    EasyLoading.show();
     careerChildController.clear();
     indexCareerChild = null;
     workNameController.clear();
@@ -380,7 +378,6 @@ class _PersonalInfoState extends State<PersonalInfo> {
     workAddressController.clear();
     dataCareerChildMap = null;
     dataCareerChildMap = await GetAPI.call(url: '$register3003/careers/$careerId/child', headers: Authorization.auth2, context: context);
-    EasyLoading.dismiss();
   }
 
   Widget dropdownCareerChild() {
