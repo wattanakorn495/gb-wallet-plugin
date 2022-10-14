@@ -13,7 +13,7 @@ Widget pageLoading({String? title}) {
       child: FittedBox(
         fit: BoxFit.scaleDown,
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Image.asset('assets/images/logo_home.jpg', package: 'gbkyc', height: 160, width: 180),
+          Image.asset('assets/images/logo_home.png', package: 'gbkyc', height: 160),
           Text(
             title ?? 'System_is_processing'.tr(),
             textAlign: TextAlign.center,

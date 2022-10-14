@@ -141,6 +141,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
   bool validateCareer = false;
   bool validateCareerChild = false;
   bool isChecked = false;
+  bool dopaValidate = false;
 
   final GlobalKey<FormState> _formKey = GlobalKey();
 
@@ -172,6 +173,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
   DateTime selectedDate = DateTime.now();
 
   Map<dynamic, dynamic>? dataCareerChildMap;
+
+  List<int> careerIdSkipList = [1, 3, 5, 13, 14, 15, 16, 17];
 
   @override
   void initState() {
@@ -268,18 +271,13 @@ class _PersonalInfoState extends State<PersonalInfo> {
   }
 
   Widget workLable() {
-    return (!skipInfomation)
+    return (!skipInfomation && !careerIdSkipList.contains(careerId))
         ? Column(children: [
             const SizedBox(height: 20),
             TextFormField(
               controller: workNameController,
               style: const TextStyle(fontSize: 15),
-              validator: (v) {
-                if (v!.isEmpty && checkValidate) return 'please_enter'.tr();
-                return null;
-              },
               onChanged: (v) {
-                _formKey.currentState!.validate();
                 widget.setWorkName!(v);
               },
               textInputAction: TextInputAction.next,
@@ -300,13 +298,6 @@ class _PersonalInfoState extends State<PersonalInfo> {
                         labelText: "district_address".tr(),
                         hintText: "district_address".tr(),
                         suffixIcon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.black54)),
-                    validator: (v) {
-                      if (v!.isEmpty && checkValidate) {
-                        return 'please_enter'.tr();
-                      }
-                      return null;
-                    },
-                    onChanged: (v) => _formKey.currentState!.validate(),
                     onTap: () => showModalSearchAddress('workAddress'),
                   ),
                 )
@@ -316,12 +307,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
             TextFormField(
               controller: workAddressController,
               style: const TextStyle(fontSize: 15),
-              validator: (v) {
-                if (v!.isEmpty && checkValidate) return 'please_enter'.tr();
-                return null;
-              },
               onChanged: (v) {
-                _formKey.currentState!.validate();
                 widget.setWorkAddress!(v);
               },
               textInputAction: TextInputAction.next,
@@ -499,6 +485,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
                     validator: (v) {
                       if (v!.isEmpty && checkValidate) {
                         return 'please_enter'.tr();
+                      } else if (dopaValidate && checkValidate) {
+                        return 'please_check_data'.tr();
                       }
                       return null;
                     },
@@ -513,6 +501,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
                     validator: (v) {
                       if (v!.isEmpty && checkValidate) {
                         return 'please_enter'.tr();
+                      } else if (dopaValidate && checkValidate) {
+                        return 'please_check_data'.tr();
                       }
                       return null;
                     },
@@ -608,7 +598,11 @@ class _PersonalInfoState extends State<PersonalInfo> {
                     onTap: () => _selectDate(context),
                     style: const TextStyle(fontSize: 15),
                     validator: (v) {
-                      if (v!.isEmpty && checkValidate) return 'please_enter'.tr();
+                      if (v!.isEmpty && checkValidate) {
+                        return 'please_enter'.tr();
+                      } else if (dopaValidate && checkValidate) {
+                        return 'please_check_data'.tr();
+                      }
                       return null;
                     },
                     onChanged: (v) => _formKey.currentState!.validate(),
@@ -620,8 +614,13 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 controller: idCardController,
                 style: const TextStyle(fontSize: 15),
                 validator: (v) {
-                  if (v!.isEmpty && checkValidate) return 'please_enter'.tr();
-                  if (v.length != 17 && checkValidate) return "Please_enter_13_digit".tr();
+                  if (v!.isEmpty && checkValidate) {
+                    return 'please_enter'.tr();
+                  } else if (v.length != 17 && checkValidate) {
+                    return "Please_enter_13_digit".tr();
+                  } else if (dopaValidate && checkValidate) {
+                    return 'please_check_data'.tr();
+                  }
                   return null;
                 },
                 onChanged: (v) {
@@ -652,7 +651,11 @@ class _PersonalInfoState extends State<PersonalInfo> {
               controller: laserCodeController,
               style: const TextStyle(fontSize: 15),
               validator: (v) {
-                if (v!.isEmpty && checkValidate) return 'please_enter'.tr();
+                if (v!.isEmpty && checkValidate) {
+                  return 'please_enter'.tr();
+                } else if (dopaValidate && checkValidate) {
+                  return 'please_check_data'.tr();
+                }
                 return null;
               },
               onChanged: (v) => _formKey.currentState!.validate(),
@@ -936,17 +939,6 @@ class _PersonalInfoState extends State<PersonalInfo> {
                         );
                       },
                     );
-                  } else if ((indexCareer == 19 || indexCareer == 20) && careerChildId == null) {
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        return CustomDialog(
-                          title: "career_more".tr(),
-                          content: "career_request".tr(),
-                          avatar: false,
-                        );
-                      },
-                    );
                   } else {
                     if (await _callVerifyDopa()) {
                       final res = await PostAPI.call(
@@ -994,18 +986,22 @@ class _PersonalInfoState extends State<PersonalInfo> {
   }
 
   Future<bool> _callVerifyDopa() async {
+    dopaValidate = false;
     var verifyDOPA = await PostAPI.call(
-        url: 'https://api.gbwallet.co/register-api/users/verify_dopa', //TODO GB PRD
-        headers: Authorization.auth2,
-        body: {
-          "id_card": idCardController.text.replaceAll('-', ''),
-          "first_name": firstNameController.text,
-          "last_name": lastNameController.text,
-          "birthday": birthdayController.text,
-          "laser": laserCodeController.text.replaceAll('-', ''),
-        },
-        context: context);
-
+      url: 'https://api.gbwallet.co/register-api/users/verify_dopa', //TODO GB PRD
+      headers: Authorization.auth2,
+      body: {
+        "id_card": idCardController.text.replaceAll('-', ''),
+        "first_name": firstNameController.text,
+        "last_name": lastNameController.text,
+        "birthday": birthdayController.text,
+        "laser": laserCodeController.text.replaceAll('-', ''),
+      },
+      context: context,
+    );
+    if ((verifyDOPA['response']['error_message']).toString().contains('invalid_id_card_information'.tr())) {
+      dopaValidate = true;
+    }
     return verifyDOPA['success'];
   }
 
