@@ -34,6 +34,7 @@ class PersonalInfo extends StatefulWidget {
   final Function? setIDCard;
   final Function? setLaserCode;
   final Function? setCareerID;
+  final Function? setCareerChildID;
   final Function? setWorkName;
   final Function? setWorkAddress;
   final Function? setWorkAddressSearch;
@@ -55,6 +56,7 @@ class PersonalInfo extends StatefulWidget {
     this.setPinVisible,
     this.setSelectedStep,
     this.setCareerID,
+    this.setCareerChildID,
     this.setWorkAddress,
     this.setWorkName,
     this.setWorkAddressSearch,
@@ -171,9 +173,9 @@ class _PersonalInfoState extends State<PersonalInfo> {
 
   DateTime selectedDate = DateTime.now();
 
-  Map<dynamic, dynamic>? dataCareerChildMap;
-
   List<int> careerIdSkipList = [1, 3, 5, 13, 14, 15, 16, 17];
+  dynamic dataCareer;
+  dynamic dataCareerChild;
 
   @override
   void initState() {
@@ -222,7 +224,10 @@ class _PersonalInfoState extends State<PersonalInfo> {
     }
   }
 
-  onLoad() async {
+  onLoad() {
+    if (StateStore.careers['success']) {
+      dataCareer = StateStore.careers['response']['data']['careers'];
+    }
     idCardController.text = idCardFormatter.maskText(widget.person!.idCard ?? "");
     firstNameController.text = widget.person!.firstName ?? "";
     lastNameController.text = widget.person!.lastName ?? "";
@@ -232,6 +237,22 @@ class _PersonalInfoState extends State<PersonalInfo> {
     birthdayController.text = widget.person!.birthday ?? "";
     laserCodeController.text = laserCodeFormatter.maskText(widget.person!.ocrBackLaser ?? "");
     ocrResultStatus = widget.ocrAllFailed ? "Failed" : "Passed";
+    careerId = widget.person!.careerID;
+    if (careerId != null) {
+      indexCareer = (dataCareer as List).indexWhere((item) => item['id'] == careerId);
+      careerController.text = '${dataCareer[indexCareer]['name_${'language'.tr()}']}';
+      careerId = dataCareer[indexCareer]['id'];
+      skipInfomation = dataCareer[indexCareer]['skip_infomation'];
+      if (widget.person!.careerChildID != null) {
+        careerChildId = widget.person!.careerChildID;
+        dataCareerChild = StateStore.careerChild['response']['data']['careers'];
+        indexCareerChild = dataCareerChild.indexWhere((item) => item['id'] == careerChildId);
+        careerChildController.text = '${dataCareerChild[indexCareerChild]['name_${'language'.tr()}']}';
+      }
+    }
+    workNameController.text = widget.person!.workName ?? "";
+    workAddressController.text = widget.person!.workAddress ?? "";
+    workAddressShowController.text = widget.person!.workAddressSearch ?? "";
   }
 
   _selectDate(BuildContext context) async {
@@ -317,8 +338,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
   }
 
   Widget dropdownCareer() {
-    if (StateStore.careers['success']) {
-      final dataCareer = StateStore.careers['response']['data']['careers'];
+    if (dataCareer != null) {
       final data = dataCareer.map<DropdownMenuItem<int>>((item) {
         int index = dataCareer.indexOf(item);
         return DropdownMenuItem(
@@ -346,9 +366,10 @@ class _PersonalInfoState extends State<PersonalInfo> {
                     final int index = v['selectedIndex'];
                     final String selectItem = '${dataCareer[index - 1]['name_${'language'.tr()}']}';
 
-                    careerController.text = selectItem;
                     if (indexCareer != null) widget.setCareerID!(index);
                     careerId = dataCareer[index - 1]['id'];
+                    careerChildId = null;
+                    careerController.text = selectItem;
                     await clearAndLoadCareerChild(careerId ?? 0);
                     setState(() {
                       validateCareer = false;
@@ -376,63 +397,61 @@ class _PersonalInfoState extends State<PersonalInfo> {
     workNameController.clear();
     workAddressShowController.clear();
     workAddressController.clear();
-    dataCareerChildMap = null;
-    dataCareerChildMap = await GetAPI.call(url: '$register3003/careers/$careerId/child', headers: Authorization.auth2, context: context);
+    StateStore.careerChild = await GetAPI.call(url: '$register3003/careers/$careerId/child', headers: Authorization.auth2, context: context);
+    if (StateStore.careerChild['success']) {
+      dataCareerChild = StateStore.careerChild['response']['data']['careers'];
+    }
   }
 
   Widget dropdownCareerChild() {
-    if (dataCareerChildMap != null && dataCareerChildMap!['success']) {
-      final List dataCareerChild = dataCareerChildMap!['response']['data']['careers'];
-      if (dataCareerChild.isNotEmpty) {
-        final data = dataCareerChild.map<DropdownMenuItem<int>>((item) {
-          int index = dataCareerChild.indexOf(item);
-          return DropdownMenuItem(
-            value: index + 1,
-            child: SizedBox(
-              width: 300,
-              child: Text(
-                '${dataCareerChild[index]['name_${'language'.tr()}']}',
-                overflow: TextOverflow.ellipsis,
-              ),
+    if (dataCareerChild != null && (dataCareerChild as List).isNotEmpty) {
+      final data = dataCareerChild.map<DropdownMenuItem<int>>((item) {
+        int index = dataCareerChild.indexOf(item);
+        return DropdownMenuItem(
+          value: index + 1,
+          child: SizedBox(
+            width: 300,
+            child: Text(
+              '${dataCareerChild[index]['name_${'language'.tr()}']}',
+              overflow: TextOverflow.ellipsis,
             ),
-          );
-        }).toList();
-        return Padding(
-          padding: const EdgeInsets.only(top: 20),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Expanded(
-                child: TextFormField(
-                  readOnly: true,
-                  controller: careerChildController,
-                  style: const TextStyle(fontSize: 15),
-                  textInputAction: TextInputAction.next,
-                  decoration: InputDecoration(
-                      labelText: 'career_more'.tr(), suffixIcon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.black54)),
-                  onTap: () {
-                    showBottomDialog(data, indexCareerChild, '- ${'career_more'.tr()} -', (v) {
-                      if (v != null && v['selectedIndex'] != null) {
-                        final int index = v['selectedIndex'];
-                        final String selectItem = '${dataCareerChild[index - 1]['name_${'language'.tr()}']}';
-                        careerChildController.text = selectItem;
-                        setState(() {
-                          validateCareerChild = false;
-                          indexCareerChild = index - 1;
-                          skipInfomation = dataCareerChild[index - 1]['skip_infomation'];
-                          careerChildId = dataCareerChild[index - 1]['id'];
-                        });
-                      }
-                    });
-                  },
-                ),
-              )
-            ],
           ),
         );
-      }
-      return const SizedBox();
+      }).toList();
+      return Padding(
+        padding: const EdgeInsets.only(top: 20),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Expanded(
+              child: TextFormField(
+                readOnly: true,
+                controller: careerChildController,
+                style: const TextStyle(fontSize: 15),
+                textInputAction: TextInputAction.next,
+                decoration:
+                    InputDecoration(labelText: 'career_more'.tr(), suffixIcon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.black54)),
+                onTap: () {
+                  showBottomDialog(data, indexCareerChild, '- ${'career_more'.tr()} -', (v) {
+                    if (v != null && v['selectedIndex'] != null) {
+                      final int index = v['selectedIndex'];
+                      final String selectItem = '${dataCareerChild[index - 1]['name_${'language'.tr()}']}';
+                      careerChildController.text = selectItem;
+                      setState(() {
+                        validateCareerChild = false;
+                        indexCareerChild = index - 1;
+                        skipInfomation = dataCareerChild[index - 1]['skip_infomation'];
+                        careerChildId = dataCareerChild[index - 1]['id'];
+                      });
+                    }
+                  });
+                },
+              ),
+            )
+          ],
+        ),
+      );
     }
     return const SizedBox();
   }
@@ -913,7 +932,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 if (careerId == null) {
                   setState(() => validateCareer = true);
                 }
-                if (_formKey.currentState!.validate()) {
+                if (_formKey.currentState!.validate() || dopaValidate) {
                   if (widget.ocrAllFailed && (frontIDCardImage.isEmpty || backIDCardImage.isEmpty || selfieIDCard.isEmpty)) {
                     showDialog(
                       context: context,
@@ -946,8 +965,9 @@ class _PersonalInfoState extends State<PersonalInfo> {
 
                       if (res['success']) {
                         if (careerChildId != null) {
-                          careerId = careerChildId;
-                          widget.setCareerID!(careerId);
+                          widget.setCareerChildID!(careerChildId);
+                        } else {
+                          widget.setCareerChildID!(null);
                         }
                         if (frontIDCardImage.isNotEmpty) {
                           widget.setFileFrontCitizen!(frontIDCardImage);
@@ -998,6 +1018,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
     );
     if ((verifyDOPA['response']['error_message']).toString().contains('invalid_id_card_information'.tr())) {
       dopaValidate = true;
+      _formKey.currentState!.validate();
     }
     return verifyDOPA['success'];
   }

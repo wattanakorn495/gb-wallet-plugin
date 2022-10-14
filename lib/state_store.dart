@@ -4,4 +4,5 @@ class StateStore {
   static String fcmToken = '';
 
   static Map careers = {};
+  static Map careerChild = {};
 }

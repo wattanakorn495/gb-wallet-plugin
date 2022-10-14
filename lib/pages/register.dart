@@ -59,7 +59,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
 
   int length = 6;
   int selectedStep = 1;
-  int? careerID;
+  int? careerID, careerChildID;
   int? indexProvince, indexDistric, indexSubDistric;
   int failFacematch = 0;
 
@@ -144,7 +144,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
     List dataDistrict = address['district'];
     List dataSubDistrict = address['sub_district'];
 
-    if (person.filterAddress!.isNotEmpty) {
+    if (person.filterAddress!.isNotEmpty && person.filterAddress!.split(' ').length > 2) {
       List filter = person.filterAddress!.split(' ');
       String filterProvince = filter[2];
       String filterDistrict = filter[1];
@@ -178,19 +178,76 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
   setDataVisible(bool value) => setState(() => _dataVisible = value);
   setPinVisible(bool value) => setState(() => _pinSetVisible = value);
 
-  setFirstName(String value) => firstNameController.text = value;
-  setLastName(String value) => lastNameController.text = value;
-  setFirstNameEng(String value) => firstNameENController.text = value;
-  setLastnameEng(String value) => lastNameENController.text = value;
-  setAddress(String value) => addressController.text = value;
-  setAddressSearch(String value) => addressSearchController.text = value;
-  setBirthday(String value) => birthdayController.text = value;
-  setIDCard(String value) => idCardController.text = value;
-  setLaserCode(String value) => ocrBackLaser = value;
-  setCareerID(int value) => careerID = value;
-  setWorkName(String value) => workNameController.text = value;
-  setWorkAddress(String value) => workAddressController.text = value;
-  setWorkAddressSearch(String value) => workAddressSerchController.text = value;
+  setFirstName(String value) {
+    firstNameController.text = value;
+    personalInfo.firstName = value;
+  }
+
+  setLastName(String value) {
+    lastNameController.text = value;
+    personalInfo.lastName = value;
+  }
+
+  setFirstNameEng(String value) {
+    firstNameENController.text = value;
+    personalInfo.firstNameEng = value;
+  }
+
+  setLastnameEng(String value) {
+    lastNameENController.text = value;
+    personalInfo.lastNameEng = value;
+  }
+
+  setAddress(String value) {
+    addressController.text = value;
+    personalInfo.address = value;
+  }
+
+  setAddressSearch(String value) {
+    addressSearchController.text = value;
+    personalInfo.filterAddress = value;
+  }
+
+  setBirthday(String value) {
+    birthdayController.text = value;
+    personalInfo.birthday = value;
+  }
+
+  setIDCard(String value) {
+    idCardController.text = value;
+    personalInfo.idCard = value;
+  }
+
+  setLaserCode(String value) {
+    ocrBackLaser = value;
+    personalInfo.ocrBackLaser = value;
+  }
+
+  setCareerID(int value) {
+    careerID = value;
+    personalInfo.careerID = value;
+  }
+
+  setCareerChildID(int value) {
+    careerChildID = value;
+    personalInfo.careerChildID = value;
+  }
+
+  setWorkName(String value) {
+    workNameController.text = value;
+    personalInfo.workName = value;
+  }
+
+  setWorkAddress(String value) {
+    workAddressController.text = value;
+    personalInfo.workAddress = value;
+  }
+
+  setWorkAddressSearch(String value) {
+    workAddressSerchController.text = value;
+    personalInfo.workAddressSearch = value;
+  }
+
   setReferralCode(String value) => referralCodeController.text = value;
 
   setindexProvince(int value) => indexProvince = value;
@@ -300,7 +357,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
               "province_id": '$indexProvince',
               "district_id": '$indexDistric',
               "sub_district_id": '$indexSubDistric',
-              "career_id": '$careerID',
+              "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
               "work_name": workNameController.text,
               "work_address": '${workAddressController.text} ${workAddressSerchController.text}',
               "file_front_citizen": fileNameFrontID,
@@ -329,7 +386,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                 "province_id": '$indexProvince',
                 "district_id": '$indexDistric',
                 "sub_district_id": '$indexSubDistric',
-                "career_id": '$careerID',
+                "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
                 "work_name": workNameController.text,
                 "work_address": '${workAddressController.text} ${workAddressSerchController.text}',
                 "file_front_citizen": fileNameFrontID,
@@ -620,7 +677,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
               "province_id": '$indexProvince',
               "district_id": '$indexDistric',
               "sub_district_id": '$indexSubDistric',
-              "career_id": '$careerID',
+              "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
               "work_name": workNameController.text,
               "work_address": '${workAddressController.text} ${workAddressSerchController.text}',
               "file_front_citizen": fileNameFrontID,
@@ -649,7 +706,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                 "province_id": '$indexProvince',
                 "district_id": '$indexDistric',
                 "sub_district_id": '$indexSubDistric',
-                "career_id": '$careerID',
+                "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
                 "work_name": workNameController.text,
                 "work_address": '${workAddressController.text} ${workAddressSerchController.text}',
                 "file_front_citizen": fileNameFrontID,
@@ -1243,7 +1300,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                     "province_id": '$indexProvince',
                                     "district_id": '$indexDistric',
                                     "sub_district_id": '$indexSubDistric',
-                                    "career_id": '$careerID',
+                                    "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
                                     "work_name": workNameController.text,
                                     "work_address": '${workAddressController.text} ${workAddressSerchController.text}',
                                     "file_front_citizen": fileNameFrontID,
@@ -1270,7 +1327,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                       "province_id": '$indexProvince',
                                       "district_id": '$indexDistric',
                                       "sub_district_id": '$indexSubDistric',
-                                      "career_id": '$careerID',
+                                      "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
                                       "work_name": workNameController.text,
                                       "work_address": '${workAddressController.text} ${workAddressSerchController.text}',
                                       "file_front_citizen": fileNameFrontID,
@@ -1570,6 +1627,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                   setIDCard: setIDCard,
                   setLaserCode: setLaserCode,
                   setCareerID: setCareerID,
+                  setCareerChildID: setCareerChildID,
                   setWorkName: setWorkName,
                   setWorkAddress: setWorkAddress,
                   setWorkAddressSearch: setWorkAddressSearch,
