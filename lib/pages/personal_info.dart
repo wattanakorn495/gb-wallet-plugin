@@ -228,7 +228,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
     if (StateStore.careers['success']) {
       dataCareer = StateStore.careers['response']['data']['careers'];
     }
-    if (StateStore.careerChild['success']) {
+    if (StateStore.careerChild.isNotEmpty && StateStore.careerChild['success']) {
       dataCareerChild = StateStore.careerChild['response']['data']['careers'];
     }
     idCardController.text = idCardFormatter.maskText(widget.person!.idCard ?? "");
