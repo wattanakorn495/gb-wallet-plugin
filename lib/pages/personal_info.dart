@@ -228,6 +228,9 @@ class _PersonalInfoState extends State<PersonalInfo> {
     if (StateStore.careers['success']) {
       dataCareer = StateStore.careers['response']['data']['careers'];
     }
+    if (StateStore.careerChild['success']) {
+      dataCareerChild = StateStore.careerChild['response']['data']['careers'];
+    }
     idCardController.text = idCardFormatter.maskText(widget.person!.idCard ?? "");
     firstNameController.text = widget.person!.firstName ?? "";
     lastNameController.text = widget.person!.lastName ?? "";
@@ -243,9 +246,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
       careerController.text = '${dataCareer[indexCareer]['name_${'language'.tr()}']}';
       careerId = dataCareer[indexCareer]['id'];
       skipInfomation = dataCareer[indexCareer]['skip_infomation'];
-      if (widget.person!.careerChildID != null) {
+      if (widget.person!.careerChildID != null && dataCareerChild != null) {
         careerChildId = widget.person!.careerChildID;
-        dataCareerChild = StateStore.careerChild['response']['data']['careers'];
         indexCareerChild = dataCareerChild.indexWhere((item) => item['id'] == careerChildId);
         careerChildController.text = '${dataCareerChild[indexCareerChild]['name_${'language'.tr()}']}';
       }
@@ -1016,7 +1018,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
       },
       context: context,
     );
-    if ((verifyDOPA['response']['error_message']).toString().contains('invalid_id_card_information'.tr())) {
+    if ((verifyDOPA['response']['error_message']).toString().toLowerCase().contains('invalid_id_card_information'.tr())) {
       dopaValidate = true;
       _formKey.currentState!.validate();
     }

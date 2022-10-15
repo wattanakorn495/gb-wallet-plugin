@@ -223,12 +223,12 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
     personalInfo.ocrBackLaser = value;
   }
 
-  setCareerID(int value) {
+  setCareerID(int? value) {
     careerID = value;
     personalInfo.careerID = value;
   }
 
-  setCareerChildID(int value) {
+  setCareerChildID(int? value) {
     careerChildID = value;
     personalInfo.careerChildID = value;
   }
