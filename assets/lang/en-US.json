@@ -292,7 +292,7 @@
     "idcard_front": "Front of ID Card ",
     "idcard_laser": "ID Card laser number",
     "idcard_number": "ID Card number",
-    "idcard_official": "Your ID Card is issued by goverment.",
+    "idcard_official": "Your ID Card is issued by government.",
     "idcard_policy": "* Keeping your information secure by the policy.",
     "idcard_security": "Your security is our priority, We make sure no one isn't use your ID Card if you not allowed.",
     "idcard_selfie": "Selfie Show ID Card",
@@ -628,5 +628,14 @@
     "facetec_can_not_open": "Cannot open Face Scan",
     "system_error_try_again": "Found a problem from the system ,Please try again.",
     "invalid_id_card_information": "invalid id card information",
-    "please_check_data": "Please check data"
+    "please_check_data": "Please check data",
+    "passport": "Passport ID",
+    "passport_scan": "Scan Passport ID",
+    "thai_person": "Thai person",
+    "foreigner": "Foreigner",
+    "photoandPassport_info": "Make sure your Passport is clear and without scratch.",
+    "photoandPassport_glare": "You Passport no glare.",
+    "passport_official": "Your Passport is issued by government.",
+    "Please_arrange_the_back_of_the_passport": "Please arrange the back of the passport.\nby keeping the card in the specified frame",
+    "personal_information": "Personal information"
 }

@@ -13,7 +13,7 @@ import 'widgets/circular_progress.dart';
 import 'widgets/custom_dialog.dart';
 
 class CameraScanIDCard extends StatefulWidget {
-  final bool? enableButton, isFront, noFrame, scanID;
+  final bool? enableButton, isFront, noFrame, scanID, isCitizenCard;
   final String titleAppbar;
 
   const CameraScanIDCard({
@@ -22,6 +22,7 @@ class CameraScanIDCard extends StatefulWidget {
     this.isFront,
     this.noFrame,
     this.scanID = false,
+    this.isCitizenCard = true,
     required this.titleAppbar,
   }) : super(key: key);
 
@@ -68,6 +69,11 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
   String? ocrBackLaser;
   bool ocrFailedAll = false;
 
+  String? passportIDPath;
+  String? passportNumber;
+  String? countryCode;
+  String? expireDate;
+
   callBackData() async {
     Map data = {};
 
@@ -84,6 +90,11 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
     data['backIDPath'] = backIDPath ?? '';
     data['ocrFailedAll'] = ocrFailedAll;
 
+    data['passportIDPath'] = passportIDPath ?? '';
+    data['passportNumber'] = passportNumber ?? '';
+    data['countryCode'] = countryCode ?? '';
+    data['expireDate'] = expireDate ?? '';
+
     // debugPrint(data);
     return data;
   }
@@ -91,13 +102,14 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
   ocrThaiID({String? image, String? side}) async {
     Dio dio = Dio();
 
-    dio.options.baseUrl = '$register3003/users/ocr-thailand-id-card';
+    dio.options.baseUrl = widget.isCitizenCard! ? '$register3003/users/ocr-thailand-id-card' : '$register3003/users/ocr-passport';
     dio.options.headers = {'Authorization2': authorization2};
 
-    FormData formData = FormData.fromMap({"image": image, "side": side});
+    FormData formData =
+        widget.isCitizenCard! ? FormData.fromMap({"image": image, "side": side}) : FormData.fromMap({"image": image, "country_code": "66"});
 
     var response = await dio.post(dio.options.baseUrl, data: formData).timeout(const Duration(seconds: 30));
-    debugPrint('${dio.options.baseUrl}: ${response.data}');
+    debugPrint('OCR check : ${dio.options.baseUrl}: ${response.data}');
 
     if (response.data['success']) {
       return response.data['response']['data']['result'];
@@ -181,7 +193,7 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
     return Scaffold(
       key: Key('CameraScanIDCard_plugin_${DateTime.now().toString()}'),
       body: Stack(children: [
-        visibleFront! ? _cameraFrontPreviewWidget() : _cameraBackPreviewWidget(),
+        _cameraPreviewWidget(),
         Align(
             alignment: Alignment.topCenter,
             child: SizedBox(
@@ -220,7 +232,7 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
                     Expanded(
                       child: FloatingActionButton(
                         backgroundColor: Colors.white,
-                        onPressed: visibleFront! ? _onCaptureFrontPressed : _onCaptureBackPressed,
+                        onPressed: widget.isCitizenCard! ? (visibleFront! ? _onCaptureFrontPressed : _onCaptureBackPressed) : _onCapturePassport,
                         child: const Icon(
                           Icons.lens,
                           color: Colors.black,
@@ -232,7 +244,6 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
                 ),
         ),
         Center(child: SizedBox(key: _globalKey, height: MediaQuery.of(context).size.height / 2.5, width: double.infinity)),
-        // if (frontIDPath != null) Image.file(File(frontIDPath!))
       ]),
     );
   }
@@ -250,13 +261,16 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
         ),
       ),
       if (!noFrame!)
-        SizedBox(
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: widget.isCitizenCard! ? 0 : 20),
           width: double.infinity,
           height: double.infinity,
           child: Opacity(
             opacity: 0.8,
             child: Image.asset(
-              isFront ? 'assets/images/crop_front_id_${'language'.tr()}.png' : 'assets/images/crop_back_id_${'language'.tr()}.png',
+              widget.isCitizenCard!
+                  ? (isFront ? 'assets/images/crop_front_id_${'language'.tr()}.png' : 'assets/images/crop_back_id_${'language'.tr()}.png')
+                  : 'assets/images/crop_passport.png',
               package: 'gbkyc',
               fit: BoxFit.fitWidth,
             ),
@@ -268,7 +282,9 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
           left: 0,
           right: 0,
           child: Text(
-            isFront ? 'Please_arrange_the_front_of_the_card'.tr() : 'Please_arrange_the_back_of_the_card'.tr(),
+            widget.isCitizenCard!
+                ? (isFront ? 'Please_arrange_the_front_of_the_card'.tr() : 'Please_arrange_the_back_of_the_card'.tr())
+                : "Please_arrange_the_back_of_the_passport".tr(),
             style: const TextStyle(fontSize: 16, color: Colors.white),
             textAlign: TextAlign.center,
           ),
@@ -277,7 +293,7 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
   }
 
   /// Display Camera preview.
-  Widget _cameraFrontPreviewWidget() {
+  Widget _cameraPreviewWidget() {
     if (_controller == null || !_controller!.value.isInitialized) {
       return circularProgress();
     } else if (isLoading) {
@@ -294,25 +310,11 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
         ),
       );
     } else {
-      return ocrGuideFrame(true);
-    }
-  }
-
-  /// Display Camera preview.
-  Widget _cameraBackPreviewWidget() {
-    if (_controller == null || !_controller!.value.isInitialized) {
-      return circularProgress();
-    } else if (isLoading) {
-      return Container(
-          decoration: const BoxDecoration(color: Colors.grey),
-          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            CustomPaint(foregroundPainter: Paint()),
-            circularProgress(),
-            const SizedBox(height: 5),
-            Text('${'System_is_processing'.tr()}...', style: const TextStyle(color: Colors.white)),
-          ]));
-    } else {
-      return ocrGuideFrame(false);
+      if (visibleFront == true) {
+        return ocrGuideFrame(true);
+      } else {
+        return ocrGuideFrame(false);
+      }
     }
   }
 
@@ -360,17 +362,6 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
         ),
       ),
       const Expanded(child: SizedBox())
-      // !noFrame
-      //     ? Expanded(child: SizedBox())
-      //     : Expanded(
-      //         child: GestureDetector(
-      //           child: Icon(
-      //             Icons.autorenew,
-      //             color: Colors.black,
-      //           ),
-      //           onTap: _switchLiveCamera,
-      //         ),
-      //       ),
     ]);
   }
 
@@ -534,7 +525,6 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
               });
 
               if (cameraBackCount == 3) {
-                // await File(frontIDPath).delete();
                 ocrFailedAll = true;
                 Navigator.pop(context, callBackData());
               } else {
@@ -555,6 +545,76 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
       await _controller!.takePicture().then((v) {
         Navigator.pop(context, v.path);
       });
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
+  _onCapturePassport() async {
+    try {
+      setState(() => isLoading = true);
+      await _controller!.takePicture().then((v) => passportIDPath = v.path);
+
+      List<int> toJPG = await cropImagePath(imagePath: passportIDPath!, offset: offset, size: size, context: context);
+      String base64 = base64Encode(toJPG);
+
+      final resPassport = await ocrThaiID(
+        image: base64,
+      );
+      debugPrint('on Capture passport : $resPassport');
+      if (resPassport.isNotEmpty) {
+        try {
+          countryCode = resPassport['country_code'] ?? '';
+          passportNumber = resPassport['passport_number'] ?? '';
+          ocrFrontName = resPassport['given_name'] ?? '';
+          ocrFrontSurname = resPassport['surname'] ?? '';
+
+          List birthdayList = (resPassport['date_of_birth'] ?? '').split('-');
+          if (birthdayList.isNotEmpty && birthdayList.length > 2) {
+            ocrFrontBirthdayD = birthdayList[2] ?? '';
+            ocrFrontBirthdayM = birthdayList[1] ?? '';
+            ocrFrontBirthdayY = birthdayList[0] ?? '';
+            birthDay = '$ocrFrontBirthdayD/$ocrFrontBirthdayM/$ocrFrontBirthdayY';
+          }
+
+          List expireDateList = (resPassport['date_of_expiry'] ?? '').split('-');
+          if (expireDateList.isNotEmpty && expireDateList.length > 2) {
+            final day = expireDateList[2] ?? '';
+            final month = expireDateList[1] ?? '';
+            final year = expireDateList[0] ?? '';
+            expireDate = '$day/$month/$year';
+          }
+        } catch (e) {
+          debugPrint('on capture passport error : $e');
+        }
+        Navigator.pop(context, callBackData());
+      } else {
+        showDialog(
+          barrierDismissible: false,
+          context: context,
+          builder: (dialogContext) => CustomDialog(
+            title: 'Something_went_wrong'.tr(),
+            content: 'ID_card_scan_failed_Please_try_again'.tr(),
+            avatar: false,
+            onPressedConfirm: () async {
+              Navigator.pop(dialogContext);
+              setState(() {
+                cameraCount++;
+                isLoading = false;
+                // _takeBack = false;
+              });
+
+              if (cameraCount == 3) {
+                // await File(frontIDPath).delete();
+                ocrFailedAll = true;
+                Navigator.pop(context, callBackData());
+              } else {
+                await _startLiveFeed();
+              }
+            },
+          ),
+        );
+      }
     } catch (e) {
       debugPrint(e.toString());
     }

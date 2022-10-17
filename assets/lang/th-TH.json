@@ -625,5 +625,14 @@
     "facetec_can_not_open": "เปิดสแกนใบหน้าไม่สำเร็จ",
     "system_error_try_again": "พบปัญหาจากระบบ กรุณาลองใหม่อีกครั้ง",
     "invalid_id_card_information": "ข้อมูลบัตรประชาชนไม่ถูกต้อง",
-    "please_check_data": "กรุณาตรวจสอบข้อมูล"
+    "please_check_data": "กรุณาตรวจสอบข้อมูล",
+    "passport": "หนังสือเดินทาง",
+    "passport_scan": "สแกนหนังสือเดินทาง",
+    "thai_person": "คนไทย",
+    "foreigner": "ชาวต่างชาติ",
+    "photoandPassport_info": "รูปถ่ายและข้อมูลบนหนังสือเดินทางชัดเจน ไม่มีรอยขูดขีด",
+    "photoandPassport_glare": "หลีกเลี่ยงแสงสะท้อนบนหนังสือเดินทาง",
+    "passport_official": "ต้องใช้หนังสือเดินทางตัวจริงเท่านั้น",
+    "Please_arrange_the_back_of_the_passport": "กรุณาจัดวางหนังสือเดินทาง\nโดยให้บัตรอยู่ในกรอบที่กำหนด",
+    "personal_information": "ข้อมูลส่วนตัว"
 }

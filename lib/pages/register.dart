@@ -11,6 +11,7 @@ import 'package:gbkyc/api/config_api.dart';
 import 'package:gbkyc/api/get_api.dart';
 import 'package:gbkyc/api/post_api.dart';
 import 'package:gbkyc/pages/personal_info.dart';
+import 'package:gbkyc/pages/scan_id_detail.dart';
 import 'package:gbkyc/personal_info_model.dart';
 import 'package:gbkyc/scan_id_card.dart';
 import 'package:gbkyc/state_store.dart';
@@ -39,7 +40,7 @@ class Register extends StatefulWidget {
 
 class _RegisterState extends State<Register> with WidgetsBindingObserver {
   static const facetecChannel = MethodChannel('gbkyc');
-  File? imgFrontIDCard, imgBackIDCard, imgLiveness;
+  File? imgFrontIDCard, imgBackIDCard, imgLiveness, imgPassport;
 
   dynamic resCreateUser, onTapRecognizer, imgLivenessUint8;
   final format = DateFormat('dd/MM/yyyy');
@@ -56,6 +57,10 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
   String fileNameBackID = '';
   String fileNameSelfieID = '';
   String fileNameLiveness = '';
+  //passport
+  String passportNumber = '';
+  String countryCodeName = '';
+  String expireDate = '';
 
   int length = 6;
   int selectedStep = 1;
@@ -78,6 +83,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
   bool resetPIN = false;
   bool validatePhonenumber = false;
   bool ocrFailedAll = false;
+  bool isCitizen = true;
 
   DateTime? datetimeOTP;
 
@@ -257,6 +263,11 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
   setFileFrontCitizen(String value) => pathFrontCitizen = value;
   setFileBackCitizen(String value) => pathBackCitizen = value;
   setFileSelfie(String value) => pathSelfie = value;
+  setCitizenToggle(bool value) => isCitizen = value;
+  //passport
+  setCountryCode(String value) => countryCode = value;
+  setPassportNumber(String value) => passportNumber = value;
+  setExpirePassport(String value) => expireDate = value;
 
   bool getScanIDVisible() {
     return _scanIDVisible;
@@ -302,6 +313,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
       String dir = (await getApplicationDocumentsDirectory()).path;
       String fullPath = '$dir/imageFacetec.png';
       imgLiveness = File(fullPath);
+      debugPrint("img Liveness : $imgLiveness ,unit8 : $imgLivenessUint8");
       await imgLiveness!.writeAsBytes(imgLivenessUint8);
     } on PlatformException catch (e) {
       debugPrint("Failed to get : '${e.message}'");
@@ -314,136 +326,204 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
       if (isSuccess) {
         setState(() => isLoading = true);
         await getImageFacetec();
+        final imgFromCardByte = isCitizen ? imgFrontIDCard!.readAsBytesSync() : imgPassport!.readAsBytesSync();
+        final imgFromCardName = isCitizen ? imgFrontIDCard!.path.split("/").last : imgPassport!.path.split("/").last;
         final res = await PostAPI.callFormData(
             closeLoading: true,
             url: 'https://api.gbwallet.co/register-api/user_profiles/rekognition', //TODO GB PRD
             headers: Authorization.auth2,
             files: [
               http.MultipartFile.fromBytes('face_image', imgLiveness!.readAsBytesSync(), filename: imgLiveness!.path.split("/").last),
-              http.MultipartFile.fromBytes('card_image', imgFrontIDCard!.readAsBytesSync(), filename: imgFrontIDCard!.path.split("/").last),
-              http.MultipartFile.fromString('id_card', idCardController.text)
+              http.MultipartFile.fromBytes('card_image', imgFromCardByte, filename: imgFromCardName),
+              http.MultipartFile.fromString('id_card', isCitizen ? idCardController.text : passportNumber)
             ],
             context: context);
         final data = res['response']['data'];
 
         if (data['similarity'] >= 80) {
-          fileNameFrontID = data['card_image_file_name'];
-          final resBackID = await PostAPI.callFormData(
-              url: '$register3003/users/upload_file',
-              headers: Authorization.auth2,
-              files: [
-                http.MultipartFile.fromBytes(
-                  'image',
-                  imgBackIDCard!.readAsBytesSync(),
-                  filename: imgBackIDCard!.path.split("/").last,
-                )
-              ],
-              context: context);
-          fileNameBackID = resBackID['response']['data']['file_name'];
-          fileNameLiveness = data['face_image_file_name'];
+          if (isCitizen) {
+            fileNameFrontID = data['card_image_file_name'];
+            final resBackID = await PostAPI.callFormData(
+                url: '$register3003/users/upload_file',
+                headers: Authorization.auth2,
+                files: [
+                  http.MultipartFile.fromBytes(
+                    'image',
+                    imgBackIDCard!.readAsBytesSync(),
+                    filename: imgBackIDCard!.path.split("/").last,
+                  )
+                ],
+                context: context);
+            fileNameBackID = resBackID['response']['data']['file_name'];
+            fileNameLiveness = data['face_image_file_name'];
 
-          if (kDebugMode) {
-            print({
-              "id_card": idCardController.text,
-              "first_name": firstNameController.text,
-              "last_name": lastNameController.text,
-              "first_name_en": firstNameENController.text,
-              "last_name_en": lastNameENController.text,
-              "address": addressController.text,
-              "birthday": birthdayController.text,
-              "pin": pinController.text,
-              "send_otp_id": sendOtpId!,
-              "laser": ocrBackLaser!,
-              "province_id": '$indexProvince',
-              "district_id": '$indexDistric',
-              "sub_district_id": '$indexSubDistric',
-              "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
-              "work_name": workNameController.text,
-              "work_address": '${workAddressController.text} ${workAddressSerchController.text}',
-              "file_front_citizen": fileNameFrontID,
-              "file_back_citizen": fileNameBackID,
-              "file_selfie": '',
-              "file_liveness": fileNameLiveness,
-              "imei": StateStore.deviceSerial,
-              "fcm_token": StateStore.fcmToken,
-            });
-          }
-
-          resCreateUser = await PostAPI.call(
-              url: '$register3003/users',
-              headers: Authorization.auth2,
-              body: {
-                "id_card": idCardController.text,
-                "first_name": firstNameController.text,
-                "last_name": lastNameController.text,
-                "first_name_en": firstNameENController.text,
-                "last_name_en": lastNameENController.text,
-                "address": addressController.text,
-                "birthday": birthdayController.text,
-                "pin": pinController.text,
-                "send_otp_id": sendOtpId!,
-                "laser": ocrBackLaser!,
-                "province_id": '$indexProvince',
-                "district_id": '$indexDistric',
-                "sub_district_id": '$indexSubDistric',
-                "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
-                "work_name": workNameController.text,
-                "work_address": '${workAddressController.text} ${workAddressSerchController.text}',
-                "file_front_citizen": fileNameFrontID,
-                "file_back_citizen": fileNameBackID,
-                "file_selfie": '',
-                "file_liveness": fileNameLiveness,
-                "imei": StateStore.deviceSerial,
-                "fcm_token": StateStore.fcmToken,
-              },
-              alert: false,
-              context: context);
-
-          setState(() => isLoading = false);
-          if (resCreateUser['success']) {
-            await imgFrontIDCard!.delete();
-            await imgBackIDCard!.delete();
-            await imgLiveness!.delete();
-            _userLoginID = resCreateUser['response']['data']['user_login_id'];
-            var data = await PostAPI.call(
-                url: '$register3003/user_logins/$_userLoginID/login',
-                headers: Authorization.none,
-                body: {"imei": StateStore.deviceSerial, "pin": pinController.text},
+            resCreateUser = await PostAPI.call(
+                url: '$register3003/users',
+                headers: Authorization.auth2,
+                body: {
+                  "id_card": idCardController.text,
+                  "first_name": firstNameController.text,
+                  "last_name": lastNameController.text,
+                  "first_name_en": firstNameENController.text,
+                  "last_name_en": lastNameENController.text,
+                  "address": addressController.text,
+                  "birthday": birthdayController.text,
+                  "pin": pinController.text,
+                  "send_otp_id": sendOtpId!,
+                  "laser": ocrBackLaser!,
+                  "province_id": '$indexProvince',
+                  "district_id": '$indexDistric',
+                  "sub_district_id": '$indexSubDistric',
+                  "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
+                  "work_name": workNameController.text,
+                  "work_address": '${workAddressController.text} ${workAddressSerchController.text}',
+                  "file_front_citizen": fileNameFrontID,
+                  "file_back_citizen": fileNameBackID,
+                  "file_selfie": '',
+                  "file_liveness": fileNameLiveness,
+                  "imei": StateStore.deviceSerial,
+                  "fcm_token": StateStore.fcmToken,
+                },
+                alert: false,
                 context: context);
 
-            if (data['success']) {
+            setState(() => isLoading = false);
+            if (resCreateUser['success']) {
+              await imgFrontIDCard!.delete();
+              await imgBackIDCard!.delete();
+              await imgLiveness!.delete();
+              _userLoginID = resCreateUser['response']['data']['user_login_id'];
+              var data = await PostAPI.call(
+                  url: '$register3003/user_logins/$_userLoginID/login',
+                  headers: Authorization.none,
+                  body: {"imei": StateStore.deviceSerial, "pin": pinController.text},
+                  context: context);
+
+              if (data['success']) {
+                showDialog(
+                  barrierDismissible: false,
+                  context: context,
+                  builder: (dialogContext) => CustomDialog(
+                      title: 'save_success'.tr(),
+                      content: 'congratulations'.tr(),
+                      textConfirm: "back_to_main".tr(),
+                      onPressedConfirm: () {
+                        Navigator.pop(dialogContext);
+                        Navigator.of(context, rootNavigator: true).pop(_userLoginID);
+                      }),
+                );
+              }
+            } else {
               showDialog(
                 barrierDismissible: false,
                 context: context,
-                builder: (dialogContext) => CustomDialog(
-                    title: 'save_success'.tr(),
-                    content: 'congratulations'.tr(),
-                    textConfirm: "back_to_main".tr(),
-                    onPressedConfirm: () {
-                      Navigator.pop(dialogContext);
-                      Navigator.of(context, rootNavigator: true).pop(_userLoginID);
-                    }),
+                builder: (context) => CustomDialog(
+                  title: "Something_went_wrong".tr(),
+                  content: errorMessages(resCreateUser),
+                  avatar: false,
+                  onPressedConfirm: () {
+                    Navigator.pop(context);
+                    setState(() {
+                      selectedStep = 2;
+                      _kycVisible = false;
+                      _pinConfirmVisible = false;
+                      _dataVisible = true;
+                    });
+                  },
+                ),
               );
             }
           } else {
-            showDialog(
-              barrierDismissible: false,
-              context: context,
-              builder: (context) => CustomDialog(
-                title: "Something_went_wrong".tr(),
-                content: errorMessages(resCreateUser),
-                avatar: false,
-                onPressedConfirm: () {
-                  Navigator.pop(context);
-                  setState(() {
-                    selectedStep = 2;
-                    _kycVisible = false;
-                    _pinConfirmVisible = false;
-                    _dataVisible = true;
-                  });
+            final resPassport = await PostAPI.callFormData(
+                url: '$register3003/users/upload_file',
+                headers: Authorization.auth2,
+                files: [
+                  http.MultipartFile.fromBytes(
+                    'image',
+                    imgPassport!.readAsBytesSync(),
+                    filename: imgPassport!.path.split("/").last,
+                  )
+                ],
+                context: context);
+            fileNameFrontID = resPassport['response']['data']['file_name'];
+            fileNameLiveness = data['face_image_file_name'];
+            resCreateUser = await PostAPI.call(
+                url: '$register3003/users',
+                headers: Authorization.auth2,
+                body: {
+                  "passport": passportNumber,
+                  "first_name": firstNameController.text,
+                  "last_name": lastNameController.text,
+                  "first_name_en": firstNameENController.text,
+                  "last_name_en": lastNameENController.text,
+                  "address": ' ',
+                  "birthday": birthdayController.text,
+                  "pin": pinController.text,
+                  "send_otp_id": sendOtpId ?? ' ',
+                  "laser": ' ',
+                  "province_id": ' ',
+                  "district_id": ' ',
+                  "sub_district_id": ' ',
+                  "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
+                  "work_name": workNameController.text,
+                  "work_address": '${workAddressController.text} ${workAddressSerchController.text}',
+                  "file_front_citizen": fileNameFrontID,
+                  "file_back_citizen": ' ',
+                  "file_selfie": ' ',
+                  "file_liveness": fileNameLiveness,
+                  "imei": StateStore.deviceSerial,
+                  "fcm_token": StateStore.fcmToken,
                 },
-              ),
-            );
+                alert: false,
+                context: context);
+
+            setState(() => isLoading = false);
+            if (resCreateUser['success']) {
+              // await imgFrontIDCard!.delete();
+              // await imgBackIDCard!.delete();
+              await imgLiveness!.delete();
+              await imgPassport!.delete();
+              _userLoginID = resCreateUser['response']['data']['user_login_id'];
+              var data = await PostAPI.call(
+                  url: '$register3003/user_logins/$_userLoginID/login',
+                  headers: Authorization.none,
+                  body: {"imei": StateStore.deviceSerial, "pin": pinController.text},
+                  context: context);
+
+              if (data['success']) {
+                showDialog(
+                  barrierDismissible: false,
+                  context: context,
+                  builder: (dialogContext) => CustomDialog(
+                      title: 'save_success'.tr(),
+                      content: 'congratulations'.tr(),
+                      textConfirm: "back_to_main".tr(),
+                      onPressedConfirm: () {
+                        Navigator.pop(dialogContext);
+                        Navigator.of(context, rootNavigator: true).pop(_userLoginID);
+                      }),
+                );
+              }
+            } else {
+              showDialog(
+                barrierDismissible: false,
+                context: context,
+                builder: (context) => CustomDialog(
+                  title: "Something_went_wrong".tr(),
+                  content: errorMessages(resCreateUser),
+                  avatar: false,
+                  onPressedConfirm: () {
+                    Navigator.pop(context);
+                    setState(() {
+                      selectedStep = 2;
+                      _kycVisible = false;
+                      _pinConfirmVisible = false;
+                      _dataVisible = true;
+                    });
+                  },
+                ),
+              );
+            }
           }
         } else {
           setState(() => isLoading = false);
@@ -922,13 +1002,6 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
     }
   }
 
-  Widget _buildSuggestion(String topic) {
-    return Row(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
-      const Icon(Icons.check_circle_outline_rounded, color: Color(0xFF02416D), size: 24),
-      Text(topic, style: const TextStyle(color: Colors.black54, fontSize: 16)),
-    ]);
-  }
-
   Widget _buildIconCheckStep(int step, int state, String name) {
     return Expanded(
       child: Column(children: [
@@ -1053,41 +1126,65 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                           context,
                           MaterialPageRoute(
                             builder: (context) => CameraScanIDCard(
-                              titleAppbar: 'idcard'.tr(),
+                              titleAppbar: isCitizen ? 'idcard'.tr() : 'passport_scan'.tr(),
                               isFront: true,
                               noFrame: false,
                               enableButton: false,
                               scanID: true,
+                              isCitizenCard: isCitizen,
                             ),
                           ),
                         ).then((data) async {
                           if (data != null && !data['ocrFailedAll']) {
-                            personalInfo.idCard = data['ocrFrontID'];
-                            personalInfo.firstName = data['ocrFrontName'];
-                            personalInfo.lastName = data['ocrFrontSurname'];
-                            personalInfo.firstNameEng = data['ocrFrontNameEng'];
-                            personalInfo.lastNameEng = data['ocrFrontSurnameEng'];
-                            personalInfo.address = data['ocrFrontAddress'];
-                            personalInfo.filterAddress = data['ocrFilterAddress'];
-                            personalInfo.birthday = data['ocrBirthDay'];
-                            personalInfo.ocrBackLaser = data['ocrBackLaser'];
-                            await getAddress(personalInfo);
+                            if (isCitizen) {
+                              personalInfo.idCard = data['ocrFrontID'];
+                              personalInfo.firstName = data['ocrFrontName'];
+                              personalInfo.lastName = data['ocrFrontSurname'];
+                              personalInfo.firstNameEng = data['ocrFrontNameEng'];
+                              personalInfo.lastNameEng = data['ocrFrontSurnameEng'];
+                              personalInfo.address = data['ocrFrontAddress'];
+                              personalInfo.filterAddress = data['ocrFilterAddress'];
+                              personalInfo.birthday = data['ocrBirthDay'];
+                              personalInfo.ocrBackLaser = data['ocrBackLaser'];
+                              await getAddress(personalInfo);
 
-                            setState(() {
-                              idCardController.text = data['ocrFrontID'];
-                              firstNameController.text = data['ocrFrontName'];
-                              lastNameController.text = data['ocrFrontSurname'];
-                              firstNameENController.text = data['ocrFrontNameEng'];
-                              lastNameENController.text = data['ocrFrontSurnameEng'];
-                              addressController.text = data['ocrFrontAddress'];
-                              birthdayController.text = data['ocrBirthDay'];
-                              ocrBackLaser = data['ocrBackLaser'];
-                              ocrFailedAll = data['ocrFailedAll'];
-                              imgFrontIDCard = File(data['frontIDPath']);
-                              imgBackIDCard = File(data['backIDPath']);
-                              _scanIDVisible = false;
-                              _dataVisible = true;
-                            });
+                              setState(() {
+                                idCardController.text = data['ocrFrontID'];
+                                firstNameController.text = data['ocrFrontName'];
+                                lastNameController.text = data['ocrFrontSurname'];
+                                firstNameENController.text = data['ocrFrontNameEng'];
+                                lastNameENController.text = data['ocrFrontSurnameEng'];
+                                addressController.text = data['ocrFrontAddress'];
+                                birthdayController.text = data['ocrBirthDay'];
+                                ocrBackLaser = data['ocrBackLaser'];
+                                ocrFailedAll = data['ocrFailedAll'];
+                                imgFrontIDCard = File(data['frontIDPath']);
+                                imgBackIDCard = File(data['backIDPath']);
+                                _scanIDVisible = false;
+                                _dataVisible = true;
+                              });
+                            } else {
+                              personalInfo.firstName = data['ocrFrontName'];
+                              personalInfo.lastName = data['ocrFrontSurname'];
+                              personalInfo.birthday = data['ocrBirthDay'];
+                              personalInfo.passportNumber = data['passportNumber'];
+                              personalInfo.countryCodeName = data['countryCode'];
+                              personalInfo.expirePassport = data['expireDate'];
+
+                              setState(() {
+                                firstNameController.text = data['ocrFrontName'];
+                                lastNameController.text = data['ocrFrontSurname'];
+                                birthdayController.text = data['ocrBirthDay'];
+                                ocrFailedAll = data['ocrFailedAll'];
+                                _scanIDVisible = false;
+                                _dataVisible = true;
+                                //passport
+                                imgPassport = File(data['passportIDPath']);
+                                passportNumber = data['passportNumber'];
+                                countryCodeName = data['countryCode'];
+                                expireDate = data['expireDate'];
+                              });
+                            }
                           } else if (data != null && data['ocrFailedAll']) {
                             personalInfo.idCard = '';
                             personalInfo.firstName = '';
@@ -1580,39 +1677,16 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                 ),
               ),
               Visibility(
-                visible: _scanIDVisible,
-                maintainState: true,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 20),
-                  width: double.infinity,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('idcard'.tr(), style: const TextStyle(fontSize: 24)),
-                      Text('idcard_security'.tr(), style: const TextStyle(color: Colors.black54, fontSize: 16)),
-                      const SizedBox(height: 10),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text('suggestion'.tr(), style: const TextStyle(fontSize: 20)),
-                          _buildSuggestion('photolight'.tr()),
-                          _buildSuggestion('photoandIDcard_info'.tr()),
-                          _buildSuggestion('photoandIDcard_glare'.tr()),
-                          _buildSuggestion('idcard_official'.tr()),
-                        ]),
-                      ),
-                      const SizedBox(height: 10),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text('idcard_policy'.tr(), style: const TextStyle(color: Colors.grey)),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+                  visible: _scanIDVisible,
+                  maintainState: true,
+                  child: ScanIdDetail(
+                    isCitizen: isCitizen,
+                    setCitizenToggle: setCitizenToggle,
+                  )),
               Visibility(
                 visible: _dataVisible,
                 child: PersonalInfo(
+                  isCitizen: isCitizen,
                   ocrAllFailed: ocrFailedAll,
                   person: personalInfo,
                   setSelectedStep: setSelectedStep,
@@ -1642,6 +1716,10 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                   provinceID: indexProvince,
                   districtId: indexDistric,
                   subDistrictId: indexSubDistric,
+                  //passport
+                  setCountryCode: setCountryCode,
+                  setPassportNumber: setPassportNumber,
+                  setExpirePassport: setExpirePassport,
                 ),
               ),
               Visibility(

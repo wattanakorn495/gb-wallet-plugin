@@ -20,6 +20,7 @@ import 'package:intl/intl.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 class PersonalInfo extends StatefulWidget {
+  final bool isCitizen;
   final dynamic ocrAllFailed;
   final PersonalInfoModel? person;
   final Function? setSelectedStep;
@@ -45,12 +46,18 @@ class PersonalInfo extends StatefulWidget {
   final Function? setFileBackCitizen;
   final Function? setFileSelfie;
   final Function? setDataVisible;
+
   final dynamic address;
   final int? provinceID;
   final int? districtId;
   final int? subDistrictId;
+  //passport
+  final Function? setCountryCode;
+  final Function? setPassportNumber;
+  final Function? setExpirePassport;
 
   const PersonalInfo({
+    required this.isCitizen,
     this.ocrAllFailed,
     this.person,
     this.setPinVisible,
@@ -80,6 +87,10 @@ class PersonalInfo extends StatefulWidget {
     this.provinceID,
     this.districtId,
     this.subDistrictId,
+    //passport
+    this.setCountryCode,
+    this.setPassportNumber,
+    this.setExpirePassport,
     Key? key,
   }) : super(key: key);
 
@@ -120,7 +131,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
   String unCheckImage = "assets/images/uncheck.png";
   String cameraImage = "assets/icons/camera.png";
   String? workName, workAddress, workAdressSearch;
-  String? textBirthday;
+  DateTime? birthDatePick, expireDatePick;
   String? ocrResult;
   String? ocrResultStatus;
   String frontIDCardImage = "", backIDCardImage = "", selfieIDCard = "";
@@ -160,6 +171,10 @@ class _PersonalInfoState extends State<PersonalInfo> {
   final workNameController = TextEditingController();
   final workAddressController = TextEditingController();
   final workAddressShowController = TextEditingController();
+  //passport
+  final countryController = TextEditingController();
+  final passportController = TextEditingController();
+  final expirePassportController = TextEditingController();
 
   MaskTextInputFormatter laserCodeFormatter = MaskTextInputFormatter(
     mask: '###-#######-##',
@@ -171,8 +186,6 @@ class _PersonalInfoState extends State<PersonalInfo> {
     filter: {"#": RegExp(r'[0-9]')},
   );
 
-  DateTime selectedDate = DateTime.now();
-
   List<int> careerIdSkipList = [1, 3, 5, 13, 14, 15, 16, 17];
   dynamic dataCareer;
   dynamic dataCareerChild;
@@ -182,7 +195,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
     super.initState();
 
     onLoad();
-    getAddress();
+    widget.isCitizen ? getAddress() : {};
   }
 
   @override
@@ -225,39 +238,77 @@ class _PersonalInfoState extends State<PersonalInfo> {
   }
 
   onLoad() {
-    if (StateStore.careers['success']) {
-      dataCareer = StateStore.careers['response']['data']['careers'];
-    }
-    if (StateStore.careerChild.isNotEmpty && StateStore.careerChild['success']) {
-      dataCareerChild = StateStore.careerChild['response']['data']['careers'];
-    }
-    idCardController.text = idCardFormatter.maskText(widget.person!.idCard ?? "");
-    firstNameController.text = widget.person!.firstName ?? "";
-    lastNameController.text = widget.person!.lastName ?? "";
-    firstnameEngController.text = widget.person!.firstNameEng ?? "";
-    lastnameEngController.text = widget.person!.lastNameEng ?? "";
-    addressController.text = widget.person!.address ?? "";
-    birthdayController.text = widget.person!.birthday ?? "";
-    laserCodeController.text = laserCodeFormatter.maskText(widget.person!.ocrBackLaser ?? "");
-    ocrResultStatus = widget.ocrAllFailed ? "Failed" : "Passed";
-    careerId = widget.person!.careerID;
-    if (careerId != null) {
-      indexCareer = (dataCareer as List).indexWhere((item) => item['id'] == careerId);
-      careerController.text = '${dataCareer[indexCareer]['name_${'language'.tr()}']}';
-      careerId = dataCareer[indexCareer]['id'];
-      skipInfomation = dataCareer[indexCareer]['skip_infomation'];
-      if (widget.person!.careerChildID != null && dataCareerChild != null) {
-        careerChildId = widget.person!.careerChildID;
-        indexCareerChild = dataCareerChild.indexWhere((item) => item['id'] == careerChildId);
-        careerChildController.text = '${dataCareerChild[indexCareerChild]['name_${'language'.tr()}']}';
+    expireDatePick = DateTime.now();
+    birthDatePick = DateTime(expireDatePick!.year - 20, expireDatePick!.month, expireDatePick!.day);
+
+    if (widget.isCitizen) {
+      if (StateStore.careers['success']) {
+        dataCareer = StateStore.careers['response']['data']['careers'];
       }
+      if (StateStore.careerChild.isNotEmpty && StateStore.careerChild['success']) {
+        dataCareerChild = StateStore.careerChild['response']['data']['careers'];
+      }
+      idCardController.text = idCardFormatter.maskText(widget.person!.idCard ?? "");
+      firstNameController.text = widget.person!.firstName ?? "";
+      lastNameController.text = widget.person!.lastName ?? "";
+      firstnameEngController.text = widget.person!.firstNameEng ?? "";
+      lastnameEngController.text = widget.person!.lastNameEng ?? "";
+      addressController.text = widget.person!.address ?? "";
+      birthdayController.text = widget.person!.birthday ?? DateFormat('dd/MM/yyyy').format(birthDatePick!);
+      birthDatePick = DateFormat('dd/MM/yyyy').parse(birthdayController.text);
+
+      laserCodeController.text = laserCodeFormatter.maskText(widget.person!.ocrBackLaser ?? "");
+      ocrResultStatus = widget.ocrAllFailed ? "Failed" : "Passed";
+      careerId = widget.person!.careerID;
+      if (careerId != null) {
+        indexCareer = (dataCareer as List).indexWhere((item) => item['id'] == careerId);
+        careerController.text = '${dataCareer[indexCareer]['name_${'language'.tr()}']}';
+        careerId = dataCareer[indexCareer]['id'];
+        skipInfomation = dataCareer[indexCareer]['skip_infomation'];
+        if (widget.person!.careerChildID != null && dataCareerChild != null) {
+          careerChildId = widget.person!.careerChildID;
+          indexCareerChild = dataCareerChild.indexWhere((item) => item['id'] == careerChildId);
+          careerChildController.text = '${dataCareerChild[indexCareerChild]['name_${'language'.tr()}']}';
+        }
+      }
+      workNameController.text = widget.person!.workName ?? "";
+      workAddressController.text = widget.person!.workAddress ?? "";
+      workAddressShowController.text = widget.person!.workAddressSearch ?? "";
+    } else {
+      if (StateStore.careers['success']) {
+        dataCareer = StateStore.careers['response']['data']['careers'];
+      }
+      if (StateStore.careerChild.isNotEmpty && StateStore.careerChild['success']) {
+        dataCareerChild = StateStore.careerChild['response']['data']['careers'];
+      }
+      countryController.text = widget.person!.countryCodeName ?? "";
+      passportController.text = widget.person!.passportNumber ?? "";
+      firstNameController.text = widget.person!.firstName ?? "";
+      lastNameController.text = widget.person!.lastName ?? "";
+      birthdayController.text = widget.person!.birthday ?? DateFormat('dd/MM/yyyy').format(birthDatePick!);
+      birthDatePick = DateFormat('dd/MM/yyyy').parse(birthdayController.text);
+      expirePassportController.text = widget.person!.expirePassport ?? DateFormat('dd/MM/yyyy').format(expireDatePick!);
+      expireDatePick = DateFormat('dd/MM/yyyy').parse(expirePassportController.text);
+      ocrResultStatus = widget.ocrAllFailed ? "Failed" : "Passed";
+      careerId = widget.person!.careerID;
+      if (careerId != null) {
+        indexCareer = (dataCareer as List).indexWhere((item) => item['id'] == careerId);
+        careerController.text = '${dataCareer[indexCareer]['name_${'language'.tr()}']}';
+        careerId = dataCareer[indexCareer]['id'];
+        skipInfomation = dataCareer[indexCareer]['skip_infomation'];
+        if (widget.person!.careerChildID != null && dataCareerChild != null) {
+          careerChildId = widget.person!.careerChildID;
+          indexCareerChild = dataCareerChild.indexWhere((item) => item['id'] == careerChildId);
+          careerChildController.text = '${dataCareerChild[indexCareerChild]['name_${'language'.tr()}']}';
+        }
+      }
+      workNameController.text = widget.person!.workName ?? "";
+      workAddressController.text = widget.person!.workAddress ?? "";
+      workAddressShowController.text = widget.person!.workAddressSearch ?? "";
     }
-    workNameController.text = widget.person!.workName ?? "";
-    workAddressController.text = widget.person!.workAddress ?? "";
-    workAddressShowController.text = widget.person!.workAddressSearch ?? "";
   }
 
-  _selectDate(BuildContext context) async {
+  _selectDate(BuildContext context, bool isBirthday) async {
     showCupertinoModalPopup(
       context: context,
       builder: (popupContext) => Container(
@@ -270,7 +321,11 @@ class _PersonalInfoState extends State<PersonalInfo> {
             colorText: Colors.white,
             radius: 0,
             onPressed: () {
-              birthdayController.text = textBirthday!;
+              if (isBirthday) {
+                birthdayController.text = DateFormat('dd/MM/yyyy').format(birthDatePick!);
+              } else {
+                expirePassportController.text = DateFormat('dd/MM/yyyy').format(expireDatePick!);
+              }
               _formKey.currentState!.validate();
               Navigator.pop(popupContext);
             },
@@ -278,12 +333,16 @@ class _PersonalInfoState extends State<PersonalInfo> {
           SizedBox(
             height: 220,
             child: CupertinoDatePicker(
-              initialDateTime: DateTime.now(),
+              initialDateTime: isBirthday ? birthDatePick : expireDatePick,
               mode: CupertinoDatePickerMode.date,
-              minimumYear: 1900,
-              maximumYear: DateTime.now().year,
+              minimumYear: isBirthday ? 1900 : DateTime.now().year - 10,
+              maximumYear: isBirthday ? DateTime.now().year : DateTime.now().year + 10,
               onDateTimeChanged: (v) {
-                textBirthday = DateFormat('dd/MM/yyyy').format(v);
+                if (isBirthday) {
+                  birthDatePick = v;
+                } else {
+                  expireDatePick = v;
+                }
               },
             ),
           ),
@@ -486,114 +545,55 @@ class _PersonalInfoState extends State<PersonalInfo> {
   }
 
   Widget personInformation(double screenWidth) {
-    return Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('idcard'.tr(), style: const TextStyle(fontSize: 24)),
-            Text('${"Scan_result".tr()} $ocrResultStatus', style: const TextStyle(fontSize: 18))
-          ]),
-          Text('about_profile'.tr(), style: const TextStyle(color: Colors.black54, fontSize: 16)),
-          const SizedBox(height: 20),
-          Row(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
-            Expanded(
-                child: TextFormField(
-                    controller: firstNameController,
-                    style: const TextStyle(fontSize: 15),
-                    validator: (v) {
-                      if (v!.isEmpty && checkValidate) {
-                        return 'please_enter'.tr();
-                      } else if (dopaValidate && checkValidate) {
-                        return 'please_check_data'.tr();
-                      }
-                      return null;
-                    },
-                    onChanged: (v) => _formKey.currentState!.validate(),
-                    textInputAction: TextInputAction.next,
-                    decoration: InputDecoration(labelText: 'name'.tr()))),
-            const SizedBox(width: 20),
-            Expanded(
-                child: TextFormField(
-                    controller: lastNameController,
-                    style: const TextStyle(fontSize: 15),
-                    validator: (v) {
-                      if (v!.isEmpty && checkValidate) {
-                        return 'please_enter'.tr();
-                      } else if (dopaValidate && checkValidate) {
-                        return 'please_check_data'.tr();
-                      }
-                      return null;
-                    },
-                    onChanged: (v) => _formKey.currentState!.validate(),
-                    textInputAction: TextInputAction.next,
-                    decoration: InputDecoration(labelText: 'last_name'.tr())))
-          ]),
-          const SizedBox(height: 20),
-          Row(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
-            Expanded(
-                child: TextFormField(
-                    controller: firstnameEngController,
-                    style: const TextStyle(fontSize: 15),
-                    validator: (v) {
-                      if (v!.isEmpty && checkValidate) {
-                        return 'please_enter'.tr();
-                      }
-                      return null;
-                    },
-                    onChanged: (v) => _formKey.currentState!.validate(),
-                    textInputAction: TextInputAction.next,
-                    decoration: InputDecoration(labelText: 'eng_name'.tr()))),
-            const SizedBox(width: 20),
-            Expanded(
-                child: TextFormField(
-                    controller: lastnameEngController,
-                    style: const TextStyle(fontSize: 15),
-                    validator: (v) {
-                      if (v!.isEmpty && checkValidate) {
-                        return 'please_enter'.tr();
-                      }
-                      return null;
-                    },
-                    onChanged: (v) => _formKey.currentState!.validate(),
-                    textInputAction: TextInputAction.next,
-                    decoration: InputDecoration(labelText: 'eng_lastname'.tr())))
-          ]),
-          const SizedBox(height: 20),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Expanded(
-                child: TextFormField(
-                  controller: addressShowController,
-                  readOnly: true,
-                  style: const TextStyle(fontSize: 16),
-                  textInputAction: TextInputAction.next,
-                  decoration: InputDecoration(
-                    labelText: "district_address".tr(),
-                    hintText: "district_address".tr(),
-                    suffixIcon: const Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      color: Colors.black54,
-                    ),
-                  ),
-                  validator: (v) {
-                    if (v!.isEmpty && checkValidate) {
-                      return 'please_enter'.tr();
-                    }
-                    return null;
-                  },
-                  onChanged: (v) => _formKey.currentState!.validate(),
-                  onTap: () => showModalSearchAddress('address'),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(children: [
-            Expanded(
-              child: TextFormField(
-                controller: addressController,
+    return Padding(padding: const EdgeInsets.all(20), child: widget.isCitizen ? citizenInformation(screenWidth) : passportInformation(screenWidth));
+  }
+
+  citizenInformation(double screenWidth) {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('idcard'.tr(), style: const TextStyle(fontSize: 24)),
+        Text('${"Scan_result".tr()} $ocrResultStatus', style: const TextStyle(fontSize: 18))
+      ]),
+      Text('about_profile'.tr(), style: const TextStyle(color: Colors.black54, fontSize: 16)),
+      const SizedBox(height: 20),
+      Row(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+        Expanded(
+            child: TextFormField(
+                controller: firstNameController,
+                style: const TextStyle(fontSize: 15),
+                validator: (v) {
+                  if (v!.isEmpty && checkValidate) {
+                    return 'please_enter'.tr();
+                  } else if (dopaValidate && checkValidate) {
+                    return 'please_check_data'.tr();
+                  }
+                  return null;
+                },
+                onChanged: (v) => _formKey.currentState!.validate(),
+                textInputAction: TextInputAction.next,
+                decoration: InputDecoration(labelText: 'name'.tr()))),
+        const SizedBox(width: 20),
+        Expanded(
+            child: TextFormField(
+                controller: lastNameController,
+                style: const TextStyle(fontSize: 15),
+                validator: (v) {
+                  if (v!.isEmpty && checkValidate) {
+                    return 'please_enter'.tr();
+                  } else if (dopaValidate && checkValidate) {
+                    return 'please_check_data'.tr();
+                  }
+                  return null;
+                },
+                onChanged: (v) => _formKey.currentState!.validate(),
+                textInputAction: TextInputAction.next,
+                decoration: InputDecoration(labelText: 'last_name'.tr())))
+      ]),
+      const SizedBox(height: 20),
+      Row(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+        Expanded(
+            child: TextFormField(
+                controller: firstnameEngController,
                 style: const TextStyle(fontSize: 15),
                 validator: (v) {
                   if (v!.isEmpty && checkValidate) {
@@ -603,93 +603,268 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 },
                 onChanged: (v) => _formKey.currentState!.validate(),
                 textInputAction: TextInputAction.next,
-                decoration: InputDecoration(labelText: 'address'.tr(), hintText: 'house_number_floor_village_road'.tr()),
-              ),
-            )
-          ]),
-          const SizedBox(height: 20),
-          Row(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
-            Expanded(
-                child: TextFormField(
-                    controller: birthdayController,
-                    readOnly: true,
-                    onTap: () => _selectDate(context),
-                    style: const TextStyle(fontSize: 15),
-                    validator: (v) {
-                      if (v!.isEmpty && checkValidate) {
-                        return 'please_enter'.tr();
-                      } else if (dopaValidate && checkValidate) {
-                        return 'please_check_data'.tr();
-                      }
-                      return null;
-                    },
-                    onChanged: (v) => _formKey.currentState!.validate(),
-                    decoration: InputDecoration(
-                        fillColor: Colors.white, labelText: 'birthday'.tr(), suffixIcon: const Icon(Icons.calendar_today, color: Colors.black54)))),
-            const SizedBox(width: 20),
-            Expanded(
-              child: TextFormField(
-                controller: idCardController,
+                decoration: InputDecoration(labelText: 'eng_name'.tr()))),
+        const SizedBox(width: 20),
+        Expanded(
+            child: TextFormField(
+                controller: lastnameEngController,
                 style: const TextStyle(fontSize: 15),
                 validator: (v) {
                   if (v!.isEmpty && checkValidate) {
                     return 'please_enter'.tr();
-                  } else if (v.length != 17 && checkValidate) {
-                    return "Please_enter_13_digit".tr();
+                  }
+                  return null;
+                },
+                onChanged: (v) => _formKey.currentState!.validate(),
+                textInputAction: TextInputAction.next,
+                decoration: InputDecoration(labelText: 'eng_lastname'.tr())))
+      ]),
+      const SizedBox(height: 20),
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Expanded(
+            child: TextFormField(
+              controller: addressShowController,
+              readOnly: true,
+              style: const TextStyle(fontSize: 16),
+              textInputAction: TextInputAction.next,
+              decoration: InputDecoration(
+                labelText: "district_address".tr(),
+                hintText: "district_address".tr(),
+                suffixIcon: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: Colors.black54,
+                ),
+              ),
+              validator: (v) {
+                if (v!.isEmpty && checkValidate) {
+                  return 'please_enter'.tr();
+                }
+                return null;
+              },
+              onChanged: (v) => _formKey.currentState!.validate(),
+              onTap: () => showModalSearchAddress('address'),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 20),
+      Row(children: [
+        Expanded(
+          child: TextFormField(
+            controller: addressController,
+            style: const TextStyle(fontSize: 15),
+            validator: (v) {
+              if (v!.isEmpty && checkValidate) {
+                return 'please_enter'.tr();
+              }
+              return null;
+            },
+            onChanged: (v) => _formKey.currentState!.validate(),
+            textInputAction: TextInputAction.next,
+            decoration: InputDecoration(labelText: 'address'.tr(), hintText: 'house_number_floor_village_road'.tr()),
+          ),
+        )
+      ]),
+      const SizedBox(height: 20),
+      Row(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+        Expanded(
+            child: TextFormField(
+                controller: birthdayController,
+                readOnly: true,
+                onTap: () => _selectDate(context, true),
+                style: const TextStyle(fontSize: 15),
+                validator: (v) {
+                  if (v!.isEmpty && checkValidate) {
+                    return 'please_enter'.tr();
                   } else if (dopaValidate && checkValidate) {
                     return 'please_check_data'.tr();
                   }
                   return null;
                 },
-                onChanged: (v) {
-                  _formKey.currentState!.validate();
-                },
-                keyboardType: TextInputType.number,
-                maxLength: 17,
-                inputFormatters: [
-                  MaskTextInputFormatter(
-                    initialText: idCardController.text,
-                    mask: '#-####-#####-##-#',
-                    filter: {"#": RegExp(r'[0-9]')},
-                  ),
-                  LengthLimitingTextInputFormatter(17)
-                ],
+                onChanged: (v) => _formKey.currentState!.validate(),
                 decoration: InputDecoration(
-                  fillColor: Colors.white,
-                  labelText: 'id_card_code'.tr(),
-                ),
+                    fillColor: Colors.white, labelText: 'birthday'.tr(), suffixIcon: const Icon(Icons.calendar_today, color: Colors.black54)))),
+        const SizedBox(width: 20),
+        Expanded(
+          child: TextFormField(
+            controller: idCardController,
+            style: const TextStyle(fontSize: 15),
+            validator: (v) {
+              if (v!.isEmpty && checkValidate) {
+                return 'please_enter'.tr();
+              } else if (v.length != 17 && checkValidate) {
+                return "Please_enter_13_digit".tr();
+              } else if (dopaValidate && checkValidate) {
+                return 'please_check_data'.tr();
+              }
+              return null;
+            },
+            onChanged: (v) {
+              _formKey.currentState!.validate();
+            },
+            keyboardType: TextInputType.number,
+            maxLength: 17,
+            inputFormatters: [
+              MaskTextInputFormatter(
+                initialText: idCardController.text,
+                mask: '#-####-#####-##-#',
+                filter: {"#": RegExp(r'[0-9]')},
               ),
-            )
-          ]),
-          Container(
-            padding: const EdgeInsets.only(top: 10),
-            width: screenWidth,
-            margin: EdgeInsets.only(left: screenWidth * 0.475),
-            child: TextFormField(
-              controller: laserCodeController,
-              style: const TextStyle(fontSize: 15),
-              validator: (v) {
-                if (v!.isEmpty && checkValidate) {
-                  return 'please_enter'.tr();
-                } else if (dopaValidate && checkValidate) {
-                  return 'please_check_data'.tr();
-                }
-                return null;
-              },
-              onChanged: (v) => _formKey.currentState!.validate(),
-              maxLength: 14,
-              inputFormatters: [
-                MaskTextInputFormatter(
-                  initialText: laserCodeController.text,
-                  mask: '###-#######-##',
-                  filter: {"#": RegExp(r'[a-zA-Z0-9]')},
-                )
-              ],
-              decoration: InputDecoration(fillColor: Colors.white, labelText: "id_card_laserNo".tr()),
-              textCapitalization: TextCapitalization.characters,
+              LengthLimitingTextInputFormatter(17)
+            ],
+            decoration: InputDecoration(
+              fillColor: Colors.white,
+              labelText: 'id_card_code'.tr(),
             ),
-          )
-        ]));
+          ),
+        )
+      ]),
+      Container(
+        padding: const EdgeInsets.only(top: 10),
+        width: screenWidth,
+        margin: EdgeInsets.only(left: screenWidth * 0.475),
+        child: TextFormField(
+          controller: laserCodeController,
+          style: const TextStyle(fontSize: 15),
+          validator: (v) {
+            if (v!.isEmpty && checkValidate) {
+              return 'please_enter'.tr();
+            } else if (dopaValidate && checkValidate) {
+              return 'please_check_data'.tr();
+            }
+            return null;
+          },
+          onChanged: (v) => _formKey.currentState!.validate(),
+          maxLength: 14,
+          inputFormatters: [
+            MaskTextInputFormatter(
+              initialText: laserCodeController.text,
+              mask: '###-#######-##',
+              filter: {"#": RegExp(r'[a-zA-Z0-9]')},
+            )
+          ],
+          decoration: InputDecoration(fillColor: Colors.white, labelText: "id_card_laserNo".tr()),
+          textCapitalization: TextCapitalization.characters,
+        ),
+      )
+    ]);
+  }
+
+  passportInformation(double screenWidth) {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text('passport_scan'.tr(), style: const TextStyle(fontSize: 24)),
+      const SizedBox(
+        height: 16,
+      ),
+      Text('about_profile'.tr(), style: const TextStyle(color: Colors.black54, fontSize: 16)),
+      const SizedBox(height: 20),
+      Text('personal_information'.tr(), style: const TextStyle(fontSize: 20)),
+      const SizedBox(height: 20),
+      Row(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+        Expanded(
+            child: TextFormField(
+                controller: countryController,
+                style: const TextStyle(fontSize: 15),
+                validator: (v) {
+                  if (v!.isEmpty && checkValidate) {
+                    return 'please_enter'.tr();
+                  }
+                  return null;
+                },
+                onChanged: (v) => _formKey.currentState!.validate(),
+                textInputAction: TextInputAction.next,
+                decoration: InputDecoration(labelText: 'country'.tr()))),
+        const SizedBox(width: 20),
+        Expanded(
+            child: TextFormField(
+                controller: passportController,
+                style: const TextStyle(fontSize: 15),
+                validator: (v) {
+                  if (v!.isEmpty && checkValidate) {
+                    return 'please_enter'.tr();
+                  }
+                  return null;
+                },
+                onChanged: (v) => _formKey.currentState!.validate(),
+                textInputAction: TextInputAction.next,
+                decoration: InputDecoration(labelText: 'passport'.tr())))
+      ]),
+      const SizedBox(height: 20),
+      Row(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+        Expanded(
+            child: TextFormField(
+                controller: firstNameController,
+                style: const TextStyle(fontSize: 15),
+                validator: (v) {
+                  if (v!.isEmpty && checkValidate) {
+                    return 'please_enter'.tr();
+                  } else if (dopaValidate && checkValidate) {
+                    return 'please_check_data'.tr();
+                  }
+                  return null;
+                },
+                onChanged: (v) => _formKey.currentState!.validate(),
+                textInputAction: TextInputAction.next,
+                decoration: InputDecoration(labelText: 'name'.tr()))),
+        const SizedBox(width: 20),
+        Expanded(
+            child: TextFormField(
+                controller: lastNameController,
+                style: const TextStyle(fontSize: 15),
+                validator: (v) {
+                  if (v!.isEmpty && checkValidate) {
+                    return 'please_enter'.tr();
+                  } else if (dopaValidate && checkValidate) {
+                    return 'please_check_data'.tr();
+                  }
+                  return null;
+                },
+                onChanged: (v) => _formKey.currentState!.validate(),
+                textInputAction: TextInputAction.next,
+                decoration: InputDecoration(labelText: 'last_name'.tr())))
+      ]),
+      const SizedBox(height: 20),
+      Row(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+        Expanded(
+            child: TextFormField(
+                controller: birthdayController,
+                readOnly: true,
+                onTap: () => _selectDate(context, true),
+                style: const TextStyle(fontSize: 15),
+                validator: (v) {
+                  if (v!.isEmpty && checkValidate) {
+                    return 'please_enter'.tr();
+                  } else if (dopaValidate && checkValidate) {
+                    return 'please_check_data'.tr();
+                  }
+                  return null;
+                },
+                onChanged: (v) => _formKey.currentState!.validate(),
+                decoration: InputDecoration(
+                    fillColor: Colors.white, labelText: 'birthday'.tr(), suffixIcon: const Icon(Icons.calendar_today, color: Colors.black54)))),
+        const SizedBox(width: 20),
+        Expanded(
+            child: TextFormField(
+                controller: expirePassportController,
+                readOnly: true,
+                onTap: () => _selectDate(context, false),
+                style: const TextStyle(fontSize: 15),
+                validator: (v) {
+                  if (v!.isEmpty && checkValidate) {
+                    return 'please_enter'.tr();
+                  } else if (dopaValidate && checkValidate) {
+                    return 'please_check_data'.tr();
+                  }
+                  return null;
+                },
+                onChanged: (v) => _formKey.currentState!.validate(),
+                decoration: InputDecoration(
+                    fillColor: Colors.white, labelText: 'Expiration_date'.tr(), suffixIcon: const Icon(Icons.calendar_today, color: Colors.black54))))
+      ]),
+    ]);
   }
 
   Widget idCardCapturing({double? screenWidth, double? screenheight}) {
@@ -959,36 +1134,52 @@ class _PersonalInfoState extends State<PersonalInfo> {
                     );
                   } else {
                     if (await _callVerifyDopa()) {
-                      final res = await PostAPI.call(
-                          url: '$register3003/users/pre_verify',
-                          headers: Authorization.auth2,
-                          body: {"id_card": idCardController.text.replaceAll('-', '')},
-                          context: context);
+                      if (widget.isCitizen) {
+                        final res = await PostAPI.call(
+                            url: '$register3003/users/pre_verify',
+                            headers: Authorization.auth2,
+                            body: {"id_card": idCardController.text.replaceAll('-', '')},
+                            context: context);
+                        if (res['success']) {
+                          if (careerChildId != null) {
+                            widget.setCareerChildID!(careerChildId);
+                          } else {
+                            widget.setCareerChildID!(null);
+                          }
+                          if (frontIDCardImage.isNotEmpty) {
+                            widget.setFileFrontCitizen!(frontIDCardImage);
+                          }
+                          if (backIDCardImage.isNotEmpty) {
+                            widget.setFileBackCitizen!(backIDCardImage);
+                          }
+                          if (selfieIDCard.isNotEmpty) {
+                            widget.setFileSelfie!(selfieIDCard);
+                          }
 
-                      if (res['success']) {
+                          widget.setFirstName!(firstNameController.text);
+                          widget.setLastName!(lastNameController.text);
+                          widget.setFirstNameEng!(firstnameEngController.text);
+                          widget.setLastNameEng!(lastnameEngController.text);
+                          widget.setAddress!(addressController.text);
+                          widget.setBirthday!(birthdayController.text);
+                          widget.setIDCard!(idCardController.text.replaceAll('-', ''));
+                          widget.setLaserCode!(laserCodeController.text.replaceAll('-', ''));
+                          widget.setPinVisible!(true);
+                          widget.setSelectedStep!(3);
+                          widget.setDataVisible!(false);
+                        }
+                      } else {
                         if (careerChildId != null) {
                           widget.setCareerChildID!(careerChildId);
                         } else {
                           widget.setCareerChildID!(null);
                         }
-                        if (frontIDCardImage.isNotEmpty) {
-                          widget.setFileFrontCitizen!(frontIDCardImage);
-                        }
-                        if (backIDCardImage.isNotEmpty) {
-                          widget.setFileBackCitizen!(backIDCardImage);
-                        }
-                        if (selfieIDCard.isNotEmpty) {
-                          widget.setFileSelfie!(selfieIDCard);
-                        }
-
+                        widget.setCountryCode!(countryController.text);
+                        widget.setPassportNumber!(passportController.text);
                         widget.setFirstName!(firstNameController.text);
                         widget.setLastName!(lastNameController.text);
-                        widget.setFirstNameEng!(firstnameEngController.text);
-                        widget.setLastNameEng!(lastnameEngController.text);
-                        widget.setAddress!(addressController.text);
                         widget.setBirthday!(birthdayController.text);
-                        widget.setIDCard!(idCardController.text.replaceAll('-', ''));
-                        widget.setLaserCode!(laserCodeController.text.replaceAll('-', ''));
+                        widget.setExpirePassport!(expirePassportController.text);
                         widget.setPinVisible!(true);
                         widget.setSelectedStep!(3);
                         widget.setDataVisible!(false);
@@ -1006,23 +1197,41 @@ class _PersonalInfoState extends State<PersonalInfo> {
 
   Future<bool> _callVerifyDopa() async {
     dopaValidate = false;
-    var verifyDOPA = await PostAPI.call(
-      url: 'https://api.gbwallet.co/register-api/users/verify_dopa', //TODO GB PRD
-      headers: Authorization.auth2,
-      body: {
-        "id_card": idCardController.text.replaceAll('-', ''),
-        "first_name": firstNameController.text,
-        "last_name": lastNameController.text,
-        "birthday": birthdayController.text,
-        "laser": laserCodeController.text.replaceAll('-', ''),
-      },
-      context: context,
-    );
-    if ((verifyDOPA['response']['error_message']).toString().toLowerCase().contains('invalid_id_card_information'.tr())) {
-      dopaValidate = true;
-      _formKey.currentState!.validate();
+    if (widget.isCitizen) {
+      var verifyDOPA = await PostAPI.call(
+        url: 'https://api.gbwallet.co/register-api/users/verify_dopa', //TODO GB PRD
+        headers: Authorization.auth2,
+        body: {
+          "id_card": idCardController.text.replaceAll('-', ''),
+          "first_name": firstNameController.text,
+          "last_name": lastNameController.text,
+          "birthday": birthdayController.text,
+          "laser": laserCodeController.text.replaceAll('-', ''),
+        },
+        context: context,
+      );
+      if ((verifyDOPA['response']['error_message']).toString().toLowerCase().contains('invalid_id_card_information'.tr())) {
+        dopaValidate = true;
+        _formKey.currentState!.validate();
+      }
+      return verifyDOPA['success'];
+    } else {
+      var verifyDOPA = await PostAPI.call(
+        url: 'https://api-uat-villa.gbwallet.co/register-api/users/verify_amlo',
+        headers: Authorization.authPassport,
+        body: {
+          "passportNo": passportController.text,
+          "firstNameEng": firstNameController.text,
+          "lastNameEng": lastNameController.text,
+        },
+        context: context,
+      );
+      if ((verifyDOPA['response']['error_message']).toString().toLowerCase().contains('invalid_id_card_information'.tr())) {
+        dopaValidate = true;
+        _formKey.currentState!.validate();
+      }
+      return verifyDOPA['success'];
     }
-    return verifyDOPA['success'];
   }
 
   showBottomDialog(List<DropdownMenuItem> dataListDropdown, int? selectedIndex, String title, Function callback) {
@@ -1086,8 +1295,16 @@ class _PersonalInfoState extends State<PersonalInfo> {
           key: _formKey,
           child: Column(children: [
             personInformation(screenWidth),
-            widget.ocrAllFailed ? Container(height: 20, width: double.infinity, color: Colors.grey[100]) : Container(),
-            widget.ocrAllFailed ? idCardCapturing(screenWidth: screenWidth, screenheight: screenheight) : Container(),
+            widget.isCitizen
+                ? widget.ocrAllFailed
+                    ? Container(height: 20, width: double.infinity, color: Colors.grey[100])
+                    : Container()
+                : Container(),
+            widget.isCitizen
+                ? widget.ocrAllFailed
+                    ? idCardCapturing(screenWidth: screenWidth, screenheight: screenheight)
+                    : Container()
+                : Container(),
             Container(height: 20, width: double.infinity, color: Colors.grey[100]),
             workInformation(),
           ]))

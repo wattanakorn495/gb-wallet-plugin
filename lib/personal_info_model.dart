@@ -12,6 +12,10 @@ class PersonalInfoModel {
     this.workName,
     this.workAddress,
     this.workAddressSearch,
+    //passport
+    this.passportNumber,
+    this.countryCodeName,
+    this.expirePassport,
   });
   int? careerID, careerChildID;
   String? idCard,
@@ -25,5 +29,9 @@ class PersonalInfoModel {
       ocrBackLaser,
       workName,
       workAddress,
-      workAddressSearch;
+      workAddressSearch,
+      //passport
+      passportNumber,
+      countryCodeName,
+      expirePassport;
 }

@@ -5,6 +5,7 @@ String? register3003 = dotenv.env['host3003'];
 String? gateway3006 = dotenv.env['host3006'];
 String? connectGBWallet = dotenv.env['connect_gbwallet'];
 String? authorization2 = dotenv.env['authorization2'];
+String? authorization2Passport = dotenv.env['authorization2Passport'];
 
 Map messageOffline = {
   "success": false,
@@ -21,12 +22,16 @@ Map errorNotFound = {
   'response': {'error_message': 'Something_went_wrong_Please_try_again'.tr()}
 };
 
-enum Authorization { token, auth2, none }
+enum Authorization { token, auth2, none, authPassport }
 
-Map<String, String> setHeaders(Authorization headers) {
+Map<String, String> setHeaders(
+  Authorization headers,
+) {
   switch (headers) {
     case Authorization.auth2:
       return {'Authorization2': authorization2!, 'lang': 'language'.tr()};
+    case Authorization.authPassport:
+      return {'Authorization2': authorization2Passport!, 'lang': 'language'.tr()};
     default:
       return {'lang': 'language'.tr()};
   }
