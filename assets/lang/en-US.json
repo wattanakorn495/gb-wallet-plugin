@@ -636,6 +636,7 @@
     "photoandPassport_info": "Make sure your Passport is clear and without scratch.",
     "photoandPassport_glare": "You Passport no glare.",
     "passport_official": "Your Passport is issued by government.",
-    "Please_arrange_the_back_of_the_passport": "Please arrange the back of the passport.\nby keeping the card in the specified frame",
-    "personal_information": "Personal information"
+    "Please_arrange_the_back_of_the_passport": "Please arrange the back of the passport.\nby keeping in the specified frame",
+    "personal_information": "Personal information",
+    "passport_scan_failed_Please_try_again": "Passport scan failed Please try again"
 }

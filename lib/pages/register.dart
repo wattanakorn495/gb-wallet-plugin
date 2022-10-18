@@ -357,10 +357,19 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
             fileNameBackID = resBackID['response']['data']['file_name'];
             fileNameLiveness = data['face_image_file_name'];
 
+            String workAddress = '';
+            if (workAddressController.text.isNotEmpty) {
+              workAddress = workAddressController.text;
+            }
+            if (workAddressSerchController.text.isNotEmpty) {
+              if (workAddressController.text.isNotEmpty) workAddress += ' ';
+              workAddress += workAddressSerchController.text;
+            }
             resCreateUser = await PostAPI.call(
                 url: '$register3003/users',
                 headers: Authorization.auth2,
                 body: {
+                  "type_register": 'id_card',
                   "id_card": idCardController.text,
                   "first_name": firstNameController.text,
                   "last_name": lastNameController.text,
@@ -376,7 +385,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                   "sub_district_id": '$indexSubDistric',
                   "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
                   "work_name": workNameController.text,
-                  "work_address": '${workAddressController.text} ${workAddressSerchController.text}',
+                  "work_address": workAddress,
                   "file_front_citizen": fileNameFrontID,
                   "file_back_citizen": fileNameBackID,
                   "file_selfie": '',
@@ -447,29 +456,38 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                 context: context);
             fileNameFrontID = resPassport['response']['data']['file_name'];
             fileNameLiveness = data['face_image_file_name'];
+            String workAddress = '';
+            if (workAddressController.text.isNotEmpty) {
+              workAddress = workAddressController.text;
+            }
+            if (workAddressSerchController.text.isNotEmpty) {
+              if (workAddressController.text.isNotEmpty) workAddress += ' ';
+              workAddress += workAddressSerchController.text;
+            }
             resCreateUser = await PostAPI.call(
                 url: '$register3003/users',
                 headers: Authorization.auth2,
                 body: {
-                  "passport": passportNumber,
+                  "type_register": 'passport',
+                  "id_card": passportNumber,
                   "first_name": firstNameController.text,
                   "last_name": lastNameController.text,
-                  "first_name_en": firstNameENController.text,
-                  "last_name_en": lastNameENController.text,
-                  "address": ' ',
+                  "first_name_en": firstNameController.text,
+                  "last_name_en": lastNameController.text,
+                  "address": 'none',
                   "birthday": birthdayController.text,
                   "pin": pinController.text,
-                  "send_otp_id": sendOtpId ?? ' ',
-                  "laser": ' ',
-                  "province_id": ' ',
-                  "district_id": ' ',
-                  "sub_district_id": ' ',
+                  "send_otp_id": sendOtpId ?? '',
+                  "laser": '',
+                  "province_id": '',
+                  "district_id": '',
+                  "sub_district_id": '',
                   "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
                   "work_name": workNameController.text,
-                  "work_address": '${workAddressController.text} ${workAddressSerchController.text}',
+                  "work_address": workAddress,
                   "file_front_citizen": fileNameFrontID,
-                  "file_back_citizen": ' ',
-                  "file_selfie": ' ',
+                  "file_back_citizen": '',
+                  "file_selfie": '',
                   "file_liveness": fileNameLiveness,
                   "imei": StateStore.deviceSerial,
                   "fcm_token": StateStore.fcmToken,
@@ -768,11 +786,19 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
               "fcm_token": StateStore.fcmToken,
             });
           }
-
+          String workAddress = '';
+          if (workAddressController.text.isNotEmpty) {
+            workAddress = workAddressController.text;
+          }
+          if (workAddressSerchController.text.isNotEmpty) {
+            if (workAddressController.text.isNotEmpty) workAddress += ' ';
+            workAddress += workAddressSerchController.text;
+          }
           resCreateUser = await PostAPI.call(
               url: '$register3003/users',
               headers: Authorization.auth2,
               body: {
+                "type_register": 'id_card',
                 "id_card": idCardController.text,
                 "first_name": firstNameController.text,
                 "last_name": lastNameController.text,
@@ -788,7 +814,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                 "sub_district_id": '$indexSubDistric',
                 "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
                 "work_name": workNameController.text,
-                "work_address": '${workAddressController.text} ${workAddressSerchController.text}',
+                "work_address": workAddress,
                 "file_front_citizen": fileNameFrontID,
                 "file_back_citizen": fileNameBackID,
                 "file_selfie": fileNameSelfieID,
@@ -1166,10 +1192,13 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                             } else {
                               personalInfo.firstName = data['ocrFrontName'];
                               personalInfo.lastName = data['ocrFrontSurname'];
+                              personalInfo.address = '';
+                              personalInfo.filterAddress = '';
                               personalInfo.birthday = data['ocrBirthDay'];
                               personalInfo.passportNumber = data['passportNumber'];
                               personalInfo.countryCodeName = data['countryCode'];
                               personalInfo.expirePassport = data['expireDate'];
+                              await getAddress(personalInfo);
 
                               setState(() {
                                 firstNameController.text = data['ocrFrontName'];
@@ -1381,38 +1410,19 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                     ],
                                     context: context);
                                 fileNameSelfieID = resSelfieID['response']['data']['file_name'];
-
-                                if (kDebugMode) {
-                                  print({
-                                    "id_card": idCardController.text,
-                                    "first_name": firstNameController.text,
-                                    "last_name": lastNameController.text,
-                                    "first_name_en": firstNameENController.text,
-                                    "last_name_en": lastNameENController.text,
-                                    "address": addressController.text,
-                                    "birthday": birthdayController.text,
-                                    "pin": pinController.text,
-                                    "send_otp_id": sendOtpId!,
-                                    "laser": ocrBackLaser!,
-                                    "province_id": '$indexProvince',
-                                    "district_id": '$indexDistric',
-                                    "sub_district_id": '$indexSubDistric',
-                                    "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
-                                    "work_name": workNameController.text,
-                                    "work_address": '${workAddressController.text} ${workAddressSerchController.text}',
-                                    "file_front_citizen": fileNameFrontID,
-                                    "file_back_citizen": fileNameBackID,
-                                    "file_selfie": fileNameSelfieID,
-                                    "file_liveness": '',
-                                    "imei": StateStore.deviceSerial,
-                                    "fcm_token": StateStore.fcmToken,
-                                  });
+                                String workAddress = '';
+                                if (workAddressController.text.isNotEmpty) {
+                                  workAddress = workAddressController.text;
                                 }
-
+                                if (workAddressSerchController.text.isNotEmpty) {
+                                  if (workAddressController.text.isNotEmpty) workAddress += ' ';
+                                  workAddress += workAddressSerchController.text;
+                                }
                                 resCreateUser = await PostAPI.call(
                                     url: '$register3003/users',
                                     headers: Authorization.auth2,
                                     body: {
+                                      "type_register": 'id_card',
                                       "id_card": idCardController.text,
                                       "first_name": firstNameController.text,
                                       "last_name": lastNameController.text,
@@ -1426,7 +1436,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                       "sub_district_id": '$indexSubDistric',
                                       "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
                                       "work_name": workNameController.text,
-                                      "work_address": '${workAddressController.text} ${workAddressSerchController.text}',
+                                      "work_address": workAddress,
                                       "file_front_citizen": fileNameFrontID,
                                       "file_back_citizen": fileNameBackID,
                                       "file_selfie": fileNameSelfieID,

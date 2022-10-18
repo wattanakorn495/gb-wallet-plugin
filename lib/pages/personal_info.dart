@@ -195,7 +195,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
     super.initState();
 
     onLoad();
-    widget.isCitizen ? getAddress() : {};
+    getAddress();
   }
 
   @override
@@ -255,12 +255,13 @@ class _PersonalInfoState extends State<PersonalInfo> {
       lastnameEngController.text = widget.person!.lastNameEng ?? "";
       addressController.text = widget.person!.address ?? "";
       birthdayController.text = widget.person!.birthday ?? DateFormat('dd/MM/yyyy').format(birthDatePick!);
-      birthDatePick = DateFormat('dd/MM/yyyy').parse(birthdayController.text);
-
+      if (birthdayController.text.isNotEmpty) {
+        birthDatePick = DateFormat('dd/MM/yyyy').parse(birthdayController.text);
+      }
       laserCodeController.text = laserCodeFormatter.maskText(widget.person!.ocrBackLaser ?? "");
       ocrResultStatus = widget.ocrAllFailed ? "Failed" : "Passed";
       careerId = widget.person!.careerID;
-      if (careerId != null) {
+      if (careerId != null && (dataCareer as List).map((e) => e['id']).contains(careerId)) {
         indexCareer = (dataCareer as List).indexWhere((item) => item['id'] == careerId);
         careerController.text = '${dataCareer[indexCareer]['name_${'language'.tr()}']}';
         careerId = dataCareer[indexCareer]['id'];
@@ -286,12 +287,17 @@ class _PersonalInfoState extends State<PersonalInfo> {
       firstNameController.text = widget.person!.firstName ?? "";
       lastNameController.text = widget.person!.lastName ?? "";
       birthdayController.text = widget.person!.birthday ?? DateFormat('dd/MM/yyyy').format(birthDatePick!);
-      birthDatePick = DateFormat('dd/MM/yyyy').parse(birthdayController.text);
+
+      if (birthdayController.text.isNotEmpty) {
+        birthDatePick = DateFormat('dd/MM/yyyy').parse(birthdayController.text);
+      }
       expirePassportController.text = widget.person!.expirePassport ?? DateFormat('dd/MM/yyyy').format(expireDatePick!);
-      expireDatePick = DateFormat('dd/MM/yyyy').parse(expirePassportController.text);
+      if (expirePassportController.text.isNotEmpty) {
+        expireDatePick = DateFormat('dd/MM/yyyy').parse(expirePassportController.text);
+      }
       ocrResultStatus = widget.ocrAllFailed ? "Failed" : "Passed";
       careerId = widget.person!.careerID;
-      if (careerId != null) {
+      if (careerId != null && (dataCareer as List).map((e) => e['id']).contains(careerId)) {
         indexCareer = (dataCareer as List).indexWhere((item) => item['id'] == careerId);
         careerController.text = '${dataCareer[indexCareer]['name_${'language'.tr()}']}';
         careerId = dataCareer[indexCareer]['id'];
@@ -439,7 +445,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                       indexCareerChild = null;
                       skipInfomation = dataCareer[index - 1]['skip_infomation'];
                       careerChildId = null;
-                      widget.setCareerID!(index);
+                      widget.setCareerID!(careerId);
                     });
                   }
                 });

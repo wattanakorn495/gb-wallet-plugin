@@ -594,23 +594,20 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
           context: context,
           builder: (dialogContext) => CustomDialog(
             title: 'Something_went_wrong'.tr(),
-            content: 'ID_card_scan_failed_Please_try_again'.tr(),
+            content: "passport_scan_failed_Please_try_again".tr(),
             avatar: false,
             onPressedConfirm: () async {
               Navigator.pop(dialogContext);
               setState(() {
-                cameraCount++;
+                // cameraCount++;
                 isLoading = false;
-                // _takeBack = false;
               });
-
-              if (cameraCount == 3) {
-                // await File(frontIDPath).delete();
-                ocrFailedAll = true;
-                Navigator.pop(context, callBackData());
-              } else {
-                await _startLiveFeed();
-              }
+              // if (cameraCount == 3) {
+              //   ocrFailedAll = true;
+              //   Navigator.pop(context, callBackData());
+              // } else {
+              await _startLiveFeed();
+              // }
             },
           ),
         );

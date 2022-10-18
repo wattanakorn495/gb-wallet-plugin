@@ -633,6 +633,7 @@
     "photoandPassport_info": "รูปถ่ายและข้อมูลบนหนังสือเดินทางชัดเจน ไม่มีรอยขูดขีด",
     "photoandPassport_glare": "หลีกเลี่ยงแสงสะท้อนบนหนังสือเดินทาง",
     "passport_official": "ต้องใช้หนังสือเดินทางตัวจริงเท่านั้น",
-    "Please_arrange_the_back_of_the_passport": "กรุณาจัดวางหนังสือเดินทาง\nโดยให้บัตรอยู่ในกรอบที่กำหนด",
-    "personal_information": "ข้อมูลส่วนตัว"
+    "Please_arrange_the_back_of_the_passport": "กรุณาจัดวางหนังสือเดินทาง\nโดยให้อยู่ในกรอบที่กำหนด",
+    "personal_information": "ข้อมูลส่วนตัว",
+    "passport_scan_failed_Please_try_again": "การสแกนหนังสือเดินทางไม่สำเร็จ กรุณาลองใหม่อีกครั้ง"
 }
