@@ -127,9 +127,9 @@ class PersonalInfo extends StatefulWidget {
 }
 
 class _PersonalInfoState extends State<PersonalInfo> {
-  String checkImage = "assets/images/Check.png";
-  String unCheckImage = "assets/images/uncheck.png";
-  String cameraImage = "assets/icons/camera.png";
+  final checkImage = "assets/images/Check.png";
+  final unCheckImage = "assets/images/uncheck.png";
+  final cameraImage = "assets/icons/camera.png";
   String? workName, workAddress, workAdressSearch;
   DateTime? birthDatePick, expireDatePick;
   String? ocrResult;
@@ -873,11 +873,20 @@ class _PersonalInfoState extends State<PersonalInfo> {
     ]);
   }
 
-  Widget idCardCapturing({double? screenWidth, double? screenheight}) {
+  Widget idCapturing({
+    double? screenWidth,
+  }) {
     return Container(
       width: screenWidth,
       padding: const EdgeInsets.all(20),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      child: widget.isCitizen ? idCardCapture() : passportCapture(),
+    );
+  }
+
+  Widget idCardCapture() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         Text("confirm_identity_image".tr(), style: const TextStyle(fontSize: 17)),
         Text("confirm_identity_image_description".tr(), style: const TextStyle(fontSize: 13, color: Color(0xff797979))),
         const SizedBox(height: 20),
@@ -1073,7 +1082,155 @@ class _PersonalInfoState extends State<PersonalInfo> {
             ),
           )
         ])
-      ]),
+      ],
+    );
+  }
+
+  Widget passportCapture() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("confirm_identity_image".tr(), style: const TextStyle(fontSize: 17)),
+        Text("confirm_identity_image_description_passport".tr(), style: const TextStyle(fontSize: 13, color: Color(0xff797979))),
+        const SizedBox(height: 20),
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Image(
+                image: AssetImage(frontIDCardImage.isEmpty ? unCheckImage : checkImage, package: 'gbkyc'),
+                width: 24,
+              ),
+              const SizedBox(
+                height: 8,
+              ),
+              Text("passport_data".tr(), style: const TextStyle(color: Color(0xff555555))),
+              Text("${"photolight".tr()}/${"photo_passport_info".tr()}", style: const TextStyle(fontSize: 12, color: Color(0xff555555)))
+            ]),
+          ),
+          const SizedBox(width: 15),
+          DottedBorder(
+            dashPattern: const [6, 3, 6, 3],
+            padding: const EdgeInsets.all(6),
+            color: const Color(0xffc4c4c4),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.all(Radius.circular(6)),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            CameraScanIDCard(titleAppbar: 'front_passport'.tr(), enableButton: true, isFront: false, noFrame: true)),
+                  ).then((v) async {
+                    if (v != null) {
+                      int fileSize = await getFileSize(filepath: v);
+                      if (frontIDCardImage.isNotEmpty) {
+                        await File(frontIDCardImage).delete();
+                      }
+                      if (!isImage(v)) {
+                        showDialog(
+                          barrierDismissible: true,
+                          context: context,
+                          builder: (context) {
+                            return CustomDialog(
+                                title: "Extension_not_correct".tr(), textConfirm: "ok".tr(), onPressedConfirm: () => Navigator.pop(context));
+                          },
+                        );
+                      } else if (fileSize > 10000000) {
+                        showDialog(
+                          barrierDismissible: true,
+                          context: context,
+                          builder: (context) {
+                            return CustomDialog(
+                                title: "File_size_larger".tr(), textConfirm: "ok".tr(), onPressedConfirm: () => Navigator.pop(context));
+                          },
+                        );
+                      } else {
+                        setState(() => frontIDCardImage = v);
+                      }
+                    }
+                  });
+                },
+                child: SizedBox(
+                  height: 102,
+                  width: 143,
+                  child: frontIDCardImage.isEmpty
+                      ? Image.asset(cameraImage, scale: 3, package: 'gbkyc')
+                      : Image.file(File(frontIDCardImage), width: 143, fit: BoxFit.cover),
+                ),
+              ),
+            ),
+          )
+        ]),
+        Divider(height: 30, thickness: 2, color: Colors.grey[100]),
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Image(image: AssetImage(selfieIDCard.isEmpty ? unCheckImage : checkImage, package: 'gbkyc'), width: 24),
+              const SizedBox(
+                height: 8,
+              ),
+              Text("passport_selfie".tr(), style: const TextStyle(color: Color(0xff555555))),
+              Text("${"photolight".tr()}/${"photo_passport_info".tr()}", style: const TextStyle(fontSize: 12, color: Color(0xff555555))),
+            ]),
+          ),
+          const SizedBox(width: 15),
+          DottedBorder(
+            dashPattern: const [6, 3, 6, 3],
+            padding: const EdgeInsets.all(6),
+            color: const Color(0xffc4c4c4),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.all(Radius.circular(6)),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          CameraScanIDCard(titleAppbar: 'passport_take_selfie'.tr(), enableButton: true, isFront: true, noFrame: true),
+                    ),
+                  ).then((v) async {
+                    if (v != null) {
+                      int fileSize = await getFileSize(filepath: v);
+                      if (selfieIDCard.isNotEmpty) {
+                        await File(selfieIDCard).delete();
+                      }
+                      if (!isImage(v)) {
+                        showDialog(
+                          barrierDismissible: true,
+                          context: context,
+                          builder: (context) {
+                            return CustomDialog(
+                                title: "Extension_not_correct".tr(), textConfirm: "ok".tr(), onPressedConfirm: () => Navigator.pop(context));
+                          },
+                        );
+                      } else if (fileSize > 10000000) {
+                        showDialog(
+                          barrierDismissible: true,
+                          context: context,
+                          builder: (context) {
+                            return CustomDialog(
+                                title: "File_size_larger".tr(), textConfirm: "ok".tr(), onPressedConfirm: () => Navigator.pop(context));
+                          },
+                        );
+                      } else {
+                        setState(() => selfieIDCard = v);
+                      }
+                    }
+                  });
+                },
+                child: SizedBox(
+                  height: 102,
+                  width: 143,
+                  child: selfieIDCard.isEmpty
+                      ? Image.asset(cameraImage, scale: 3, package: 'gbkyc')
+                      : Image.file(File(selfieIDCard), width: 143, fit: BoxFit.cover),
+                ),
+              ),
+            ),
+          )
+        ])
+      ],
     );
   }
 
@@ -1116,18 +1273,36 @@ class _PersonalInfoState extends State<PersonalInfo> {
                   setState(() => validateCareer = true);
                 }
                 if (_formKey.currentState!.validate() || dopaValidate) {
-                  if (widget.ocrAllFailed && (frontIDCardImage.isEmpty || backIDCardImage.isEmpty || selfieIDCard.isEmpty)) {
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        return CustomDialog(
-                          title: "confirm_identity_image".tr(),
-                          content: "confirm_identity_image_description".tr(),
-                          avatar: false,
-                        );
-                      },
-                    );
-                  } else if (careerId == null) {
+                  bool ocrPassed = true;
+                  if (widget.ocrAllFailed) {
+                    if (widget.isCitizen && (frontIDCardImage.isEmpty || backIDCardImage.isEmpty || selfieIDCard.isEmpty)) {
+                      ocrPassed = false;
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return CustomDialog(
+                            title: "confirm_identity_image".tr(),
+                            content: "confirm_identity_image_description".tr(),
+                            avatar: false,
+                          );
+                        },
+                      );
+                      ocrPassed = false;
+                    } else if (!widget.isCitizen && (frontIDCardImage.isEmpty || selfieIDCard.isEmpty)) {
+                      ocrPassed = false;
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return CustomDialog(
+                            title: "confirm_identity_image".tr(),
+                            content: "confirm_identity_image_description_passport".tr(),
+                            avatar: false,
+                          );
+                        },
+                      );
+                    }
+                  }
+                  if (careerId == null && ocrPassed) {
                     showDialog(
                       context: context,
                       builder: (context) {
@@ -1138,7 +1313,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                         );
                       },
                     );
-                  } else {
+                  } else if (ocrPassed) {
                     if (await _callVerifyDopa()) {
                       if (widget.isCitizen) {
                         final res = await PostAPI.call(
@@ -1179,6 +1354,12 @@ class _PersonalInfoState extends State<PersonalInfo> {
                           widget.setCareerChildID!(careerChildId);
                         } else {
                           widget.setCareerChildID!(null);
+                        }
+                        if (frontIDCardImage.isNotEmpty) {
+                          widget.setFileFrontCitizen!(frontIDCardImage);
+                        }
+                        if (selfieIDCard.isNotEmpty) {
+                          widget.setFileSelfie!(selfieIDCard);
                         }
                         widget.setCountryCode!(countryController.text);
                         widget.setPassportNumber!(passportController.text);
@@ -1294,22 +1475,17 @@ class _PersonalInfoState extends State<PersonalInfo> {
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
-    double screenheight = MediaQuery.of(context).size.height;
 
     return ListView(physics: const ClampingScrollPhysics(), padding: const EdgeInsets.only(top: 5, bottom: 30), children: [
       Form(
           key: _formKey,
           child: Column(children: [
             personInformation(screenWidth),
-            widget.isCitizen
-                ? widget.ocrAllFailed
-                    ? Container(height: 20, width: double.infinity, color: Colors.grey[100])
-                    : Container()
-                : Container(),
-            widget.isCitizen
-                ? widget.ocrAllFailed
-                    ? idCardCapturing(screenWidth: screenWidth, screenheight: screenheight)
-                    : Container()
+            widget.ocrAllFailed ? Container(height: 20, width: double.infinity, color: Colors.grey[100]) : Container(),
+            widget.ocrAllFailed
+                ? idCapturing(
+                    screenWidth: screenWidth,
+                  )
                 : Container(),
             Container(height: 20, width: double.infinity, color: Colors.grey[100]),
             workInformation(),

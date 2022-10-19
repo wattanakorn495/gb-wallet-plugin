@@ -125,7 +125,7 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
     cameraBackCount = 0;
     noFrame = widget.noFrame;
     visibleFront = widget.isFront;
-    if (noFrame!) _direction = CameraLensDirection.front;
+    if (noFrame! && visibleFront!) _direction = CameraLensDirection.front;
     _startLiveFeed();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final RenderBox renderBox = _globalKey.currentContext?.findRenderObject() as RenderBox;
@@ -599,15 +599,15 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
             onPressedConfirm: () async {
               Navigator.pop(dialogContext);
               setState(() {
-                // cameraCount++;
+                cameraCount++;
                 isLoading = false;
               });
-              // if (cameraCount == 3) {
-              //   ocrFailedAll = true;
-              //   Navigator.pop(context, callBackData());
-              // } else {
-              await _startLiveFeed();
-              // }
+              if (cameraCount == 3) {
+                ocrFailedAll = true;
+                Navigator.pop(context, callBackData());
+              } else {
+                await _startLiveFeed();
+              }
             },
           ),
         );

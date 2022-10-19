@@ -635,5 +635,12 @@
     "passport_official": "ต้องใช้หนังสือเดินทางตัวจริงเท่านั้น",
     "Please_arrange_the_back_of_the_passport": "กรุณาจัดวางหนังสือเดินทาง\nโดยให้อยู่ในกรอบที่กำหนด",
     "personal_information": "ข้อมูลส่วนตัว",
-    "passport_scan_failed_Please_try_again": "การสแกนหนังสือเดินทางไม่สำเร็จ กรุณาลองใหม่อีกครั้ง"
+    "passport_scan_failed_Please_try_again": "การสแกนหนังสือเดินทางไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+    "confirm_identity_image_description_passport": "เพื่อการตรวจสอบ กรุณาถ่ายภาพหนังสือเดินทางให้ชัดเจน เพื่อเป็นหลักฐาน",
+    "passport_data": "ภาพข้อมูลหนังสือเดินทาง",
+    "photo_passport_info": "รูปถ่ายและข้อมูลบนหนังสือเดินทางชัดเจน ไม่มีรอยขูดขีด",
+    "front_passport": "ถ่ายข้อมูลหนังสือเดินทาง",
+    "passport_selfie": "ภาพเซลฟี่พร้อมถือหนังสือเดินทาง",
+    "passport_take_selfie": "ถ่ายเซลฟี่พร้อมถือหนังสือเดินทาง",
+    "scanface_verify_passport": "ถ่ายรูปเพื่อยืนยันความเป็นเจ้าของหนังสือเดินทาง"
 }
