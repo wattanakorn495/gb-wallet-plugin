@@ -14,7 +14,7 @@ bool isImage(String path) {
   return regType.hasMatch(path.substring(path.length - 4, path.length));
 }
 
-dynamic data;
+dynamic dataLang;
 bool isThai = false;
 
 readStringFile(bool isTh) async {
@@ -22,11 +22,11 @@ readStringFile(bool isTh) async {
   final String response = isTh
       ? await rootBundle.loadString('packages/gbkyc/assets/lang/th-TH.json')
       : await rootBundle.loadString('packages/gbkyc/assets/lang/en-US.json');
-  data = await json.decode(response);
+  dataLang = await json.decode(response);
 }
 
 extension StrTr on String {
   String tr() {
-    return (data == null || data[this] == null) ? ' ' : data[this];
+    return (dataLang == null || dataLang[this] == null) ? ' ' : dataLang[this];
   }
 }

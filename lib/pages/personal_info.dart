@@ -256,7 +256,11 @@ class _PersonalInfoState extends State<PersonalInfo> {
       addressController.text = widget.person!.address ?? "";
       birthdayController.text = widget.person!.birthday ?? DateFormat('dd/MM/yyyy').format(birthDatePick!);
       if (birthdayController.text.isNotEmpty) {
-        birthDatePick = DateFormat('dd/MM/yyyy').parse(birthdayController.text);
+        try {
+          birthDatePick = DateFormat('dd/MM/yyyy').parse(birthdayController.text);
+        } catch (e) {
+          birthdayController.text = DateFormat('dd/MM/yyyy').format(birthDatePick!);
+        }
       }
       laserCodeController.text = laserCodeFormatter.maskText(widget.person!.ocrBackLaser ?? "");
       ocrResultStatus = widget.ocrAllFailed ? "Failed" : "Passed";
@@ -287,13 +291,20 @@ class _PersonalInfoState extends State<PersonalInfo> {
       firstNameController.text = widget.person!.firstName ?? "";
       lastNameController.text = widget.person!.lastName ?? "";
       birthdayController.text = widget.person!.birthday ?? DateFormat('dd/MM/yyyy').format(birthDatePick!);
-
       if (birthdayController.text.isNotEmpty) {
-        birthDatePick = DateFormat('dd/MM/yyyy').parse(birthdayController.text);
+        try {
+          birthDatePick = DateFormat('dd/MM/yyyy').parse(birthdayController.text);
+        } catch (e) {
+          birthdayController.text = DateFormat('dd/MM/yyyy').format(birthDatePick!);
+        }
       }
       expirePassportController.text = widget.person!.expirePassport ?? DateFormat('dd/MM/yyyy').format(expireDatePick!);
       if (expirePassportController.text.isNotEmpty) {
-        expireDatePick = DateFormat('dd/MM/yyyy').parse(expirePassportController.text);
+        try {
+          expireDatePick = DateFormat('dd/MM/yyyy').parse(expirePassportController.text);
+        } catch (e) {
+          expirePassportController.text = DateFormat('dd/MM/yyyy').format(expireDatePick!);
+        }
       }
       ocrResultStatus = widget.ocrAllFailed ? "Failed" : "Passed";
       careerId = widget.person!.careerID;
