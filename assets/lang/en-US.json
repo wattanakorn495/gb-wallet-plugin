@@ -645,5 +645,9 @@
     "front_passport": "passport data photo",
     "passport_selfie": "Selfie with Passport",
     "passport_take_selfie": "Selfie with Passport",
-    "scanface_verify_passport": "Ready to take a photo to verify your Passport"
+    "scanface_verify_passport": "Ready to take a photo to verify your Passport",
+    "selfie_passport": "Take a selfie with your Passport",
+    "selfie_with_passport_make_sure": "Selfie with Passport\n Make sure your Passport is clear and\nwithout a scratch",
+    "sub_facematch_passport": "Your face is not match on your Passport",
+    "make_sure_your_passport_is_clear_and_without_a_scratch": "Make sure your passport is clear and without a scratch"
 }
