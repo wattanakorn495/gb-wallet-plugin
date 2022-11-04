@@ -1107,9 +1107,13 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
 
       setState(() => isLoading = false);
       if (resCreateUser['success']) {
-        await imgFrontIDCard!.delete();
-        await imgBackIDCard!.delete();
-        await imgLiveness!.delete();
+        try {
+          await imgFrontIDCard!.delete();
+          await imgBackIDCard!.delete();
+          await imgLiveness!.delete();
+        } catch (e) {
+          debugPrint('cannot delete image');
+        }
         _userLoginID = resCreateUser['response']['data']['user_login_id'];
         var data = await PostAPI.call(
             url: '$register3003/user_logins/$_userLoginID/login',
@@ -1206,10 +1210,12 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
 
       setState(() => isLoading = false);
       if (resCreateUser['success']) {
-        // await imgFrontIDCard!.delete();
-        // await imgBackIDCard!.delete();
-        await imgLiveness!.delete();
-        await imgPassport!.delete();
+        try {
+          await imgLiveness!.delete();
+          await imgPassport!.delete();
+        } catch (e) {
+          debugPrint('cannot delete image');
+        }
         _userLoginID = resCreateUser['response']['data']['user_login_id'];
         var data = await PostAPI.call(
             url: '$register3003/user_logins/$_userLoginID/login',
@@ -1360,9 +1366,14 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
         context: context);
 
     if (resCreateUser['success']) {
-      await File(pathFrontCitizen).delete();
-      if (isCitizen) await File(pathBackCitizen).delete();
-      await File(pathSelfie).delete();
+      try {
+        await File(pathFrontCitizen).delete();
+        if (isCitizen) await File(pathBackCitizen).delete();
+        await File(pathSelfie).delete();
+      } catch (e) {
+        debugPrint('cannot delete image');
+      }
+
       _userLoginID = resCreateUser['response']['data']['user_login_id'];
       var data = await PostAPI.call(
           url: '$register3003/user_logins/$_userLoginID/login',
@@ -1514,9 +1525,13 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
 
     setState(() => isLoading = false);
     if (resCreateUser['success']) {
-      await imgFrontIDCard!.delete();
-      if (isCitizen) await imgBackIDCard!.delete();
-      await File(pathSelfie).delete();
+      try {
+        await imgFrontIDCard!.delete();
+        if (isCitizen) await imgBackIDCard!.delete();
+        await File(pathSelfie).delete();
+      } catch (e) {
+        debugPrint('cannot delete image');
+      }
       _userLoginID = resCreateUser['response']['data']['user_login_id'];
       var data = await PostAPI.call(
           url: '$register3003/user_logins/$_userLoginID/login',
