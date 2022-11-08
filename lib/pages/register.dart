@@ -572,11 +572,11 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
   sendOTP() async {
     txPhoneNumber = widget.phoneNumber.toString();
     var otpId = await PostAPI.call(
-      url: '$register3003/send_otps',
-      headers: Authorization.auth2,
-      body: {"phone_number": txPhoneNumber, "country_code": countryCode},
-      context: context,
-    );
+        url: '$register3003/send_otps',
+        headers: Authorization.auth2,
+        body: {"phone_number": txPhoneNumber, "country_code": countryCode},
+        context: context,
+        alert: false);
 
     if (otpId['success']) {
       var data = otpId['response']['data'];
@@ -585,6 +585,12 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
         sendOtpId = data['send_otp_id'];
         datetimeOTP = DateTime.parse(data['expiration_at']);
       });
+    } else if (otpId['response'] != null) {
+      await showDialog(
+          context: context, builder: (builder) => CustomDialog(title: 'unable_register'.tr(), content: errorMessages(otpId), avatar: false));
+    } else {
+      await showDialog(
+          context: context, builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(otpId), avatar: false));
     }
   }
 
@@ -593,12 +599,12 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
 
     if (formkeyOTP.currentState!.validate() && otpController.text.length == 6) {
       var data = await PostAPI.call(
-          url: '$register3003/send_otps/$sendOtpId/verify', headers: Authorization.auth2, body: {"otp": otpController.text}, context: context);
-
-      if (!data['success']) {
-        errorController.add(ErrorAnimationType.shake);
-        setState(() => hasError = true);
-      } else {
+          url: '$register3003/send_otps/$sendOtpId/verify',
+          headers: Authorization.auth2,
+          body: {"otp": otpController.text},
+          context: context,
+          alert: false);
+      if (data['success']) {
         setState(() {
           hasError = false;
           expiration = true;
@@ -606,6 +612,16 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
           _otpVisible = false;
           _scanIDVisible = true;
         });
+      } else if (data['response'] != null) {
+        await showDialog(
+            context: context, builder: (builder) => CustomDialog(title: 'incorrect_otp'.tr(), content: errorMessages(data), avatar: false));
+        errorController.add(ErrorAnimationType.shake);
+        setState(() => hasError = true);
+      } else {
+        await showDialog(
+            context: context, builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(data), avatar: false));
+        errorController.add(ErrorAnimationType.shake);
+        setState(() => hasError = true);
       }
     } else {
       errorController.add(ErrorAnimationType.shake);
@@ -1746,6 +1762,14 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                               otpController.clear();
                               expiration = false;
                             });
+                          } else if (otpId['response'] != null) {
+                            await showDialog(
+                                context: context,
+                                builder: (builder) => CustomDialog(title: 'unable_register'.tr(), content: errorMessages(otpId), avatar: false));
+                          } else {
+                            await showDialog(
+                                context: context,
+                                builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(otpId), avatar: false));
                           }
                         },
                         onDone: () => setState(() => expiration = true),

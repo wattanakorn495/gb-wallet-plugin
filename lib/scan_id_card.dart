@@ -424,7 +424,7 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
           barrierDismissible: false,
           context: context,
           builder: (dialogContext) => CustomDialog(
-            title: 'Something_went_wrong'.tr(),
+            title: 'unable_scan_id_card'.tr(),
             content: 'ID_card_scan_failed_Please_try_again'.tr(),
             avatar: false,
             onPressedConfirm: () async {
@@ -513,7 +513,7 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
           barrierDismissible: false,
           context: context,
           builder: (dialogContext) => CustomDialog(
-            title: 'Something_went_wrong'.tr(),
+            title: 'unable_scan_id_card'.tr(),
             content: 'ID_card_scan_failed_Please_try_again'.tr(),
             avatar: false,
             onPressedConfirm: () async {
@@ -593,7 +593,7 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
           barrierDismissible: false,
           context: context,
           builder: (dialogContext) => CustomDialog(
-            title: 'Something_went_wrong'.tr(),
+            title: 'unable_scan_passport'.tr(),
             content: "passport_scan_failed_Please_try_again".tr(),
             avatar: false,
             onPressedConfirm: () async {
