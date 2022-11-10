@@ -132,8 +132,12 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
       size = renderBox.size;
       offset = renderBox.localToGlobal(Offset.zero);
     });
-    Timer(const Duration(seconds: 5), _onCaptureFrontPressed);
-    Timer(const Duration(seconds: 15), _onCaptureBackPressed);
+    if (widget.isCitizenCard!) {
+      Timer(const Duration(seconds: 5), _onCaptureFrontPressed);
+      Timer(const Duration(seconds: 15), _onCaptureBackPressed);
+    } else {
+      Timer(const Duration(seconds: 5), _onCapturePassport);
+    }
   }
 
   @override
@@ -368,6 +372,7 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
   }
 
   _onCaptureFrontPressed() async {
+    print('in idcard');
     // if (_controller!.value.isStreamingImages) {
     //   await _controller?.stopImageStream();
     // }
@@ -553,6 +558,7 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
   }
 
   _onCapturePassport() async {
+    print('inpassaport');
     try {
       setState(() => isLoading = true);
       await _controller!.takePicture().then((v) => passportIDPath = v.path);
