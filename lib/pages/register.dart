@@ -352,208 +352,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
         final data = res['response']['data'];
 
         if (data['similarity'] >= 80) {
-          if (isCitizen) {
-            fileNameFrontID = data['card_image_file_name'];
-            final resBackID = await PostAPI.callFormData(
-                url: '$register3003/users/upload_file',
-                headers: Authorization.auth2,
-                files: [
-                  http.MultipartFile.fromBytes(
-                    'image',
-                    imgBackIDCard!.readAsBytesSync(),
-                    filename: imgBackIDCard!.path.split("/").last,
-                  )
-                ],
-                context: context);
-            fileNameBackID = resBackID['response']['data']['file_name'];
-            fileNameLiveness = data['face_image_file_name'];
-
-            String workAddress = '';
-            if (workAddressController.text.isNotEmpty) {
-              workAddress = workAddressController.text;
-            }
-            if (workAddressSerchController.text.isNotEmpty) {
-              if (workAddressController.text.isNotEmpty) workAddress += ' ';
-              workAddress += workAddressSerchController.text;
-            }
-            resCreateUser = await PostAPI.call(
-                url: '$register3003/users',
-                headers: Authorization.auth2,
-                body: {
-                  "type_register": 'id_card',
-                  "id_card": idCardController.text,
-                  "first_name": firstNameController.text,
-                  "last_name": lastNameController.text,
-                  "first_name_en": firstNameENController.text,
-                  "last_name_en": lastNameENController.text,
-                  "address": addressController.text,
-                  "birthday": birthdayController.text,
-                  "pin": pinController.text,
-                  "send_otp_id": sendOtpId!,
-                  "laser": ocrBackLaser!,
-                  "province_id": '$indexProvince',
-                  "district_id": '$indexDistric',
-                  "sub_district_id": '$indexSubDistric',
-                  "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
-                  "work_name": workNameController.text,
-                  "work_address": workAddress,
-                  "file_front_citizen": fileNameFrontID,
-                  "file_back_citizen": fileNameBackID,
-                  "file_selfie": '',
-                  "file_liveness": fileNameLiveness,
-                  "imei": StateStore.deviceSerial,
-                  "fcm_token": StateStore.fcmToken,
-                },
-                alert: false,
-                context: context);
-
-            setState(() => isLoading = false);
-            if (resCreateUser['success']) {
-              await imgFrontIDCard!.delete();
-              await imgBackIDCard!.delete();
-              await imgLiveness!.delete();
-              _userLoginID = resCreateUser['response']['data']['user_login_id'];
-              var data = await PostAPI.call(
-                  url: '$register3003/user_logins/$_userLoginID/login',
-                  headers: Authorization.none,
-                  body: {"imei": StateStore.deviceSerial, "pin": pinController.text},
-                  context: context);
-
-              if (data['success']) {
-                showDialog(
-                  barrierDismissible: false,
-                  context: context,
-                  builder: (dialogContext) => CustomDialog(
-                      title: 'save_success'.tr(),
-                      content: 'congratulations'.tr(),
-                      textConfirm: "back_to_main".tr(),
-                      onPressedConfirm: () {
-                        Navigator.pop(dialogContext);
-                        Navigator.of(context, rootNavigator: true).pop(_userLoginID);
-                      }),
-                );
-              }
-            } else {
-              showDialog(
-                barrierDismissible: false,
-                context: context,
-                builder: (context) => CustomDialog(
-                  title: "Something_went_wrong".tr(),
-                  content: errorMessages(resCreateUser),
-                  avatar: false,
-                  onPressedConfirm: () {
-                    Navigator.pop(context);
-                    setState(() {
-                      selectedStep = 2;
-                      _kycVisible = false;
-                      _pinConfirmVisible = false;
-                      _dataVisible = true;
-                    });
-                  },
-                ),
-              );
-            }
-          } else {
-            final resPassport = await PostAPI.callFormData(
-                url: '$register3003/users/upload_file',
-                headers: Authorization.auth2,
-                files: [
-                  http.MultipartFile.fromBytes(
-                    'image',
-                    imgPassport!.readAsBytesSync(),
-                    filename: imgPassport!.path.split("/").last,
-                  )
-                ],
-                context: context);
-            fileNameFrontID = resPassport['response']['data']['file_name'];
-            fileNameLiveness = data['face_image_file_name'];
-            String workAddress = '';
-            if (workAddressController.text.isNotEmpty) {
-              workAddress = workAddressController.text;
-            }
-            if (workAddressSerchController.text.isNotEmpty) {
-              if (workAddressController.text.isNotEmpty) workAddress += ' ';
-              workAddress += workAddressSerchController.text;
-            }
-            resCreateUser = await PostAPI.call(
-                url: '$register3003/users',
-                headers: Authorization.auth2,
-                body: {
-                  "type_register": 'passport',
-                  "id_card": passportNumber,
-                  "first_name": firstNameController.text,
-                  "last_name": lastNameController.text,
-                  "first_name_en": firstNameController.text,
-                  "last_name_en": lastNameController.text,
-                  "address": 'none',
-                  "birthday": birthdayController.text,
-                  "pin": pinController.text,
-                  "send_otp_id": sendOtpId ?? '',
-                  "laser": '',
-                  "province_id": '',
-                  "district_id": '',
-                  "sub_district_id": '',
-                  "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
-                  "work_name": workNameController.text,
-                  "work_address": workAddress,
-                  "file_front_citizen": fileNameFrontID,
-                  "file_back_citizen": '',
-                  "file_selfie": '',
-                  "file_liveness": fileNameLiveness,
-                  "imei": StateStore.deviceSerial,
-                  "fcm_token": StateStore.fcmToken,
-                },
-                alert: false,
-                context: context);
-
-            setState(() => isLoading = false);
-            if (resCreateUser['success']) {
-              // await imgFrontIDCard!.delete();
-              // await imgBackIDCard!.delete();
-              await imgLiveness!.delete();
-              await imgPassport!.delete();
-              _userLoginID = resCreateUser['response']['data']['user_login_id'];
-              var data = await PostAPI.call(
-                  url: '$register3003/user_logins/$_userLoginID/login',
-                  headers: Authorization.none,
-                  body: {"imei": StateStore.deviceSerial, "pin": pinController.text},
-                  context: context);
-
-              if (data['success']) {
-                showDialog(
-                  barrierDismissible: false,
-                  context: context,
-                  builder: (dialogContext) => CustomDialog(
-                      title: 'save_success'.tr(),
-                      content: 'congratulations'.tr(),
-                      textConfirm: "back_to_main".tr(),
-                      onPressedConfirm: () {
-                        Navigator.pop(dialogContext);
-                        Navigator.of(context, rootNavigator: true).pop(_userLoginID);
-                      }),
-                );
-              }
-            } else {
-              showDialog(
-                barrierDismissible: false,
-                context: context,
-                builder: (context) => CustomDialog(
-                  title: "Something_went_wrong".tr(),
-                  content: errorMessages(resCreateUser),
-                  avatar: false,
-                  onPressedConfirm: () {
-                    Navigator.pop(context);
-                    setState(() {
-                      selectedStep = 2;
-                      _kycVisible = false;
-                      _pinConfirmVisible = false;
-                      _dataVisible = true;
-                    });
-                  },
-                ),
-              );
-            }
-          }
+          uploadUserData(data);
         } else {
           setState(() => isLoading = false);
           failFacematch++;
@@ -565,7 +364,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
               context: context,
               builder: (context) => CustomDialog(
                 title: 'facematch'.tr(),
-                content: 'sub_facematch'.tr(),
+                content: isCitizen ? 'sub_facematch'.tr() : 'sub_facematch_passport'.tr(),
                 avatar: false,
               ),
             );
@@ -600,7 +399,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
               Image.asset('assets/icons/idCardD.png', package: 'gbkyc', width: 113, fit: BoxFit.cover),
               const SizedBox(height: 10),
               Text(
-                'Selfie_with_ID_cardMake_sure'.tr(),
+                isCitizen ? 'Selfie_with_ID_cardMake_sure'.tr() : 'selfie_with_passport_make_sure'.tr(),
                 style: const TextStyle(color: Colors.grey),
                 textAlign: TextAlign.center,
               ),
@@ -632,13 +431,15 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    CameraScanIDCard(titleAppbar: 'Selfie_ID_Card'.tr(), enableButton: true, isFront: true, noFrame: true),
+                                builder: (context) => CameraScanIDCard(
+                                    titleAppbar: isCitizen ? 'Selfie_ID_Card'.tr() : 'selfie_passport'.tr(),
+                                    enableButton: true,
+                                    isFront: true,
+                                    noFrame: true),
                               ),
                             ).then((v) async {
                               if (v != null) {
                                 int fileSize = await getFileSize(filepath: v);
-
                                 if (!isImage(v)) {
                                   showDialog(
                                     barrierDismissible: true,
@@ -668,6 +469,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                     _kycVisible = false;
                                     _kycVisibleFalse = true;
                                     pathSelfie = v;
+                                    imgFrontIDCard = File(pathSelfie);
                                   });
                                 }
                               }
@@ -731,159 +533,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
     if (number.length == length) {
       if (number == pinController.text) {
         if (pathSelfie.isNotEmpty) {
-          setState(() => isLoading = true);
-
-          final resFrontID = await PostAPI.callFormData(
-              url: '$register3003/users/upload_file',
-              headers: Authorization.auth2,
-              files: [
-                http.MultipartFile.fromBytes(
-                  'image',
-                  File(pathFrontCitizen).readAsBytesSync(),
-                  filename: File(pathFrontCitizen).path.split("/").last,
-                )
-              ],
-              context: context);
-          fileNameFrontID = resFrontID['response']['data']['file_name'];
-          if (isCitizen) {
-            final resBackID = await PostAPI.callFormData(
-                url: '$register3003/users/upload_file',
-                headers: Authorization.auth2,
-                files: [
-                  http.MultipartFile.fromBytes(
-                    'image',
-                    File(pathBackCitizen).readAsBytesSync(),
-                    filename: File(pathBackCitizen).path.split("/").last,
-                  )
-                ],
-                context: context);
-            fileNameBackID = resBackID['response']['data']['file_name'];
-          }
-          final resSelfieID = await PostAPI.callFormData(
-              url: '$register3003/users/upload_file',
-              headers: Authorization.auth2,
-              files: [
-                http.MultipartFile.fromBytes(
-                  'image',
-                  File(pathSelfie).readAsBytesSync(),
-                  filename: File(pathSelfie).path.split("/").last,
-                )
-              ],
-              context: context);
-          fileNameSelfieID = resSelfieID['response']['data']['file_name'];
-          String workAddress = '';
-          if (workAddressController.text.isNotEmpty) {
-            workAddress = workAddressController.text;
-          }
-          if (workAddressSerchController.text.isNotEmpty) {
-            if (workAddressController.text.isNotEmpty) workAddress += ' ';
-            workAddress += workAddressSerchController.text;
-          }
-          resCreateUser = await PostAPI.call(
-              url: '$register3003/users',
-              headers: Authorization.auth2,
-              body: isCitizen
-                  ? {
-                      "type_register": 'id_card',
-                      "id_card": idCardController.text,
-                      "first_name": firstNameController.text,
-                      "last_name": lastNameController.text,
-                      "first_name_en": firstNameENController.text,
-                      "last_name_en": lastNameENController.text,
-                      "address": addressController.text,
-                      "birthday": birthdayController.text,
-                      "pin": pinController.text,
-                      "send_otp_id": sendOtpId!,
-                      "laser": ocrBackLaser!,
-                      "province_id": '$indexProvince',
-                      "district_id": '$indexDistric',
-                      "sub_district_id": '$indexSubDistric',
-                      "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
-                      "work_name": workNameController.text,
-                      "work_address": workAddress,
-                      "file_front_citizen": fileNameFrontID,
-                      "file_back_citizen": fileNameBackID,
-                      "file_selfie": fileNameSelfieID,
-                      "file_liveness": '',
-                      "imei": StateStore.deviceSerial,
-                      "fcm_token": StateStore.fcmToken,
-                    }
-                  : {
-                      "type_register": 'passport',
-                      "id_card": passportNumber,
-                      "first_name": firstNameController.text,
-                      "last_name": lastNameController.text,
-                      "first_name_en": firstNameController.text,
-                      "last_name_en": lastNameController.text,
-                      "address": 'none',
-                      "birthday": birthdayController.text,
-                      "pin": pinController.text,
-                      "send_otp_id": sendOtpId ?? '',
-                      "laser": '',
-                      "province_id": '',
-                      "district_id": '',
-                      "sub_district_id": '',
-                      "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
-                      "work_name": workNameController.text,
-                      "work_address": workAddress,
-                      "file_front_citizen": fileNameFrontID,
-                      "file_back_citizen": '',
-                      "file_selfie": fileNameSelfieID,
-                      "file_liveness": '',
-                      "imei": StateStore.deviceSerial,
-                      "fcm_token": StateStore.fcmToken,
-                    },
-              alert: false,
-              context: context);
-
-          if (resCreateUser['success']) {
-            await File(pathFrontCitizen).delete();
-            if (isCitizen) await File(pathBackCitizen).delete();
-            await File(pathSelfie).delete();
-            _userLoginID = resCreateUser['response']['data']['user_login_id'];
-            var data = await PostAPI.call(
-                url: '$register3003/user_logins/$_userLoginID/login',
-                headers: Authorization.none,
-                body: {"imei": StateStore.deviceSerial, "pin": pinController.text},
-                context: context);
-
-            if (data['success']) {
-              showDialog(
-                barrierDismissible: false,
-                context: context,
-                builder: (dialogContext) => CustomDialog(
-                    title: 'save_success'.tr(),
-                    content: 'congratulations_now'.tr(),
-                    textConfirm: "back_to_main".tr(),
-                    onPressedConfirm: () {
-                      Navigator.pop(dialogContext);
-                      Navigator.of(context, rootNavigator: true).pop(_userLoginID);
-                    }),
-              );
-            }
-          } else {
-            setState(() {
-              isLoading = false;
-              resetPIN = true;
-            });
-            showDialog(
-              barrierDismissible: false,
-              context: context,
-              builder: (context) => CustomDialog(
-                title: "Something_went_wrong".tr(),
-                content: errorMessages(resCreateUser),
-                avatar: false,
-                onPressedConfirm: () {
-                  Navigator.pop(context);
-                  setState(() {
-                    selectedStep = 2;
-                    _pinConfirmVisible = false;
-                    _dataVisible = true;
-                  });
-                },
-              ),
-            );
-          }
+          scanFailAndSelfie();
         } else {
           showDialog(
             barrierDismissible: false,
@@ -1318,7 +968,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => CameraScanIDCard(
-                                    titleAppbar: 'Selfie_ID_Card'.tr(),
+                                    titleAppbar: isCitizen ? 'Selfie_ID_Card'.tr() : 'selfie_passport'.tr(),
                                     enableButton: true,
                                     isFront: true,
                                     noFrame: true,
@@ -1357,6 +1007,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                         _kycVisible = false;
                                         _kycVisibleFalse = true;
                                         pathSelfie = v;
+                                        imgFrontIDCard = File(pathSelfie);
                                         isLoading = false;
                                       });
                                     }
@@ -1383,129 +1034,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                             child: MaterialButton(
                               child: Text('continue'.tr()),
                               onPressed: () async {
-                                final resFrontID = await PostAPI.callFormData(
-                                    url: '$register3003/users/upload_file',
-                                    headers: Authorization.auth2,
-                                    files: [
-                                      http.MultipartFile.fromBytes(
-                                        'image',
-                                        imgFrontIDCard!.readAsBytesSync(),
-                                        filename: imgFrontIDCard!.path.split("/").last,
-                                      )
-                                    ],
-                                    context: context);
-                                fileNameFrontID = resFrontID['response']['data']['file_name'];
-
-                                final resBackID = await PostAPI.callFormData(
-                                    url: '$register3003/users/upload_file',
-                                    headers: Authorization.auth2,
-                                    files: [
-                                      http.MultipartFile.fromBytes(
-                                        'image',
-                                        imgBackIDCard!.readAsBytesSync(),
-                                        filename: imgBackIDCard!.path.split("/").last,
-                                      )
-                                    ],
-                                    context: context);
-                                fileNameBackID = resBackID['response']['data']['file_name'];
-
-                                final resSelfieID = await PostAPI.callFormData(
-                                    url: '$register3003/users/upload_file',
-                                    headers: Authorization.auth2,
-                                    files: [
-                                      http.MultipartFile.fromBytes(
-                                        'image',
-                                        File(pathSelfie).readAsBytesSync(),
-                                        filename: File(pathSelfie).path.split("/").last,
-                                      )
-                                    ],
-                                    context: context);
-                                fileNameSelfieID = resSelfieID['response']['data']['file_name'];
-                                String workAddress = '';
-                                if (workAddressController.text.isNotEmpty) {
-                                  workAddress = workAddressController.text;
-                                }
-                                if (workAddressSerchController.text.isNotEmpty) {
-                                  if (workAddressController.text.isNotEmpty) workAddress += ' ';
-                                  workAddress += workAddressSerchController.text;
-                                }
-                                resCreateUser = await PostAPI.call(
-                                    url: '$register3003/users',
-                                    headers: Authorization.auth2,
-                                    body: {
-                                      "type_register": 'id_card',
-                                      "id_card": idCardController.text,
-                                      "first_name": firstNameController.text,
-                                      "last_name": lastNameController.text,
-                                      "address": addressController.text,
-                                      "birthday": birthdayController.text,
-                                      "pin": pinController.text,
-                                      "send_otp_id": sendOtpId!,
-                                      "laser": ocrBackLaser!,
-                                      "province_id": '$indexProvince',
-                                      "district_id": '$indexDistric',
-                                      "sub_district_id": '$indexSubDistric',
-                                      "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
-                                      "work_name": workNameController.text,
-                                      "work_address": workAddress,
-                                      "file_front_citizen": fileNameFrontID,
-                                      "file_back_citizen": fileNameBackID,
-                                      "file_selfie": fileNameSelfieID,
-                                      "file_liveness": '',
-                                      "imei": StateStore.deviceSerial,
-                                      "fcm_token": StateStore.fcmToken,
-                                    },
-                                    alert: false,
-                                    context: context);
-
-                                setState(() => isLoading = false);
-                                if (resCreateUser['success']) {
-                                  await imgFrontIDCard!.delete();
-                                  await imgBackIDCard!.delete();
-                                  await File(pathSelfie).delete();
-                                  _userLoginID = resCreateUser['response']['data']['user_login_id'];
-                                  var data = await PostAPI.call(
-                                      url: '$register3003/user_logins/$_userLoginID/login',
-                                      headers: Authorization.none,
-                                      body: {"imei": StateStore.deviceSerial, "pin": pinController.text},
-                                      context: context);
-
-                                  if (data['success']) {
-                                    showDialog(
-                                      barrierDismissible: false,
-                                      context: context,
-                                      builder: (dialogContext) => CustomDialog(
-                                          title: 'save_success'.tr(),
-                                          content: 'congratulations_now'.tr(),
-                                          textConfirm: "back_to_main".tr(),
-                                          onPressedConfirm: () {
-                                            Navigator.pop(dialogContext);
-                                            Navigator.of(context, rootNavigator: true).pop(_userLoginID);
-                                          }),
-                                    );
-                                  }
-                                } else {
-                                  showDialog(
-                                    barrierDismissible: false,
-                                    context: context,
-                                    builder: (context) => CustomDialog(
-                                      title: "Something_went_wrong".tr(),
-                                      content: errorMessages(resCreateUser),
-                                      avatar: false,
-                                      onPressedConfirm: () {
-                                        Navigator.pop(context);
-                                        setState(() {
-                                          selectedStep = 2;
-                                          _kycVisible = false;
-                                          _kycVisibleFalse = false;
-                                          pathSelfie = '';
-                                          isLoading = false;
-                                          _dataVisible = true;
-                                        });
-                                      },
-                                    ),
-                                  );
-                                }
+                                facetecFailAndSelfie();
                               },
                             ),
                           ),
@@ -1517,6 +1046,534 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
           return const SizedBox();
         }
       default:
+    }
+  }
+
+  uploadUserData(dynamic data) async {
+    if (isCitizen) {
+      fileNameFrontID = data['card_image_file_name'];
+      final resBackID = await PostAPI.callFormData(
+          url: '$register3003/users/upload_file',
+          headers: Authorization.auth2,
+          files: [
+            http.MultipartFile.fromBytes(
+              'image',
+              imgBackIDCard!.readAsBytesSync(),
+              filename: imgBackIDCard!.path.split("/").last,
+            )
+          ],
+          context: context);
+      fileNameBackID = resBackID['response']['data']['file_name'];
+      fileNameLiveness = data['face_image_file_name'];
+
+      String workAddress = '';
+      if (workAddressController.text.isNotEmpty) {
+        workAddress = workAddressController.text;
+      }
+      if (workAddressSerchController.text.isNotEmpty) {
+        if (workAddressController.text.isNotEmpty) workAddress += ' ';
+        workAddress += workAddressSerchController.text;
+      }
+      resCreateUser = await PostAPI.call(
+          url: '$register3003/users',
+          headers: Authorization.auth2,
+          body: {
+            "type_register": 'id_card',
+            "id_card": idCardController.text,
+            "first_name": firstNameController.text,
+            "last_name": lastNameController.text,
+            "first_name_en": firstNameENController.text,
+            "last_name_en": lastNameENController.text,
+            "address": addressController.text,
+            "birthday": birthdayController.text,
+            "pin": pinController.text,
+            "send_otp_id": sendOtpId!,
+            "laser": ocrBackLaser!,
+            "province_id": '$indexProvince',
+            "district_id": '$indexDistric',
+            "sub_district_id": '$indexSubDistric',
+            "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
+            "work_name": workNameController.text,
+            "work_address": workAddress,
+            "file_front_citizen": fileNameFrontID,
+            "file_back_citizen": fileNameBackID,
+            "file_selfie": '',
+            "file_liveness": fileNameLiveness,
+            "imei": StateStore.deviceSerial,
+            "fcm_token": StateStore.fcmToken,
+          },
+          alert: false,
+          context: context);
+
+      setState(() => isLoading = false);
+      if (resCreateUser['success']) {
+        try {
+          await imgFrontIDCard!.delete();
+          await imgBackIDCard!.delete();
+          await imgLiveness!.delete();
+        } catch (e) {
+          debugPrint('cannot delete image');
+        }
+        _userLoginID = resCreateUser['response']['data']['user_login_id'];
+        var data = await PostAPI.call(
+            url: '$register3003/user_logins/$_userLoginID/login',
+            headers: Authorization.none,
+            body: {"imei": StateStore.deviceSerial, "pin": pinController.text},
+            context: context);
+
+        if (data['success']) {
+          showDialog(
+            barrierDismissible: false,
+            context: context,
+            builder: (dialogContext) => CustomDialog(
+                title: 'save_success'.tr(),
+                content: 'congratulations'.tr(),
+                textConfirm: "back_to_main".tr(),
+                onPressedConfirm: () {
+                  Navigator.pop(dialogContext);
+                  Navigator.of(context, rootNavigator: true).pop(_userLoginID);
+                }),
+          );
+        }
+      } else {
+        showDialog(
+          barrierDismissible: false,
+          context: context,
+          builder: (context) => CustomDialog(
+            title: "Something_went_wrong".tr(),
+            content: errorMessages(resCreateUser),
+            avatar: false,
+            onPressedConfirm: () {
+              Navigator.pop(context);
+              setState(() {
+                selectedStep = 2;
+                _kycVisible = false;
+                _pinConfirmVisible = false;
+                _dataVisible = true;
+              });
+            },
+          ),
+        );
+      }
+    } else {
+      final resPassport = await PostAPI.callFormData(
+          url: '$register3003/users/upload_file',
+          headers: Authorization.auth2,
+          files: [
+            http.MultipartFile.fromBytes(
+              'image',
+              imgPassport!.readAsBytesSync(),
+              filename: imgPassport!.path.split("/").last,
+            )
+          ],
+          context: context);
+      fileNameFrontID = resPassport['response']['data']['file_name'];
+      fileNameLiveness = data['face_image_file_name'];
+      String workAddress = '';
+      if (workAddressController.text.isNotEmpty) {
+        workAddress = workAddressController.text;
+      }
+      if (workAddressSerchController.text.isNotEmpty) {
+        if (workAddressController.text.isNotEmpty) workAddress += ' ';
+        workAddress += workAddressSerchController.text;
+      }
+      resCreateUser = await PostAPI.call(
+          url: '$register3003/users',
+          headers: Authorization.auth2,
+          body: {
+            "type_register": 'passport',
+            "id_card": passportNumber,
+            "first_name": firstNameController.text,
+            "last_name": lastNameController.text,
+            "first_name_en": firstNameController.text,
+            "last_name_en": lastNameController.text,
+            "address": 'none',
+            "birthday": birthdayController.text,
+            "pin": pinController.text,
+            "send_otp_id": sendOtpId ?? '',
+            "laser": '',
+            "province_id": '',
+            "district_id": '',
+            "sub_district_id": '',
+            "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
+            "work_name": workNameController.text,
+            "work_address": workAddress,
+            "file_front_citizen": fileNameFrontID,
+            "file_back_citizen": '',
+            "file_selfie": '',
+            "file_liveness": fileNameLiveness,
+            "imei": StateStore.deviceSerial,
+            "fcm_token": StateStore.fcmToken,
+          },
+          alert: false,
+          context: context);
+
+      setState(() => isLoading = false);
+      if (resCreateUser['success']) {
+        try {
+          await imgLiveness!.delete();
+          await imgPassport!.delete();
+        } catch (e) {
+          debugPrint('cannot delete image');
+        }
+        _userLoginID = resCreateUser['response']['data']['user_login_id'];
+        var data = await PostAPI.call(
+            url: '$register3003/user_logins/$_userLoginID/login',
+            headers: Authorization.none,
+            body: {"imei": StateStore.deviceSerial, "pin": pinController.text},
+            context: context);
+
+        if (data['success']) {
+          showDialog(
+            barrierDismissible: false,
+            context: context,
+            builder: (dialogContext) => CustomDialog(
+                title: 'save_success'.tr(),
+                content: 'congratulations'.tr(),
+                textConfirm: "back_to_main".tr(),
+                onPressedConfirm: () {
+                  Navigator.pop(dialogContext);
+                  Navigator.of(context, rootNavigator: true).pop(_userLoginID);
+                }),
+          );
+        }
+      } else {
+        showDialog(
+          barrierDismissible: false,
+          context: context,
+          builder: (context) => CustomDialog(
+            title: "Something_went_wrong".tr(),
+            content: errorMessages(resCreateUser),
+            avatar: false,
+            onPressedConfirm: () {
+              Navigator.pop(context);
+              setState(() {
+                selectedStep = 2;
+                _kycVisible = false;
+                _pinConfirmVisible = false;
+                _dataVisible = true;
+              });
+            },
+          ),
+        );
+      }
+    }
+  }
+
+  scanFailAndSelfie() async {
+    setState(() => isLoading = true);
+    final resFrontID = await PostAPI.callFormData(
+        url: '$register3003/users/upload_file',
+        headers: Authorization.auth2,
+        files: [
+          http.MultipartFile.fromBytes(
+            'image',
+            File(pathFrontCitizen).readAsBytesSync(),
+            filename: File(pathFrontCitizen).path.split("/").last,
+          )
+        ],
+        context: context);
+    fileNameFrontID = resFrontID['response']['data']['file_name'];
+    if (isCitizen) {
+      final resBackID = await PostAPI.callFormData(
+          url: '$register3003/users/upload_file',
+          headers: Authorization.auth2,
+          files: [
+            http.MultipartFile.fromBytes(
+              'image',
+              File(pathBackCitizen).readAsBytesSync(),
+              filename: File(pathBackCitizen).path.split("/").last,
+            )
+          ],
+          context: context);
+      fileNameBackID = resBackID['response']['data']['file_name'];
+    }
+    final resSelfieID = await PostAPI.callFormData(
+        url: '$register3003/users/upload_file',
+        headers: Authorization.auth2,
+        files: [
+          http.MultipartFile.fromBytes(
+            'image',
+            File(pathSelfie).readAsBytesSync(),
+            filename: File(pathSelfie).path.split("/").last,
+          )
+        ],
+        context: context);
+    fileNameSelfieID = resSelfieID['response']['data']['file_name'];
+    String workAddress = '';
+    if (workAddressController.text.isNotEmpty) {
+      workAddress = workAddressController.text;
+    }
+    if (workAddressSerchController.text.isNotEmpty) {
+      if (workAddressController.text.isNotEmpty) workAddress += ' ';
+      workAddress += workAddressSerchController.text;
+    }
+    resCreateUser = await PostAPI.call(
+        url: '$register3003/users',
+        headers: Authorization.auth2,
+        body: isCitizen
+            ? {
+                "type_register": 'id_card',
+                "id_card": idCardController.text,
+                "first_name": firstNameController.text,
+                "last_name": lastNameController.text,
+                "first_name_en": firstNameENController.text,
+                "last_name_en": lastNameENController.text,
+                "address": addressController.text,
+                "birthday": birthdayController.text,
+                "pin": pinController.text,
+                "send_otp_id": sendOtpId!,
+                "laser": ocrBackLaser!,
+                "province_id": '$indexProvince',
+                "district_id": '$indexDistric',
+                "sub_district_id": '$indexSubDistric',
+                "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
+                "work_name": workNameController.text,
+                "work_address": workAddress,
+                "file_front_citizen": fileNameFrontID,
+                "file_back_citizen": fileNameBackID,
+                "file_selfie": fileNameSelfieID,
+                "file_liveness": '',
+                "imei": StateStore.deviceSerial,
+                "fcm_token": StateStore.fcmToken,
+              }
+            : {
+                "type_register": 'passport',
+                "id_card": passportNumber,
+                "first_name": firstNameController.text,
+                "last_name": lastNameController.text,
+                "first_name_en": firstNameController.text,
+                "last_name_en": lastNameController.text,
+                "address": 'none',
+                "birthday": birthdayController.text,
+                "pin": pinController.text,
+                "send_otp_id": sendOtpId ?? '',
+                "laser": '',
+                "province_id": '',
+                "district_id": '',
+                "sub_district_id": '',
+                "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
+                "work_name": workNameController.text,
+                "work_address": workAddress,
+                "file_front_citizen": fileNameFrontID,
+                "file_back_citizen": '',
+                "file_selfie": fileNameSelfieID,
+                "file_liveness": '',
+                "imei": StateStore.deviceSerial,
+                "fcm_token": StateStore.fcmToken,
+              },
+        alert: false,
+        context: context);
+
+    if (resCreateUser['success']) {
+      try {
+        await File(pathFrontCitizen).delete();
+        if (isCitizen) await File(pathBackCitizen).delete();
+        await File(pathSelfie).delete();
+      } catch (e) {
+        debugPrint('cannot delete image');
+      }
+
+      _userLoginID = resCreateUser['response']['data']['user_login_id'];
+      var data = await PostAPI.call(
+          url: '$register3003/user_logins/$_userLoginID/login',
+          headers: Authorization.none,
+          body: {"imei": StateStore.deviceSerial, "pin": pinController.text},
+          context: context);
+
+      if (data['success']) {
+        showDialog(
+          barrierDismissible: false,
+          context: context,
+          builder: (dialogContext) => CustomDialog(
+              title: 'save_success'.tr(),
+              content: 'congratulations_now'.tr(),
+              textConfirm: "back_to_main".tr(),
+              onPressedConfirm: () {
+                Navigator.pop(dialogContext);
+                Navigator.of(context, rootNavigator: true).pop(_userLoginID);
+              }),
+        );
+      }
+    } else {
+      setState(() {
+        isLoading = false;
+        resetPIN = true;
+      });
+      showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (context) => CustomDialog(
+          title: "Something_went_wrong".tr(),
+          content: errorMessages(resCreateUser),
+          avatar: false,
+          onPressedConfirm: () {
+            Navigator.pop(context);
+            setState(() {
+              selectedStep = 2;
+              _pinConfirmVisible = false;
+              _dataVisible = true;
+            });
+          },
+        ),
+      );
+    }
+  }
+
+  facetecFailAndSelfie() async {
+    final resFrontID = await PostAPI.callFormData(
+        url: '$register3003/users/upload_file',
+        headers: Authorization.auth2,
+        files: [
+          http.MultipartFile.fromBytes(
+            'image',
+            imgFrontIDCard!.readAsBytesSync(),
+            filename: imgFrontIDCard!.path.split("/").last,
+          )
+        ],
+        context: context);
+    fileNameFrontID = resFrontID['response']['data']['file_name'];
+    if (isCitizen) {
+      final resBackID = await PostAPI.callFormData(
+          url: '$register3003/users/upload_file',
+          headers: Authorization.auth2,
+          files: [
+            http.MultipartFile.fromBytes(
+              'image',
+              imgBackIDCard!.readAsBytesSync(),
+              filename: imgBackIDCard!.path.split("/").last,
+            )
+          ],
+          context: context);
+      fileNameBackID = resBackID['response']['data']['file_name'];
+    }
+
+    final resSelfieID = await PostAPI.callFormData(
+        url: '$register3003/users/upload_file',
+        headers: Authorization.auth2,
+        files: [
+          http.MultipartFile.fromBytes(
+            'image',
+            File(pathSelfie).readAsBytesSync(),
+            filename: File(pathSelfie).path.split("/").last,
+          )
+        ],
+        context: context);
+    fileNameSelfieID = resSelfieID['response']['data']['file_name'];
+    String workAddress = '';
+    if (workAddressController.text.isNotEmpty) {
+      workAddress = workAddressController.text;
+    }
+    if (workAddressSerchController.text.isNotEmpty) {
+      if (workAddressController.text.isNotEmpty) workAddress += ' ';
+      workAddress += workAddressSerchController.text;
+    }
+    resCreateUser = await PostAPI.call(
+        url: '$register3003/users',
+        headers: Authorization.auth2,
+        body: isCitizen
+            ? {
+                "type_register": 'id_card',
+                "id_card": idCardController.text,
+                "first_name": firstNameController.text,
+                "last_name": lastNameController.text,
+                "address": addressController.text,
+                "birthday": birthdayController.text,
+                "pin": pinController.text,
+                "send_otp_id": sendOtpId!,
+                "laser": ocrBackLaser!,
+                "province_id": '$indexProvince',
+                "district_id": '$indexDistric',
+                "sub_district_id": '$indexSubDistric',
+                "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
+                "work_name": workNameController.text,
+                "work_address": workAddress,
+                "file_front_citizen": fileNameFrontID,
+                "file_back_citizen": fileNameBackID,
+                "file_selfie": fileNameSelfieID,
+                "file_liveness": '',
+                "imei": StateStore.deviceSerial,
+                "fcm_token": StateStore.fcmToken,
+              }
+            : {
+                "type_register": 'passport',
+                "id_card": passportNumber,
+                "first_name": firstNameController.text,
+                "last_name": lastNameController.text,
+                "first_name_en": firstNameController.text,
+                "last_name_en": lastNameController.text,
+                "address": 'none',
+                "birthday": birthdayController.text,
+                "pin": pinController.text,
+                "send_otp_id": sendOtpId ?? '',
+                "laser": '',
+                "province_id": '',
+                "district_id": '',
+                "sub_district_id": '',
+                "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
+                "work_name": workNameController.text,
+                "work_address": workAddress,
+                "file_front_citizen": fileNameFrontID,
+                "file_back_citizen": '',
+                "file_selfie": fileNameSelfieID,
+                "file_liveness": '',
+                "imei": StateStore.deviceSerial,
+                "fcm_token": StateStore.fcmToken,
+              },
+        alert: false,
+        context: context);
+
+    setState(() => isLoading = false);
+    if (resCreateUser['success']) {
+      try {
+        await imgFrontIDCard!.delete();
+        if (isCitizen) await imgBackIDCard!.delete();
+        await File(pathSelfie).delete();
+      } catch (e) {
+        debugPrint('cannot delete image');
+      }
+      _userLoginID = resCreateUser['response']['data']['user_login_id'];
+      var data = await PostAPI.call(
+          url: '$register3003/user_logins/$_userLoginID/login',
+          headers: Authorization.none,
+          body: {"imei": StateStore.deviceSerial, "pin": pinController.text},
+          context: context);
+
+      if (data['success']) {
+        showDialog(
+          barrierDismissible: false,
+          context: context,
+          builder: (dialogContext) => CustomDialog(
+              title: 'save_success'.tr(),
+              content: 'congratulations_now'.tr(),
+              textConfirm: "back_to_main".tr(),
+              onPressedConfirm: () {
+                Navigator.pop(dialogContext);
+                Navigator.of(context, rootNavigator: true).pop(_userLoginID);
+              }),
+        );
+      }
+    } else {
+      showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (context) => CustomDialog(
+          title: "Something_went_wrong".tr(),
+          content: errorMessages(resCreateUser),
+          avatar: false,
+          onPressedConfirm: () {
+            Navigator.pop(context);
+            setState(() {
+              selectedStep = 2;
+              _kycVisible = false;
+              _kycVisibleFalse = false;
+              pathSelfie = '';
+              isLoading = false;
+              _dataVisible = true;
+            });
+          },
+        ),
+      );
     }
   }
 
@@ -1846,7 +1903,9 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                       const Icon(Icons.error_outline_outlined),
                       const SizedBox(width: 5),
                       Text(
-                        "Make_sure_your_id_card_is_clear_and_without_a_scratch".tr(),
+                        isCitizen
+                            ? "Make_sure_your_id_card_is_clear_and_without_a_scratch".tr()
+                            : 'make_sure_your_passport_is_clear_and_without_a_scratch'.tr(),
                         style: const TextStyle(color: Colors.grey),
                       ),
                     ]),
