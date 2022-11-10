@@ -132,6 +132,8 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
       size = renderBox.size;
       offset = renderBox.localToGlobal(Offset.zero);
     });
+    Timer(const Duration(seconds: 5), _onCaptureFrontPressed);
+    Timer(const Duration(seconds: 15), _onCaptureBackPressed);
   }
 
   @override

@@ -32,7 +32,7 @@ class HomePage extends StatefulWidget {
 
 class HomePageState extends State<HomePage> {
   final GlobalKey<FormState> _formKey = GlobalKey();
-  final phoneController = TextEditingController(text: '0971796690');
+  final phoneController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
