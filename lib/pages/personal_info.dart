@@ -621,6 +621,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 },
                 onChanged: (v) => _formKey.currentState!.validate(),
                 textInputAction: TextInputAction.next,
+                inputFormatters: [UpperCaseTextFormatter()],
                 decoration: InputDecoration(labelText: 'eng_name'.tr()))),
         const SizedBox(width: 20),
         Expanded(
@@ -635,6 +636,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 },
                 onChanged: (v) => _formKey.currentState!.validate(),
                 textInputAction: TextInputAction.next,
+                inputFormatters: [UpperCaseTextFormatter()],
                 decoration: InputDecoration(labelText: 'eng_lastname'.tr())))
       ]),
       const SizedBox(height: 20),
@@ -826,6 +828,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 },
                 onChanged: (v) => _formKey.currentState!.validate(),
                 textInputAction: TextInputAction.next,
+                inputFormatters: [UpperCaseTextFormatter()],
                 decoration: InputDecoration(labelText: 'name'.tr()))),
         const SizedBox(width: 20),
         Expanded(
@@ -842,6 +845,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 },
                 onChanged: (v) => _formKey.currentState!.validate(),
                 textInputAction: TextInputAction.next,
+                inputFormatters: [UpperCaseTextFormatter()],
                 decoration: InputDecoration(labelText: 'last_name'.tr())))
       ]),
       const SizedBox(height: 20),
@@ -1520,5 +1524,15 @@ class _PersonalInfoState extends State<PersonalInfo> {
             workInformation(),
           ]))
     ]);
+  }
+}
+
+class UpperCaseTextFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    return TextEditingValue(
+      text: newValue.text.toUpperCase(),
+      selection: newValue.selection,
+    );
   }
 }
