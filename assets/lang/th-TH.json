@@ -285,7 +285,7 @@
     "ID_card_code_is_invalid": "รหัสบัตรประชาชนของคุณไม่ถูกต้องหรือเคยใช้สมัครสมาชิกแล้ว",
     "ID_card_is_invalid": "บัตรประชาชนไม่ถูกต้อง",
     "id_card_laserNo": "เลขหลังบัตร",
-    "ID_card_scan_failed_Please_try_again": "การสแกนบัตรประชาชนไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+    "ID_card_scan_failed_Please_try_again": "การสแกนบัตรประชาชนไม่สำเร็จ กรุณาตรวจสอบบัตรประชาชนของคุณและลองใหม่อีกครั้ง",
     "idcard": "สแกนบัตรประชาชน",
     "idcard_back": "ภาพหลังบัตรประชาชน",
     "idcard_front": "ภาพหน้าบัตรประชาชน",
@@ -635,7 +635,7 @@
     "passport_official": "ต้องใช้หนังสือเดินทางตัวจริงเท่านั้น",
     "Please_arrange_the_back_of_the_passport": "กรุณาจัดวางหนังสือเดินทาง\nโดยให้อยู่ในกรอบที่กำหนด",
     "personal_information": "ข้อมูลส่วนตัว",
-    "passport_scan_failed_Please_try_again": "การสแกนหนังสือเดินทางไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+    "passport_scan_failed_Please_try_again": "การสแกนหนังสือเดินทางไม่สำเร็จ กรุณาตรวจสอบหนังสือเดินทางของคุณและลองใหม่อีกครั้ง",
     "confirm_identity_image_description_passport": "เพื่อการตรวจสอบ กรุณาถ่ายภาพหนังสือเดินทางให้ชัดเจน เพื่อเป็นหลักฐาน",
     "passport_data": "ภาพข้อมูลหนังสือเดินทาง",
     "photo_passport_info": "รูปถ่ายและข้อมูลบนหนังสือเดินทางชัดเจน ไม่มีรอยขูดขีด",
@@ -646,5 +646,10 @@
     "selfie_passport": "ถ่ายหน้าคู่หนังสือเดินทาง",
     "selfie_with_passport_make_sure": "ถ่ายรูปเซลฟี่คู่กับหนังสือเดินทางของคุณ\n ต้องถ่ายให้เห็นใบหน้าและข้อมูล\nบนหนังสือชัดเจน",
     "sub_facematch_passport": "ไม่ตรงกับหนังสือเดินทางที่ลงทะเบียนอยู่",
-    "make_sure_your_passport_is_clear_and_without_a_scratch": "ต้องถ่ายให้เห็นใบหน้า และข้อมูลบนหนังสือชัดเจน"
+    "make_sure_your_passport_is_clear_and_without_a_scratch": "ต้องถ่ายให้เห็นใบหน้า และข้อมูลบนหนังสือชัดเจน",
+    "unable_register": "ไม่สามารถลงทะเบียนได้",
+    "incorrect_otp": "OTP ไม่ถูกต้อง",
+    "unable_scan_id_card": "ไม่สามารถสแกนบัตรประชาชนได้",
+    "unable_scan_passport": "ไม่สามารถสแกนหนังสือเดินทางได้",
+    "invalid_id_card": "เลขบัตรประชาชนไม่ถูกต้อง"
 }
