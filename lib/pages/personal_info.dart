@@ -12,6 +12,7 @@ import 'package:gbkyc/api/post_api.dart';
 import 'package:gbkyc/personal_info_model.dart';
 import 'package:gbkyc/scan_id_card.dart';
 import 'package:gbkyc/state_store.dart';
+import 'package:gbkyc/utils/error_messages.dart';
 import 'package:gbkyc/utils/file_uitility.dart';
 import 'package:gbkyc/widgets/button_confirm.dart';
 import 'package:gbkyc/widgets/custom_dialog.dart';
@@ -620,6 +621,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 },
                 onChanged: (v) => _formKey.currentState!.validate(),
                 textInputAction: TextInputAction.next,
+                inputFormatters: [UpperCaseTextFormatter()],
                 decoration: InputDecoration(labelText: 'eng_name'.tr()))),
         const SizedBox(width: 20),
         Expanded(
@@ -634,6 +636,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 },
                 onChanged: (v) => _formKey.currentState!.validate(),
                 textInputAction: TextInputAction.next,
+                inputFormatters: [UpperCaseTextFormatter()],
                 decoration: InputDecoration(labelText: 'eng_lastname'.tr())))
       ]),
       const SizedBox(height: 20),
@@ -825,6 +828,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 },
                 onChanged: (v) => _formKey.currentState!.validate(),
                 textInputAction: TextInputAction.next,
+                inputFormatters: [UpperCaseTextFormatter()],
                 decoration: InputDecoration(labelText: 'name'.tr()))),
         const SizedBox(width: 20),
         Expanded(
@@ -841,6 +845,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 },
                 onChanged: (v) => _formKey.currentState!.validate(),
                 textInputAction: TextInputAction.next,
+                inputFormatters: [UpperCaseTextFormatter()],
                 decoration: InputDecoration(labelText: 'last_name'.tr())))
       ]),
       const SizedBox(height: 20),
@@ -1331,7 +1336,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
                             url: '$register3003/users/pre_verify',
                             headers: Authorization.auth2,
                             body: {"id_card": idCardController.text.replaceAll('-', '')},
-                            context: context);
+                            context: context,
+                            alert: false);
                         if (res['success']) {
                           if (careerChildId != null) {
                             widget.setCareerChildID!(careerChildId);
@@ -1359,6 +1365,14 @@ class _PersonalInfoState extends State<PersonalInfo> {
                           widget.setPinVisible!(true);
                           widget.setSelectedStep!(3);
                           widget.setDataVisible!(false);
+                        } else if (res['response'] != null) {
+                          await showDialog(
+                              context: context,
+                              builder: (builder) => CustomDialog(title: 'unable_register'.tr(), content: errorMessages(res), avatar: false));
+                        } else {
+                          await showDialog(
+                              context: context,
+                              builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(res), avatar: false));
                         }
                       } else {
                         if (careerChildId != null) {
@@ -1397,17 +1411,25 @@ class _PersonalInfoState extends State<PersonalInfo> {
     dopaValidate = false;
     if (widget.isCitizen) {
       var verifyDOPA = await PostAPI.call(
-        url: 'https://api.gbwallet.co/register-api/users/verify_dopa', //TODO GB PRD
-        headers: Authorization.auth2,
-        body: {
-          "id_card": idCardController.text.replaceAll('-', ''),
-          "first_name": firstNameController.text,
-          "last_name": lastNameController.text,
-          "birthday": birthdayController.text,
-          "laser": laserCodeController.text.replaceAll('-', ''),
-        },
-        context: context,
-      );
+          url: 'https://api.gbwallet.co/register-api/users/verify_dopa', //TODO GB PRD
+          headers: Authorization.auth2,
+          body: {
+            "id_card": idCardController.text.replaceAll('-', ''),
+            "first_name": firstNameController.text,
+            "last_name": lastNameController.text,
+            "birthday": birthdayController.text,
+            "laser": laserCodeController.text.replaceAll('-', ''),
+          },
+          context: context,
+          alert: false);
+      if (!verifyDOPA['success'] && verifyDOPA['response'] != null) {
+        await showDialog(
+            context: context, builder: (builder) => CustomDialog(title: 'invalid_id_card'.tr(), content: errorMessages(verifyDOPA), avatar: false));
+      } else if (!verifyDOPA['success'] && verifyDOPA['response'] == null) {
+        await showDialog(
+            context: context,
+            builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(verifyDOPA), avatar: false));
+      }
       if ((verifyDOPA['response']['error_message']).toString().toLowerCase().contains('invalid_id_card_information'.tr())) {
         dopaValidate = true;
         _formKey.currentState!.validate();
@@ -1502,5 +1524,15 @@ class _PersonalInfoState extends State<PersonalInfo> {
             workInformation(),
           ]))
     ]);
+  }
+}
+
+class UpperCaseTextFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    return TextEditingValue(
+      text: newValue.text.toUpperCase(),
+      selection: newValue.selection,
+    );
   }
 }

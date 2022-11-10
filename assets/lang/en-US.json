@@ -286,7 +286,7 @@
     "ID_card_code_is_invalid": "Your ID Card number is invalid or has been used for membership.",
     "ID_card_is_invalid": "ID Card is invalid",
     "id_card_laserNo": "Laser Number",
-    "ID_card_scan_failed_Please_try_again": "ID Card scan failed Please try again",
+    "ID_card_scan_failed_Please_try_again": "The ID card scan failed. Please check your ID card and try again.",
     "idcard": "Scan ID Card",
     "idcard_back": "Back of ID Card",
     "idcard_front": "Front of ID Card ",
@@ -638,7 +638,7 @@
     "passport_official": "Your Passport is issued by government.",
     "Please_arrange_the_back_of_the_passport": "Please arrange the back of the passport.\nby keeping in the specified frame",
     "personal_information": "Personal information",
-    "passport_scan_failed_Please_try_again": "Passport scan failed Please try again",
+    "passport_scan_failed_Please_try_again": "The Passport scan failed. Please check your Passport and try again.",
     "confirm_identity_image_description_passport": "For indentity confirmation, please take a photo of your Passport",
     "passport_data": "Passport data photo",
     "photo_passport_info": "Make sure your Passport is clear and without scratch.",
@@ -649,5 +649,10 @@
     "selfie_passport": "Take a selfie with your Passport",
     "selfie_with_passport_make_sure": "Selfie with Passport\n Make sure your Passport is clear and\nwithout a scratch",
     "sub_facematch_passport": "Your face is not match on your Passport",
-    "make_sure_your_passport_is_clear_and_without_a_scratch": "Make sure your passport is clear and without a scratch"
+    "make_sure_your_passport_is_clear_and_without_a_scratch": "Make sure your passport is clear and without a scratch",
+    "unable_register": "Unable to register",
+    "incorrect_otp": "Incorrect OTP",
+    "unable_scan_id_card": "Unable to scan ID card",
+    "unable_scan_passport": "Unable to scan Passport",
+    "invalid_id_card": "Invalid ID Card"
 }
