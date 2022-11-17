@@ -239,6 +239,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
   }
 
   onLoad() {
+    print('in on load');
     expireDatePick = DateTime.now();
     birthDatePick = DateTime(expireDatePick!.year - 20, expireDatePick!.month, expireDatePick!.day);
 
@@ -252,8 +253,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
       idCardController.text = idCardFormatter.maskText(widget.person!.idCard ?? "");
       firstNameController.text = widget.person!.firstName ?? "";
       lastNameController.text = widget.person!.lastName ?? "";
-      firstnameEngController.text = widget.person!.firstNameEng ?? "";
-      lastnameEngController.text = widget.person!.lastNameEng ?? "";
+      firstnameEngController.text = widget.person!.firstNameEng ?? "".toUpperCase();
+      lastnameEngController.text = widget.person!.lastNameEng ?? "".toUpperCase();
       addressController.text = widget.person!.address ?? "";
       birthdayController.text = widget.person!.birthday ?? DateFormat('dd/MM/yyyy').format(birthDatePick!);
       if (birthdayController.text.isNotEmpty) {
@@ -577,6 +578,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
       Row(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
         Expanded(
             child: TextFormField(
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[ก-ฮ]'))],
                 controller: firstNameController,
                 style: const TextStyle(fontSize: 15),
                 validator: (v) {
@@ -593,6 +595,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
         const SizedBox(width: 20),
         Expanded(
             child: TextFormField(
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[ก-ฮ]'))],
                 controller: lastNameController,
                 style: const TextStyle(fontSize: 15),
                 validator: (v) {
@@ -612,6 +615,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
         Expanded(
             child: TextFormField(
                 controller: firstnameEngController,
+                textCapitalization: TextCapitalization.characters,
                 style: const TextStyle(fontSize: 15),
                 validator: (v) {
                   if (v!.isEmpty && checkValidate) {
@@ -621,12 +625,13 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 },
                 onChanged: (v) => _formKey.currentState!.validate(),
                 textInputAction: TextInputAction.next,
-                inputFormatters: [UpperCaseTextFormatter()],
+                inputFormatters: [UpperCaseTextFormatter(), FilteringTextInputFormatter.allow(RegExp('[a-z A-Z]'))],
                 decoration: InputDecoration(labelText: 'eng_name'.tr()))),
         const SizedBox(width: 20),
         Expanded(
             child: TextFormField(
                 controller: lastnameEngController,
+                textCapitalization: TextCapitalization.characters,
                 style: const TextStyle(fontSize: 15),
                 validator: (v) {
                   if (v!.isEmpty && checkValidate) {
@@ -636,7 +641,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 },
                 onChanged: (v) => _formKey.currentState!.validate(),
                 textInputAction: TextInputAction.next,
-                inputFormatters: [UpperCaseTextFormatter()],
+                inputFormatters: [UpperCaseTextFormatter(), FilteringTextInputFormatter.allow(RegExp('[a-z A-Z]'))],
                 decoration: InputDecoration(labelText: 'eng_lastname'.tr())))
       ]),
       const SizedBox(height: 20),
@@ -1356,8 +1361,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
 
                           widget.setFirstName!(firstNameController.text);
                           widget.setLastName!(lastNameController.text);
-                          widget.setFirstNameEng!(firstnameEngController.text);
-                          widget.setLastNameEng!(lastnameEngController.text);
+                          widget.setFirstNameEng!(firstnameEngController.text.toUpperCase());
+                          widget.setLastNameEng!(lastnameEngController.text.toUpperCase());
                           widget.setAddress!(addressController.text);
                           widget.setBirthday!(birthdayController.text);
                           widget.setIDCard!(idCardController.text.replaceAll('-', ''));

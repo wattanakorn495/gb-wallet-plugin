@@ -403,9 +403,9 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
             dopaLastName = arrName[arrName.length - 1];
           }
           if (arrEnName.isNotEmpty && arrEnName.length > 1) {
-            ocrFrontNameEng = arrEnName[arrEnName.length - 1];
+            ocrFrontNameEng = arrEnName[arrEnName.length - 1].toString().toUpperCase();
           }
-          ocrFrontSurnameEng = resFront['last_name_en'];
+          ocrFrontSurnameEng = resFront['last_name_en'].toString().toUpperCase();
 
           ocrFrontID = resFront['id_number'].replaceAll(RegExp(r"\s+\b|\b\s"), "");
           if (address.isNotEmpty) {
