@@ -14,12 +14,14 @@ import '../widgets/custom_dialog.dart';
 
 class PostAPI {
   //Call raw
-  static Future<Map> call(
-      {required String url,
-      required Authorization headers,
-      required Map<String, String> body,
-      required BuildContext context,
-      bool alert = true}) async {
+  static Future<Map> call({
+    required String url,
+    required Authorization headers,
+    required Map<String, String> body,
+    required BuildContext context,
+    bool alert = true,
+    String errorTitle = '',
+  }) async {
     try {
       await EasyLoading.show();
       debugPrint('$url ,body : $body');
@@ -31,7 +33,9 @@ class PostAPI {
         await EasyLoading.dismiss();
         if (!data['success'] && alert) {
           await showDialog(
-              context: context, builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(data), avatar: false));
+              context: context,
+              builder: (builder) =>
+                  CustomDialog(title: errorTitle.isEmpty ? 'Something_went_wrong'.tr() : errorTitle, content: errorMessages(data), avatar: false));
         }
         return data;
       } else {

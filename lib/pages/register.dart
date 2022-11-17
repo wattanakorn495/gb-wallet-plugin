@@ -576,7 +576,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
         headers: Authorization.auth2,
         body: {"phone_number": txPhoneNumber, "country_code": countryCode},
         context: context,
-        alert: false);
+        errorTitle: 'unable_register'.tr());
 
     if (otpId['success']) {
       var data = otpId['response']['data'];
@@ -585,12 +585,6 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
         sendOtpId = data['send_otp_id'];
         datetimeOTP = DateTime.parse(data['expiration_at']);
       });
-    } else if (otpId['response'] != null) {
-      await showDialog(
-          context: context, builder: (builder) => CustomDialog(title: 'unable_register'.tr(), content: errorMessages(otpId), avatar: false));
-    } else {
-      await showDialog(
-          context: context, builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(otpId), avatar: false));
     }
   }
 
@@ -603,7 +597,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
           headers: Authorization.auth2,
           body: {"otp": otpController.text},
           context: context,
-          alert: false);
+          errorTitle: 'incorrect_otp'.tr());
       if (data['success']) {
         setState(() {
           hasError = false;
@@ -612,15 +606,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
           _otpVisible = false;
           _scanIDVisible = true;
         });
-      } else if (data['response'] != null) {
-        await showDialog(
-            context: context, builder: (builder) => CustomDialog(title: 'incorrect_otp'.tr(), content: errorMessages(data), avatar: false));
-        errorController.add(ErrorAnimationType.shake);
-        setState(() => hasError = true);
       } else {
-        await showDialog(
-            context: context, builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(data), avatar: false));
-        errorController.add(ErrorAnimationType.shake);
         setState(() => hasError = true);
       }
     } else {
@@ -984,11 +970,11 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => CameraScanIDCard(
-                                    titleAppbar: isCitizen ? 'Selfie_ID_Card'.tr() : 'selfie_passport'.tr(),
-                                    enableButton: true,
-                                    isFront: true,
-                                    noFrame: true,
-                                  ),
+                                      titleAppbar: isCitizen ? 'Selfie_ID_Card'.tr() : 'selfie_passport'.tr(),
+                                      enableButton: true,
+                                      isFront: true,
+                                      noFrame: true,
+                                      isCitizenCard: isCitizen),
                                 ),
                               ).then(
                                 (v) async {
@@ -1752,7 +1738,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                               url: '$register3003/send_otps',
                               headers: Authorization.auth2,
                               body: {"phone_number": txPhoneNumber, "country_code": countryCode},
-                              context: context);
+                              context: context,
+                              errorTitle: 'unable_register'.tr());
 
                           if (otpId['success']) {
                             setState(() {
@@ -1762,14 +1749,6 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                               otpController.clear();
                               expiration = false;
                             });
-                          } else if (otpId['response'] != null) {
-                            await showDialog(
-                                context: context,
-                                builder: (builder) => CustomDialog(title: 'unable_register'.tr(), content: errorMessages(otpId), avatar: false));
-                          } else {
-                            await showDialog(
-                                context: context,
-                                builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(otpId), avatar: false));
                           }
                         },
                         onDone: () => setState(() => expiration = true),
