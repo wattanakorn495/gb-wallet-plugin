@@ -578,7 +578,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
       Row(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
         Expanded(
             child: TextFormField(
-                inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[ก-ฮ]'))],
+                inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.allow(RegExp(r'[ก-๙]'))],
                 controller: firstNameController,
                 style: const TextStyle(fontSize: 15),
                 validator: (v) {
@@ -595,7 +595,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
         const SizedBox(width: 20),
         Expanded(
             child: TextFormField(
-                inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[ก-ฮ]'))],
+                inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.allow(RegExp(r'[ก-๙]'))],
                 controller: lastNameController,
                 style: const TextStyle(fontSize: 15),
                 validator: (v) {
