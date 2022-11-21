@@ -810,92 +810,94 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                   Expanded(
                     child: ButtonConfirm(
                       text: 'accepttoscan'.tr(),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CameraScanIDCard(
-                              titleAppbar: isCitizen ? 'idcard'.tr() : 'passport_scan'.tr(),
-                              isFront: true,
-                              noFrame: false,
-                              enableButton: false,
-                              scanID: true,
-                              isCitizenCard: isCitizen,
+                      onPressed: () async {
+                        if (await CheckPermission.camera(context)) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CameraScanIDCard(
+                                titleAppbar: isCitizen ? 'idcard'.tr() : 'passport_scan'.tr(),
+                                isFront: true,
+                                noFrame: false,
+                                enableButton: false,
+                                scanID: true,
+                                isCitizenCard: isCitizen,
+                              ),
                             ),
-                          ),
-                        ).then((data) async {
-                          if (data != null && !data['ocrFailedAll']) {
-                            if (isCitizen) {
-                              personalInfo.idCard = data['ocrFrontID'];
-                              personalInfo.firstName = data['ocrFrontName'];
-                              personalInfo.lastName = data['ocrFrontSurname'];
-                              personalInfo.firstNameEng = data['ocrFrontNameEng'];
-                              personalInfo.lastNameEng = data['ocrFrontSurnameEng'];
-                              personalInfo.address = data['ocrFrontAddress'];
-                              personalInfo.filterAddress = data['ocrFilterAddress'];
-                              personalInfo.birthday = data['ocrBirthDay'];
-                              personalInfo.ocrBackLaser = data['ocrBackLaser'];
-                              await getAddress(personalInfo);
+                          ).then((data) async {
+                            if (data != null && !data['ocrFailedAll']) {
+                              if (isCitizen) {
+                                personalInfo.idCard = data['ocrFrontID'];
+                                personalInfo.firstName = data['ocrFrontName'];
+                                personalInfo.lastName = data['ocrFrontSurname'];
+                                personalInfo.firstNameEng = data['ocrFrontNameEng'];
+                                personalInfo.lastNameEng = data['ocrFrontSurnameEng'];
+                                personalInfo.address = data['ocrFrontAddress'];
+                                personalInfo.filterAddress = data['ocrFilterAddress'];
+                                personalInfo.birthday = data['ocrBirthDay'];
+                                personalInfo.ocrBackLaser = data['ocrBackLaser'];
+                                await getAddress(personalInfo);
 
-                              setState(() {
-                                idCardController.text = data['ocrFrontID'];
-                                firstNameController.text = data['ocrFrontName'];
-                                lastNameController.text = data['ocrFrontSurname'];
-                                firstNameENController.text = data['ocrFrontNameEng'];
-                                lastNameENController.text = data['ocrFrontSurnameEng'];
-                                addressController.text = data['ocrFrontAddress'];
-                                birthdayController.text = data['ocrBirthDay'];
-                                ocrBackLaser = data['ocrBackLaser'];
-                                ocrFailedAll = data['ocrFailedAll'];
-                                imgFrontIDCard = File(data['frontIDPath']);
-                                imgBackIDCard = File(data['backIDPath']);
-                                _scanIDVisible = false;
-                                _dataVisible = true;
-                              });
-                            } else {
-                              personalInfo.firstName = data['ocrFrontName'];
-                              personalInfo.lastName = data['ocrFrontSurname'];
+                                setState(() {
+                                  idCardController.text = data['ocrFrontID'];
+                                  firstNameController.text = data['ocrFrontName'];
+                                  lastNameController.text = data['ocrFrontSurname'];
+                                  firstNameENController.text = data['ocrFrontNameEng'];
+                                  lastNameENController.text = data['ocrFrontSurnameEng'];
+                                  addressController.text = data['ocrFrontAddress'];
+                                  birthdayController.text = data['ocrBirthDay'];
+                                  ocrBackLaser = data['ocrBackLaser'];
+                                  ocrFailedAll = data['ocrFailedAll'];
+                                  imgFrontIDCard = File(data['frontIDPath']);
+                                  imgBackIDCard = File(data['backIDPath']);
+                                  _scanIDVisible = false;
+                                  _dataVisible = true;
+                                });
+                              } else {
+                                personalInfo.firstName = data['ocrFrontName'];
+                                personalInfo.lastName = data['ocrFrontSurname'];
+                                personalInfo.address = '';
+                                personalInfo.filterAddress = '';
+                                personalInfo.birthday = data['ocrBirthDay'];
+                                personalInfo.passportNumber = data['passportNumber'];
+                                personalInfo.countryCodeName = data['countryCode'];
+                                personalInfo.expirePassport = data['expireDate'];
+                                await getAddress(personalInfo);
+
+                                setState(() {
+                                  firstNameController.text = data['ocrFrontName'];
+                                  lastNameController.text = data['ocrFrontSurname'];
+                                  birthdayController.text = data['ocrBirthDay'];
+                                  ocrFailedAll = data['ocrFailedAll'];
+                                  _scanIDVisible = false;
+                                  _dataVisible = true;
+                                  //passport
+                                  imgPassport = File(data['passportIDPath']);
+                                  passportNumber = data['passportNumber'];
+                                  countryCodeName = data['countryCode'];
+                                  expireDate = data['expireDate'];
+                                });
+                              }
+                            } else if (data != null && data['ocrFailedAll']) {
+                              personalInfo.idCard = '';
+                              personalInfo.firstName = '';
+                              personalInfo.lastName = '';
+                              personalInfo.firstNameEng = '';
+                              personalInfo.lastNameEng = '';
                               personalInfo.address = '';
+                              personalInfo.birthday = '';
+                              personalInfo.ocrBackLaser = '';
                               personalInfo.filterAddress = '';
-                              personalInfo.birthday = data['ocrBirthDay'];
-                              personalInfo.passportNumber = data['passportNumber'];
-                              personalInfo.countryCodeName = data['countryCode'];
-                              personalInfo.expirePassport = data['expireDate'];
                               await getAddress(personalInfo);
 
                               setState(() {
-                                firstNameController.text = data['ocrFrontName'];
-                                lastNameController.text = data['ocrFrontSurname'];
-                                birthdayController.text = data['ocrBirthDay'];
                                 ocrFailedAll = data['ocrFailedAll'];
                                 _scanIDVisible = false;
                                 _dataVisible = true;
-                                //passport
-                                imgPassport = File(data['passportIDPath']);
-                                passportNumber = data['passportNumber'];
-                                countryCodeName = data['countryCode'];
-                                expireDate = data['expireDate'];
                               });
                             }
-                          } else if (data != null && data['ocrFailedAll']) {
-                            personalInfo.idCard = '';
-                            personalInfo.firstName = '';
-                            personalInfo.lastName = '';
-                            personalInfo.firstNameEng = '';
-                            personalInfo.lastNameEng = '';
-                            personalInfo.address = '';
-                            personalInfo.birthday = '';
-                            personalInfo.ocrBackLaser = '';
-                            personalInfo.filterAddress = '';
-                            await getAddress(personalInfo);
-
-                            setState(() {
-                              ocrFailedAll = data['ocrFailedAll'];
-                              _scanIDVisible = false;
-                              _dataVisible = true;
-                            });
-                          }
-                        });
+                          });
+                        }
                       },
                     ),
                   )
@@ -965,57 +967,59 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                               side: const BorderSide(color: Color(0xFF115899)),
                             ),
                             child: Text('Re-take_photo'.tr(), style: const TextStyle(color: Color(0xFF115899))),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => CameraScanIDCard(
-                                      titleAppbar: isCitizen ? 'Selfie_ID_Card'.tr() : 'selfie_passport'.tr(),
-                                      enableButton: true,
-                                      isFront: true,
-                                      noFrame: true,
-                                      isCitizenCard: isCitizen),
-                                ),
-                              ).then(
-                                (v) async {
-                                  if (v != null) {
-                                    int fileSize = await getFileSize(filepath: v);
-                                    if (!isImage(v)) {
-                                      showDialog(
-                                        barrierDismissible: true,
-                                        context: context,
-                                        builder: (context) {
-                                          return CustomDialog(
-                                            title: 'Something_went_wrong'.tr(),
-                                            content: "Extension_not_correct".tr(),
-                                            exclamation: true,
-                                          );
-                                        },
-                                      );
-                                    } else if (fileSize > 10000000) {
-                                      showDialog(
-                                        barrierDismissible: true,
-                                        context: context,
-                                        builder: (context) {
-                                          return CustomDialog(
-                                            title: 'Something_went_wrong'.tr(),
-                                            content: "File_size_larger".tr(),
-                                            exclamation: true,
-                                          );
-                                        },
-                                      );
-                                    } else {
-                                      setState(() {
-                                        _kycVisible = false;
-                                        _kycVisibleFalse = true;
-                                        pathSelfie = v;
-                                        imgFrontIDCard = File(pathSelfie);
-                                        isLoading = false;
-                                      });
+                            onPressed: () async {
+                              if (await CheckPermission.camera(context)) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CameraScanIDCard(
+                                        titleAppbar: isCitizen ? 'Selfie_ID_Card'.tr() : 'selfie_passport'.tr(),
+                                        enableButton: true,
+                                        isFront: true,
+                                        noFrame: true,
+                                        isCitizenCard: isCitizen),
+                                  ),
+                                ).then(
+                                  (v) async {
+                                    if (v != null) {
+                                      int fileSize = await getFileSize(filepath: v);
+                                      if (!isImage(v)) {
+                                        showDialog(
+                                          barrierDismissible: true,
+                                          context: context,
+                                          builder: (context) {
+                                            return CustomDialog(
+                                              title: 'Something_went_wrong'.tr(),
+                                              content: "Extension_not_correct".tr(),
+                                              exclamation: true,
+                                            );
+                                          },
+                                        );
+                                      } else if (fileSize > 10000000) {
+                                        showDialog(
+                                          barrierDismissible: true,
+                                          context: context,
+                                          builder: (context) {
+                                            return CustomDialog(
+                                              title: 'Something_went_wrong'.tr(),
+                                              content: "File_size_larger".tr(),
+                                              exclamation: true,
+                                            );
+                                          },
+                                        );
+                                      } else {
+                                        setState(() {
+                                          _kycVisible = false;
+                                          _kycVisibleFalse = true;
+                                          pathSelfie = v;
+                                          imgFrontIDCard = File(pathSelfie);
+                                          isLoading = false;
+                                        });
+                                      }
                                     }
-                                  }
-                                },
-                              );
+                                  },
+                                );
+                              }
                             },
                           ),
                         ),
