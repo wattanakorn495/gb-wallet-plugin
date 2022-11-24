@@ -70,6 +70,7 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
   bool ocrFailedAll = false;
   bool scanFront = true;
   bool scanBack = true;
+  bool scanPassport = true;
 
   String? passportIDPath;
   String? passportNumber;
@@ -627,11 +628,14 @@ class _CameraScanIDCardState extends State<CameraScanIDCard> {
                 cameraCount++;
                 isLoading = false;
               });
-              if (cameraCount == 3) {
-                ocrFailedAll = true;
-                Navigator.pop(context, callBackData());
-              } else {
-                await _startLiveFeed();
+              if (scanPassport == false) {
+                Timer(const Duration(seconds: 5), _onCaptureBackPressed);
+                if (cameraCount == 3) {
+                  ocrFailedAll = true;
+                  Navigator.pop(context, callBackData());
+                } else {
+                  await _startLiveFeed();
+                }
               }
             },
           ),
