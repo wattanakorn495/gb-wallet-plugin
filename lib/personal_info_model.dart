@@ -8,16 +8,12 @@ class PersonalInfoModel {
     this.birthday,
     this.ocrBackLaser,
     this.careerID,
-    this.careerChildID,
-    this.workName,
-    this.workAddress,
-    this.workAddressSearch,
     //passport
     this.passportNumber,
     this.countryCodeName,
     this.expirePassport,
   });
-  int? careerID, careerChildID;
+  int? careerID;
   String? idCard,
       firstName,
       lastName,
@@ -27,9 +23,6 @@ class PersonalInfoModel {
       filterAddress,
       birthday,
       ocrBackLaser,
-      workName,
-      workAddress,
-      workAddressSearch,
       //passport
       passportNumber,
       countryCodeName,

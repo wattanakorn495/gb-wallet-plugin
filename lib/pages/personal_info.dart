@@ -7,7 +7,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gbkyc/address_bloc.dart';
 import 'package:gbkyc/api/config_api.dart';
-import 'package:gbkyc/api/get_api.dart';
 import 'package:gbkyc/api/post_api.dart';
 import 'package:gbkyc/personal_info_model.dart';
 import 'package:gbkyc/scan_id_card.dart';
@@ -36,10 +35,6 @@ class PersonalInfo extends StatefulWidget {
   final Function? setIDCard;
   final Function? setLaserCode;
   final Function? setCareerID;
-  final Function? setCareerChildID;
-  final Function? setWorkName;
-  final Function? setWorkAddress;
-  final Function? setWorkAddressSearch;
   final Function? setindexProvince;
   final Function? setindexDistric;
   final Function? setindexSubDistric;
@@ -64,10 +59,6 @@ class PersonalInfo extends StatefulWidget {
     this.setPinVisible,
     this.setSelectedStep,
     this.setCareerID,
-    this.setCareerChildID,
-    this.setWorkAddress,
-    this.setWorkName,
-    this.setWorkAddressSearch,
     this.setindexProvince,
     this.setindexDistric,
     this.setindexSubDistric,
@@ -141,9 +132,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
   String? fileSelfie;
 
   int? indexCareer;
-  int? indexCareerChild;
   int? careerId;
-  int? careerChildId;
 
   int? indexProvince;
   int? indexDistrict;
@@ -152,7 +141,6 @@ class _PersonalInfoState extends State<PersonalInfo> {
   bool checkValidate = false;
   bool skipInfomation = false;
   bool validateCareer = false;
-  bool validateCareerChild = false;
   bool isChecked = false;
   bool dopaValidate = false;
 
@@ -168,10 +156,6 @@ class _PersonalInfoState extends State<PersonalInfo> {
   final laserCodeController = TextEditingController();
   final birthdayController = TextEditingController();
   final careerController = TextEditingController();
-  final careerChildController = TextEditingController();
-  final workNameController = TextEditingController();
-  final workAddressController = TextEditingController();
-  final workAddressShowController = TextEditingController();
   //passport
   final countryController = TextEditingController();
   final passportController = TextEditingController();
@@ -189,7 +173,6 @@ class _PersonalInfoState extends State<PersonalInfo> {
 
   List<int> careerIdSkipList = [1, 3, 5, 13, 14, 15, 16, 17];
   dynamic dataCareer;
-  dynamic dataCareerChild;
 
   @override
   void initState() {
@@ -210,10 +193,6 @@ class _PersonalInfoState extends State<PersonalInfo> {
     birthdayController.clear();
     idCardController.clear();
     careerController.clear();
-    careerChildController.clear();
-    workNameController.clear();
-    workAddressController.clear();
-    workAddressShowController.clear();
 
     checkValidate = false;
 
@@ -247,9 +226,6 @@ class _PersonalInfoState extends State<PersonalInfo> {
       if (StateStore.careers['success']) {
         dataCareer = StateStore.careers['response']['data']['careers'];
       }
-      if (StateStore.careerChild.isNotEmpty && StateStore.careerChild['success']) {
-        dataCareerChild = StateStore.careerChild['response']['data']['careers'];
-      }
       idCardController.text = idCardFormatter.maskText(widget.person!.idCard ?? "");
       firstNameController.text = widget.person!.firstName ?? "";
       lastNameController.text = widget.person!.lastName ?? "";
@@ -272,21 +248,10 @@ class _PersonalInfoState extends State<PersonalInfo> {
         careerController.text = '${dataCareer[indexCareer]['name_${'language'.tr()}']}';
         careerId = dataCareer[indexCareer]['id'];
         skipInfomation = dataCareer[indexCareer]['skip_infomation'];
-        if (widget.person!.careerChildID != null && dataCareerChild != null) {
-          careerChildId = widget.person!.careerChildID;
-          indexCareerChild = dataCareerChild.indexWhere((item) => item['id'] == careerChildId);
-          careerChildController.text = '${dataCareerChild[indexCareerChild]['name_${'language'.tr()}']}';
-        }
       }
-      workNameController.text = widget.person!.workName ?? "";
-      workAddressController.text = widget.person!.workAddress ?? "";
-      workAddressShowController.text = widget.person!.workAddressSearch ?? "";
     } else {
       if (StateStore.careers['success']) {
         dataCareer = StateStore.careers['response']['data']['careers'];
-      }
-      if (StateStore.careerChild.isNotEmpty && StateStore.careerChild['success']) {
-        dataCareerChild = StateStore.careerChild['response']['data']['careers'];
       }
       countryController.text = widget.person!.countryCodeName ?? "";
       passportController.text = widget.person!.passportNumber ?? "";
@@ -315,15 +280,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
         careerController.text = '${dataCareer[indexCareer]['name_${'language'.tr()}']}';
         careerId = dataCareer[indexCareer]['id'];
         skipInfomation = dataCareer[indexCareer]['skip_infomation'];
-        if (widget.person!.careerChildID != null && dataCareerChild != null) {
-          careerChildId = widget.person!.careerChildID;
-          indexCareerChild = dataCareerChild.indexWhere((item) => item['id'] == careerChildId);
-          careerChildController.text = '${dataCareerChild[indexCareerChild]['name_${'language'.tr()}']}';
-        }
       }
-      workNameController.text = widget.person!.workName ?? "";
-      workAddressController.text = widget.person!.workAddress ?? "";
-      workAddressShowController.text = widget.person!.workAddressSearch ?? "";
     }
   }
 
@@ -370,53 +327,6 @@ class _PersonalInfoState extends State<PersonalInfo> {
     );
   }
 
-  Widget workLable() {
-    return (!skipInfomation && !careerIdSkipList.contains(careerId))
-        ? Column(children: [
-            const SizedBox(height: 20),
-            TextFormField(
-              controller: workNameController,
-              style: const TextStyle(fontSize: 15),
-              onChanged: (v) {
-                widget.setWorkName!(v);
-              },
-              textInputAction: TextInputAction.next,
-              decoration: InputDecoration(labelText: 'careername'.tr()),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Expanded(
-                  child: TextFormField(
-                    controller: workAddressShowController,
-                    readOnly: true,
-                    style: const TextStyle(fontSize: 15),
-                    textInputAction: TextInputAction.next,
-                    decoration: InputDecoration(
-                        labelText: "district_address".tr(),
-                        hintText: "district_address".tr(),
-                        suffixIcon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.black54)),
-                    onTap: () => showModalSearchAddress('workAddress'),
-                  ),
-                )
-              ],
-            ),
-            const SizedBox(height: 20),
-            TextFormField(
-              controller: workAddressController,
-              style: const TextStyle(fontSize: 15),
-              onChanged: (v) {
-                widget.setWorkAddress!(v);
-              },
-              textInputAction: TextInputAction.next,
-              decoration: InputDecoration(labelText: 'addresscareer'.tr(), hintText: 'house_number_floor_village_road'.tr()),
-            ),
-          ])
-        : const SizedBox();
-  }
-
   Widget dropdownCareer() {
     if (dataCareer != null) {
       final data = dataCareer.map<DropdownMenuItem<int>>((item) {
@@ -439,7 +349,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
               controller: careerController,
               style: const TextStyle(fontSize: 15),
               textInputAction: TextInputAction.next,
-              decoration: InputDecoration(labelText: "career".tr(), suffixIcon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.black54)),
+              decoration:
+                  InputDecoration(labelText: "career".tr(), suffixIcon: const Icon(Icons.keyboard_arrow_down_rounded, color: colorGradientDark)),
               onTap: () {
                 showBottomDialog(data, indexCareer, "career".tr(), (v) async {
                   if (v != null && v['selectedIndex'] != null) {
@@ -448,16 +359,11 @@ class _PersonalInfoState extends State<PersonalInfo> {
 
                     if (indexCareer != null) widget.setCareerID!(index);
                     careerId = dataCareer[index - 1]['id'];
-                    careerChildId = null;
                     careerController.text = selectItem;
-                    await clearAndLoadCareerChild(careerId ?? 0);
                     setState(() {
                       validateCareer = false;
-                      validateCareerChild = true;
                       indexCareer = index - 1;
-                      indexCareerChild = null;
                       skipInfomation = dataCareer[index - 1]['skip_infomation'];
-                      careerChildId = null;
                       widget.setCareerID!(careerId);
                     });
                   }
@@ -466,71 +372,6 @@ class _PersonalInfoState extends State<PersonalInfo> {
             ),
           )
         ],
-      );
-    }
-    return const SizedBox();
-  }
-
-  clearAndLoadCareerChild(int mainCareerId) async {
-    careerChildController.clear();
-    indexCareerChild = null;
-    workNameController.clear();
-    workAddressShowController.clear();
-    workAddressController.clear();
-    StateStore.careerChild = await GetAPI.call(url: '$register3003/careers/$careerId/child', headers: Authorization.auth2, context: context);
-    if (StateStore.careerChild['success']) {
-      dataCareerChild = StateStore.careerChild['response']['data']['careers'];
-    }
-  }
-
-  Widget dropdownCareerChild() {
-    if (dataCareerChild != null && (dataCareerChild as List).isNotEmpty) {
-      final data = dataCareerChild.map<DropdownMenuItem<int>>((item) {
-        int index = dataCareerChild.indexOf(item);
-        return DropdownMenuItem(
-          value: index + 1,
-          child: SizedBox(
-            width: 300,
-            child: Text(
-              '${dataCareerChild[index]['name_${'language'.tr()}']}',
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        );
-      }).toList();
-      return Padding(
-        padding: const EdgeInsets.only(top: 20),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Expanded(
-              child: TextFormField(
-                readOnly: true,
-                controller: careerChildController,
-                style: const TextStyle(fontSize: 15),
-                textInputAction: TextInputAction.next,
-                decoration:
-                    InputDecoration(labelText: 'career_more'.tr(), suffixIcon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.black54)),
-                onTap: () {
-                  showBottomDialog(data, indexCareerChild, '- ${'career_more'.tr()} -', (v) {
-                    if (v != null && v['selectedIndex'] != null) {
-                      final int index = v['selectedIndex'];
-                      final String selectItem = '${dataCareerChild[index - 1]['name_${'language'.tr()}']}';
-                      careerChildController.text = selectItem;
-                      setState(() {
-                        validateCareerChild = false;
-                        indexCareerChild = index - 1;
-                        skipInfomation = dataCareerChild[index - 1]['skip_infomation'];
-                        careerChildId = dataCareerChild[index - 1]['id'];
-                      });
-                    }
-                  });
-                },
-              ),
-            )
-          ],
-        ),
       );
     }
     return const SizedBox();
@@ -547,18 +388,13 @@ class _PersonalInfoState extends State<PersonalInfo> {
     ).then((v) {
       if (v != null) {
         _formKey.currentState!.validate();
-        from == 'address'
-            ? setState(() {
-                addressShowController.text = v['showAddress'];
-                widget.setindexProvince!(v['indexProvince']);
-                widget.setindexDistric!(v['indexDistrict']);
-                widget.setindexSubDistric!(v['indexSubDistrict']);
-                widget.setAddressSearch!(v['showAddress']);
-              })
-            : setState(() {
-                workAddressShowController.text = v['showAddress'];
-                widget.setWorkAddressSearch!(v['showAddress']);
-              });
+        setState(() {
+          addressShowController.text = v['showAddress'];
+          widget.setindexProvince!(v['indexProvince']);
+          widget.setindexDistric!(v['indexDistrict']);
+          widget.setindexSubDistric!(v['indexSubDistrict']);
+          widget.setAddressSearch!(v['showAddress']);
+        });
       }
     });
   }
@@ -1260,8 +1096,6 @@ class _PersonalInfoState extends State<PersonalInfo> {
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         dropdownCareer(),
-        dropdownCareerChild(),
-        if (indexCareer != null) workLable(),
         const SizedBox(height: 40),
         GestureDetector(
           onTap: () => setState(() {
@@ -1270,6 +1104,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
           child: Row(
             children: [
               Checkbox(
+                  activeColor: colorGradientLight,
                   value: isChecked,
                   onChanged: (value) {
                     setState(() {
@@ -1344,11 +1179,6 @@ class _PersonalInfoState extends State<PersonalInfo> {
                             context: context,
                             alert: false);
                         if (res['success']) {
-                          if (careerChildId != null) {
-                            widget.setCareerChildID!(careerChildId);
-                          } else {
-                            widget.setCareerChildID!(null);
-                          }
                           if (frontIDCardImage.isNotEmpty) {
                             widget.setFileFrontCitizen!(frontIDCardImage);
                           }
@@ -1380,11 +1210,6 @@ class _PersonalInfoState extends State<PersonalInfo> {
                               builder: (builder) => CustomDialog(title: 'Something_went_wrong'.tr(), content: errorMessages(res), avatar: false));
                         }
                       } else {
-                        if (careerChildId != null) {
-                          widget.setCareerChildID!(careerChildId);
-                        } else {
-                          widget.setCareerChildID!(null);
-                        }
                         if (frontIDCardImage.isNotEmpty) {
                           widget.setFileFrontCitizen!(frontIDCardImage);
                         }
@@ -1493,6 +1318,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                 return ListTile(
                     title: dataListDropdown[index].child,
                     selected: index == selectedIndex,
+                    selectedColor: colorGradientLight,
                     trailing: index == selectedIndex
                         ? const Image(image: AssetImage('assets/images/Check.png', package: 'gbkyc'), width: 25, height: 25)
                         : const SizedBox(),

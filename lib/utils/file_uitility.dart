@@ -30,3 +30,6 @@ extension StrTr on String {
     return (dataLang == null || dataLang[this] == null) ? ' ' : dataLang[this];
   }
 }
+
+const colorGradientLight = Color(0xFF5C57F2);
+const colorGradientDark = Color(0xFF2C2A74);

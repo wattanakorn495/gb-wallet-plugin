@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gbkyc/utils/file_uitility.dart';
 
 //สำหรับปุ่มตกลงทั้งแอป
 class ButtonConfirm extends StatelessWidget {
@@ -39,8 +40,8 @@ class ButtonConfirm extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Color(0xFF115899),
-                  Color(0xFF02416D),
+                  colorGradientLight,
+                  colorGradientDark,
                 ],
               )
             : const LinearGradient(

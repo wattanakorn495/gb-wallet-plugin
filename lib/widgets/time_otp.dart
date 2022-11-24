@@ -19,7 +19,7 @@ Widget timeOTP({
           color: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(6),
-            side: const BorderSide(color: Color(0xFF02416D)),
+            side: const BorderSide(color: colorGradientDark),
           ),
           onPressed: onPressed as void Function()?,
           child: Row(
@@ -27,11 +27,11 @@ Widget timeOTP({
             children: [
               const Icon(
                 Icons.rotate_right,
-                color: Color(0xFF02416D),
+                color: colorGradientDark,
               ),
               Text(
                 'sent_new_code'.tr(),
-                style: const TextStyle(color: Color(0xFF02416D), fontSize: 15),
+                style: const TextStyle(color: colorGradientDark, fontSize: 15),
               ),
             ],
           ),

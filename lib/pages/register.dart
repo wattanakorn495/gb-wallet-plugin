@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -21,6 +20,7 @@ import 'package:gbkyc/utils/file_uitility.dart';
 import 'package:gbkyc/utils/regular_expression.dart';
 import 'package:gbkyc/widgets/button_confirm.dart';
 import 'package:gbkyc/widgets/custom_dialog.dart';
+import 'package:gbkyc/widgets/input_dialog.dart';
 import 'package:gbkyc/widgets/numpad.dart';
 import 'package:gbkyc/widgets/page_loading.dart';
 import 'package:gbkyc/widgets/time_otp.dart';
@@ -64,7 +64,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
 
   int length = 6;
   int selectedStep = 1;
-  int? careerID, careerChildID;
+  int? careerID;
   int? indexProvince, indexDistric, indexSubDistric;
   int failFacematch = 0;
 
@@ -101,9 +101,6 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
   final idCardController = TextEditingController();
   final pinController = TextEditingController();
   final birthdayController = TextEditingController();
-  final workNameController = TextEditingController();
-  final workAddressController = TextEditingController();
-  final workAddressSerchController = TextEditingController();
   final referralCodeController = TextEditingController();
 
   Timer? _timer;
@@ -232,26 +229,6 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
   setCareerID(int? value) {
     careerID = value;
     personalInfo.careerID = value;
-  }
-
-  setCareerChildID(int? value) {
-    careerChildID = value;
-    personalInfo.careerChildID = value;
-  }
-
-  setWorkName(String value) {
-    workNameController.text = value;
-    personalInfo.workName = value;
-  }
-
-  setWorkAddress(String value) {
-    workAddressController.text = value;
-    personalInfo.workAddress = value;
-  }
-
-  setWorkAddressSearch(String value) {
-    workAddressSerchController.text = value;
-    personalInfo.workAddressSearch = value;
   }
 
   setReferralCode(String value) => referralCodeController.text = value;
@@ -419,8 +396,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Color(0xFF115899),
-                            Color(0xFF02416D),
+                            colorGradientLight,
+                            colorGradientDark,
                           ],
                         ),
                       ),
@@ -570,6 +547,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
   }
 
   sendOTP() async {
+    StateStore.phoneNumberGlobal = widget.phoneNumber.toString(); //save phone to Global value.
     txPhoneNumber = widget.phoneNumber.toString();
     var otpId = await PostAPI.call(
         url: '$register3003/send_otps',
@@ -703,7 +681,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
         Text(
           name,
           softWrap: false,
-          style: TextStyle(fontSize: 12, color: step == state ? const Color(0xFF106BAB) : const Color(0xFF191919)),
+          style: TextStyle(fontSize: 12, color: step == state ? colorGradientLight : colorGradientDark),
         ),
       ]),
     );
@@ -728,7 +706,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
         Text(
           name,
           softWrap: false,
-          style: TextStyle(fontSize: 12, color: step == state ? const Color(0xFF106BAB) : const Color(0xFF191919)),
+          style: TextStyle(fontSize: 12, color: step == state ? colorGradientLight : colorGradientDark),
         ),
       ]),
     );
@@ -742,8 +720,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
         decoration: const BoxDecoration(
           shape: BoxShape.circle,
           gradient: LinearGradient(begin: Alignment.topCenter, colors: [
-            Color.fromRGBO(2, 65, 109, 1),
-            Color.fromRGBO(16, 107, 171, 1),
+            colorGradientDark,
+            colorGradientLight,
           ]),
         ),
       ),
@@ -758,8 +736,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
         decoration: const BoxDecoration(
           shape: BoxShape.circle,
           gradient: LinearGradient(begin: Alignment.topCenter, colors: [
-            Color.fromRGBO(2, 65, 109, 1),
-            Color.fromRGBO(16, 107, 171, 1),
+            colorGradientDark,
+            colorGradientLight,
           ]),
         ),
       ),
@@ -773,7 +751,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
         height: 22,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(width: 1, color: const Color.fromRGBO(2, 65, 109, 1)),
+          border: Border.all(width: 1, color: colorGradientDark),
           color: Colors.white,
         ),
       ),
@@ -921,8 +899,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: [
-                              Color(0xFF115899),
-                              Color(0xFF02416D),
+                              colorGradientLight,
+                              colorGradientDark,
                             ],
                           ),
                         ),
@@ -964,9 +942,9 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                             color: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(25),
-                              side: const BorderSide(color: Color(0xFF115899)),
+                              side: const BorderSide(color: colorGradientDark),
                             ),
-                            child: Text('Re-take_photo'.tr(), style: const TextStyle(color: Color(0xFF115899))),
+                            child: Text('Re-take_photo'.tr(), style: const TextStyle(color: colorGradientDark)),
                             onPressed: () async {
                               if (await CheckPermission.camera(context)) {
                                 Navigator.push(
@@ -1032,8 +1010,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
                                 colors: [
-                                  Color(0xFF115899),
-                                  Color(0xFF02416D),
+                                  colorGradientLight,
+                                  colorGradientDark,
                                 ],
                               ),
                             ),
@@ -1072,14 +1050,6 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
       fileNameBackID = resBackID['response']['data']['file_name'];
       fileNameLiveness = data['face_image_file_name'];
 
-      String workAddress = '';
-      if (workAddressController.text.isNotEmpty) {
-        workAddress = workAddressController.text;
-      }
-      if (workAddressSerchController.text.isNotEmpty) {
-        if (workAddressController.text.isNotEmpty) workAddress += ' ';
-        workAddress += workAddressSerchController.text;
-      }
       resCreateUser = await PostAPI.call(
           url: '$register3003/users',
           headers: Authorization.auth2,
@@ -1098,9 +1068,9 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
             "province_id": '$indexProvince',
             "district_id": '$indexDistric',
             "sub_district_id": '$indexSubDistric',
-            "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
-            "work_name": workNameController.text,
-            "work_address": workAddress,
+            "career_id": '$careerID',
+            "work_name": '',
+            "work_address": '',
             "file_front_citizen": fileNameFrontID,
             "file_back_citizen": fileNameBackID,
             "file_selfie": '',
@@ -1175,14 +1145,6 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
           context: context);
       fileNameFrontID = resPassport['response']['data']['file_name'];
       fileNameLiveness = data['face_image_file_name'];
-      String workAddress = '';
-      if (workAddressController.text.isNotEmpty) {
-        workAddress = workAddressController.text;
-      }
-      if (workAddressSerchController.text.isNotEmpty) {
-        if (workAddressController.text.isNotEmpty) workAddress += ' ';
-        workAddress += workAddressSerchController.text;
-      }
       resCreateUser = await PostAPI.call(
           url: '$register3003/users',
           headers: Authorization.auth2,
@@ -1201,9 +1163,9 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
             "province_id": '',
             "district_id": '',
             "sub_district_id": '',
-            "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
-            "work_name": workNameController.text,
-            "work_address": workAddress,
+            "career_id": '$careerID',
+            "work_name": '',
+            "work_address": '',
             "file_front_citizen": fileNameFrontID,
             "file_back_citizen": '',
             "file_selfie": '',
@@ -1306,14 +1268,6 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
         ],
         context: context);
     fileNameSelfieID = resSelfieID['response']['data']['file_name'];
-    String workAddress = '';
-    if (workAddressController.text.isNotEmpty) {
-      workAddress = workAddressController.text;
-    }
-    if (workAddressSerchController.text.isNotEmpty) {
-      if (workAddressController.text.isNotEmpty) workAddress += ' ';
-      workAddress += workAddressSerchController.text;
-    }
     resCreateUser = await PostAPI.call(
         url: '$register3003/users',
         headers: Authorization.auth2,
@@ -1333,9 +1287,9 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                 "province_id": '$indexProvince',
                 "district_id": '$indexDistric',
                 "sub_district_id": '$indexSubDistric',
-                "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
-                "work_name": workNameController.text,
-                "work_address": workAddress,
+                "career_id": '$careerID',
+                "work_name": '',
+                "work_address": '',
                 "file_front_citizen": fileNameFrontID,
                 "file_back_citizen": fileNameBackID,
                 "file_selfie": fileNameSelfieID,
@@ -1358,9 +1312,9 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                 "province_id": '',
                 "district_id": '',
                 "sub_district_id": '',
-                "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
-                "work_name": workNameController.text,
-                "work_address": workAddress,
+                "career_id": '$careerID',
+                "work_name": '',
+                "work_address": '',
                 "file_front_citizen": fileNameFrontID,
                 "file_back_citizen": '',
                 "file_selfie": fileNameSelfieID,
@@ -1466,14 +1420,6 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
         ],
         context: context);
     fileNameSelfieID = resSelfieID['response']['data']['file_name'];
-    String workAddress = '';
-    if (workAddressController.text.isNotEmpty) {
-      workAddress = workAddressController.text;
-    }
-    if (workAddressSerchController.text.isNotEmpty) {
-      if (workAddressController.text.isNotEmpty) workAddress += ' ';
-      workAddress += workAddressSerchController.text;
-    }
     resCreateUser = await PostAPI.call(
         url: '$register3003/users',
         headers: Authorization.auth2,
@@ -1491,9 +1437,9 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                 "province_id": '$indexProvince',
                 "district_id": '$indexDistric',
                 "sub_district_id": '$indexSubDistric',
-                "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
-                "work_name": workNameController.text,
-                "work_address": workAddress,
+                "career_id": '$careerID',
+                "work_name": '',
+                "work_address": '',
                 "file_front_citizen": fileNameFrontID,
                 "file_back_citizen": fileNameBackID,
                 "file_selfie": fileNameSelfieID,
@@ -1516,9 +1462,9 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                 "province_id": '',
                 "district_id": '',
                 "sub_district_id": '',
-                "career_id": careerChildID != null ? '$careerChildID' : '$careerID',
-                "work_name": workNameController.text,
-                "work_address": workAddress,
+                "career_id": '$careerID',
+                "work_name": '',
+                "work_address": '',
                 "file_front_citizen": fileNameFrontID,
                 "file_back_citizen": '',
                 "file_selfie": fileNameSelfieID,
@@ -1607,7 +1553,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                 child: Column(children: [
                   Stack(children: [
                     const Divider(
-                      color: Color(0xFF02416D),
+                      color: colorGradientDark,
                       thickness: 1.5,
                       height: 30,
                       indent: 50,
@@ -1684,9 +1630,32 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                         'confirm_phone_num'.tr(),
                         style: const TextStyle(fontSize: 24),
                       ),
-                      Text(
-                        '${'enter_pin_sent_phone'.tr()} $txPhoneNumber',
-                        style: const TextStyle(color: Colors.black54, fontSize: 16),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '${'enter_pin_sent_phone'.tr()} $txPhoneNumber',
+                            style: const TextStyle(color: Colors.black54, fontSize: 16),
+                          ),
+                          GestureDetector(
+                            onTap: () async {
+                              await showDialog(
+                                  context: context,
+                                  builder: (builder) => InputDialog(
+                                        title: 'confirm_phone_num'.tr(),
+                                        onPressedConfirm: (value) {
+                                          StateStore.phoneNumberGlobal = value; //save phone to Global value.
+                                          txPhoneNumber = value;
+                                          setState(() {
+                                            expiration = true;
+                                            datetimeOTP = DateTime.now();
+                                          });
+                                        },
+                                      ));
+                            },
+                            child: const Icon(Icons.edit),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 20),
                       Form(
@@ -1708,11 +1677,11 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                             fieldHeight: 50,
                             fieldWidth: 43,
                             activeColor: hasError ? Colors.red : Colors.white,
-                            selectedColor: const Color.fromRGBO(2, 65, 109, 1),
-                            inactiveColor: const Color.fromRGBO(2, 65, 109, 1),
+                            selectedColor: colorGradientDark,
+                            inactiveColor: colorGradientDark,
                             disabledColor: Colors.grey,
                             activeFillColor: Colors.white,
-                            selectedFillColor: const Color.fromRGBO(2, 65, 109, 1),
+                            selectedFillColor: colorGradientDark,
                             inactiveFillColor: Colors.white,
                           ),
                           cursorColor: Colors.white,
@@ -1786,10 +1755,6 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
                   setIDCard: setIDCard,
                   setLaserCode: setLaserCode,
                   setCareerID: setCareerID,
-                  setCareerChildID: setCareerChildID,
-                  setWorkName: setWorkName,
-                  setWorkAddress: setWorkAddress,
-                  setWorkAddressSearch: setWorkAddressSearch,
                   setindexDistric: setindexDistric,
                   setindexSubDistric: setindexSubDistric,
                   setindexProvince: setindexProvince,

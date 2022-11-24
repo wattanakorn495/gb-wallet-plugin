@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gbkyc/utils/file_uitility.dart';
 
 //ปุ่มตัวเลขแบบ Pad
 class Numpad extends StatefulWidget {
@@ -186,7 +187,7 @@ class NumpadButton extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: MaterialButton(
         shape: CircleBorder(
-          side: haveBorder ? const BorderSide(color: Color(0xFF115899)) : const BorderSide(color: Colors.white),
+          side: haveBorder ? const BorderSide(color: colorGradientLight) : const BorderSide(color: Colors.white),
         ),
         padding: const EdgeInsets.all(15),
         onPressed: onPressed as void Function()?,

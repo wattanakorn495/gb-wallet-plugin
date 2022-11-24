@@ -62,7 +62,7 @@ class _SelectAddressState extends State<SelectAddress> with TickerProviderStateM
           color: Colors.grey[300],
           child: TabBar(
             controller: _tabBar,
-            indicatorColor: const Color(0xFF02416D),
+            indicatorColor: colorGradientDark,
             labelColor: Colors.black,
             onTap: (v) {
               if (v == 1 && province == "province".tr()) {

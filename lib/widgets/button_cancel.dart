@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gbkyc/utils/file_uitility.dart';
 
 //สำหรับปุ่มปฏิเสธทั้งแอป
 class ButtonCancel extends StatelessWidget {
@@ -32,12 +33,12 @@ class ButtonCancel extends StatelessWidget {
       child: MaterialButton(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(30),
-          side: const BorderSide(color: Color(0xFF02416D)),
+          side: const BorderSide(color: colorGradientDark),
         ),
         onPressed: onPressed,
         child: FittedBox(
           fit: BoxFit.scaleDown,
-          child: Text(text, style: const TextStyle(color: Color(0xFF02416D))),
+          child: Text(text, style: const TextStyle(color: colorGradientDark)),
         ),
       ),
     );

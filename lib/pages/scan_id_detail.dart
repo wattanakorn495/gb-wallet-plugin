@@ -40,18 +40,14 @@ class ScanIdDetailSate extends State<ScanIdDetail> {
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                          color: isCitizen ? const Color(0xFF02416D) : Colors.white,
+                          color: isCitizen ? colorGradientDark : Colors.white,
                           borderRadius: BorderRadius.circular(8),
                           border: isCitizen ? null : Border.all(width: 1.0, color: Colors.grey[300] ?? const Color.fromARGB(255, 222, 221, 221))),
                       child: Text(
                         'thai_person'.tr(),
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: isCitizen
-                              ? Colors.white
-                              : const Color(
-                                  0xFF02416D,
-                                ),
+                          color: isCitizen ? Colors.white : colorGradientDark,
                           fontSize: 16,
                         ),
                       ),
@@ -72,14 +68,14 @@ class ScanIdDetailSate extends State<ScanIdDetail> {
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: isCitizen ? Colors.white : const Color(0xFF02416D),
+                        color: isCitizen ? Colors.white : colorGradientDark,
                         borderRadius: BorderRadius.circular(8),
                         border: isCitizen ? Border.all(width: 1.0, color: Colors.grey[300] ?? const Color.fromARGB(255, 222, 221, 221)) : null,
                       ),
                       child: Text(
                         'foreigner'.tr(),
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: isCitizen ? const Color(0xFF02416D) : Colors.white, fontSize: 16),
+                        style: TextStyle(color: isCitizen ? colorGradientDark : Colors.white, fontSize: 16),
                       ),
                     ),
                   ),

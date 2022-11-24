@@ -90,9 +90,9 @@ class _MyAppState extends State<MyApp> {
                 ))),
         title: 'GB Wallet',
         theme: ThemeData(
-          primaryColor: const Color(0xFF02416D),
+          primaryColor: colorGradientDark,
           colorScheme: ColorScheme.fromSwatch().copyWith(secondary: Colors.white),
-          unselectedWidgetColor: const Color(0xFF00598A),
+          unselectedWidgetColor: colorGradientLight,
           fontFamily: 'kanit',
           dividerTheme: const DividerThemeData(color: Colors.grey, space: 0),
           appBarTheme: const AppBarTheme(
@@ -110,11 +110,11 @@ class _MyAppState extends State<MyApp> {
           ),
           inputDecorationTheme: InputDecorationTheme(
             focusedBorder: OutlineInputBorder(
-              borderSide: const BorderSide(color: Color(0xFF02416D), width: 2),
+              borderSide: const BorderSide(color: colorGradientDark, width: 2),
               borderRadius: BorderRadius.circular(8),
             ),
             enabledBorder: OutlineInputBorder(
-              borderSide: const BorderSide(color: Color(0xFF02416D)),
+              borderSide: const BorderSide(color: colorGradientDark),
               borderRadius: BorderRadius.circular(8),
             ),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -130,7 +130,7 @@ class _MyAppState extends State<MyApp> {
             bodyText1: TextStyle(fontFamily: 'kanit', package: 'gbkyc'),
             bodyText2: TextStyle(fontFamily: 'kanit', package: 'gbkyc'),
           ),
-          textSelectionTheme: const TextSelectionThemeData(cursorColor: Color(0xFF02416D)),
+          textSelectionTheme: const TextSelectionThemeData(cursorColor: colorGradientDark),
           scaffoldBackgroundColor: Colors.white,
         ),
       ),

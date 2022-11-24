@@ -67,8 +67,8 @@ class CustomDialog extends StatelessWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Color(0xFF115899),
-                      Color(0xFF02416D),
+                      colorGradientLight,
+                      colorGradientDark,
                     ],
                   ),
                 ),
@@ -93,13 +93,13 @@ class CustomDialog extends StatelessWidget {
                 color: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(6),
-                  side: const BorderSide(color: Color(0xFF02416D)),
+                  side: const BorderSide(color: colorGradientDark),
                 ),
                 onPressed: onPressedCancel ?? () => Navigator.pop(context),
                 child: Text(
                   textCancel ?? "Cancel".tr(),
                   style: const TextStyle(
-                    color: Color(0xFF02416D),
+                    color: colorGradientDark,
                   ),
                 ),
               ),
