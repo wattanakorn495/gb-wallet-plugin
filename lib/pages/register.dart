@@ -1117,7 +1117,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
           context: context,
           builder: (context) => CustomDialog(
             title: "Something_went_wrong".tr(),
-            content: errorMessages(resCreateUser),
+            content: errorMessages(resCreateUser + 1),
             avatar: false,
             onPressedConfirm: () {
               Navigator.pop(context);
@@ -1211,7 +1211,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
           context: context,
           builder: (context) => CustomDialog(
             title: "Something_went_wrong".tr(),
-            content: errorMessages(resCreateUser),
+            content: errorMessages(resCreateUser + 2),
             avatar: false,
             onPressedConfirm: () {
               Navigator.pop(context);
@@ -1365,7 +1365,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
         context: context,
         builder: (context) => CustomDialog(
           title: "Something_went_wrong".tr(),
-          content: errorMessages(resCreateUser),
+          content: errorMessages(resCreateUser! + 3),
           avatar: false,
           onPressedConfirm: () {
             Navigator.pop(context);
@@ -1511,7 +1511,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
         context: context,
         builder: (context) => CustomDialog(
           title: "Something_went_wrong".tr(),
-          content: errorMessages(resCreateUser),
+          content: errorMessages(resCreateUser + 4),
           avatar: false,
           onPressedConfirm: () {
             Navigator.pop(context);
