@@ -1116,8 +1116,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
           barrierDismissible: false,
           context: context,
           builder: (context) => CustomDialog(
-            title: "Something_went_wrong".tr(),
-            content: errorMessages(resCreateUser + 1),
+            title: "Something_went_wrong".tr() + '1',
+            content: errorMessages(resCreateUser),
             avatar: false,
             onPressedConfirm: () {
               Navigator.pop(context);
@@ -1210,8 +1210,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
           barrierDismissible: false,
           context: context,
           builder: (context) => CustomDialog(
-            title: "Something_went_wrong".tr(),
-            content: errorMessages(resCreateUser + 2),
+            title: "Something_went_wrong".tr() + '2',
+            content: errorMessages(resCreateUser),
             avatar: false,
             onPressedConfirm: () {
               Navigator.pop(context);
@@ -1364,8 +1364,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
         barrierDismissible: false,
         context: context,
         builder: (context) => CustomDialog(
-          title: "Something_went_wrong".tr(),
-          content: errorMessages(resCreateUser + 3),
+          title: "Something_went_wrong".tr() + '3',
+          content: errorMessages(resCreateUser),
           avatar: false,
           onPressedConfirm: () {
             Navigator.pop(context);
@@ -1510,8 +1510,8 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
         barrierDismissible: false,
         context: context,
         builder: (context) => CustomDialog(
-          title: "Something_went_wrong".tr(),
-          content: errorMessages(resCreateUser + 4),
+          title: "Something_went_wrong".tr() + '4',
+          content: errorMessages(resCreateUser),
           avatar: false,
           onPressedConfirm: () {
             Navigator.pop(context);
