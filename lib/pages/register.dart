@@ -1116,7 +1116,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
           barrierDismissible: false,
           context: context,
           builder: (context) => CustomDialog(
-            title: "Something_went_wrong".tr() + '1',
+            title: 'unable_register'.tr(),
             content: errorMessages(resCreateUser),
             avatar: false,
             onPressedConfirm: () {
@@ -1210,7 +1210,11 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
           barrierDismissible: false,
           context: context,
           builder: (context) => CustomDialog(
+<<<<<<< HEAD
             title: "Something_went_wrong".tr(),
+=======
+            title: 'unable_register'.tr(),
+>>>>>>> c620d151b56d50c14f5585bf0b00d59d480b0c7c
             content: errorMessages(resCreateUser),
             avatar: false,
             onPressedConfirm: () {
@@ -1364,7 +1368,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
         barrierDismissible: false,
         context: context,
         builder: (context) => CustomDialog(
-          title: "Something_went_wrong".tr() + '3',
+          title: 'unable_register'.tr(),
           content: errorMessages(resCreateUser),
           avatar: false,
           onPressedConfirm: () {
@@ -1510,7 +1514,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
         barrierDismissible: false,
         context: context,
         builder: (context) => CustomDialog(
-          title: "Something_went_wrong".tr() + '4',
+          title: "unable_register".tr(),
           content: errorMessages(resCreateUser),
           avatar: false,
           onPressedConfirm: () {

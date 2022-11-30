@@ -1177,7 +1177,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
                             headers: Authorization.auth2,
                             body: {"id_card": idCardController.text.replaceAll('-', '')},
                             context: context,
-                            alert: false);
+                            alert: false,
+                            errorTitle: 'invalid_id_card'.tr());
                         if (res['success']) {
                           if (frontIDCardImage.isNotEmpty) {
                             widget.setFileFrontCitizen!(frontIDCardImage);
