@@ -1210,11 +1210,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
           barrierDismissible: false,
           context: context,
           builder: (context) => CustomDialog(
-<<<<<<< HEAD
-            title: "Something_went_wrong".tr(),
-=======
             title: 'unable_register'.tr(),
->>>>>>> c620d151b56d50c14f5585bf0b00d59d480b0c7c
             content: errorMessages(resCreateUser),
             avatar: false,
             onPressedConfirm: () {
