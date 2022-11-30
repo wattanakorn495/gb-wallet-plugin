@@ -1147,7 +1147,7 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
       fileNameLiveness = data['face_image_file_name'];
       resCreateUser = await PostAPI.call(
           url: '$register3003/users',
-          headers: Authorization.auth2,
+          headers: Authorization.authPassport,
           body: {
             "type_register": 'passport',
             "id_card": passportNumber,
