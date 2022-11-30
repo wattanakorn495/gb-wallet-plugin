@@ -1102,6 +1102,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
             isChecked = !isChecked;
           }),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Checkbox(
                   activeColor: colorGradientLight,
@@ -1111,7 +1112,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                       isChecked = !isChecked;
                     });
                   }),
-              Text('confirm_information_correct'.tr()),
+              Expanded(child: Text('confirm_information_correct'.tr())),
             ],
           ),
         ),
