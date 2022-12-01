@@ -30,8 +30,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 
 class Register extends StatefulWidget {
-  const Register({Key? key, this.phoneNumber}) : super(key: key);
+  const Register({Key? key, this.phoneNumber, this.onConfirmOTP}) : super(key: key);
   final String? phoneNumber;
+  final void Function(String phoneNumber)? onConfirmOTP;
 
   @override
   // ignore: library_private_types_in_public_api
@@ -584,6 +585,10 @@ class _RegisterState extends State<Register> with WidgetsBindingObserver {
           _otpVisible = false;
           _scanIDVisible = true;
         });
+
+        if(widget.onConfirmOTP != null){
+          widget.onConfirmOTP!(StateStore.phoneNumberGlobal);
+        }
       } else {
         setState(() => hasError = true);
       }

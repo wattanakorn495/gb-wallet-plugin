@@ -40,9 +40,11 @@ void configLoading() {
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({Key? key, required this.phoneNumber, required this.isThai}) : super(key: key);
+  const MyApp({Key? key, required this.phoneNumber, required this.isThai, this.onConfirmOTP}) : super(key: key);
   final String phoneNumber;
   final bool isThai;
+  final void Function(String phonenumber)? onConfirmOTP;
+
   @override
   State<MyApp> createState() => _MyAppState();
 }
@@ -87,6 +89,7 @@ class _MyAppState extends State<MyApp> {
             future: readStringFile(widget.isThai),
             builder: ((context, snapshot) => Register(
                   phoneNumber: widget.phoneNumber,
+                  onConfirmOTP: widget.onConfirmOTP,
                 ))),
         title: 'GB Wallet',
         theme: ThemeData(
