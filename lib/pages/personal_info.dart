@@ -1102,7 +1102,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
             isChecked = !isChecked;
           }),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Checkbox(
                   activeColor: colorGradientLight,
