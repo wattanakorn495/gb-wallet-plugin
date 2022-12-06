@@ -33,6 +33,7 @@ class HomePage extends StatefulWidget {
 class HomePageState extends State<HomePage> {
   final GlobalKey<FormState> _formKey = GlobalKey();
   final phoneController = TextEditingController();
+  bool isThai = true;
 
   @override
   Widget build(BuildContext context) {
@@ -60,13 +61,38 @@ class HomePageState extends State<HomePage> {
                   keyboardType: TextInputType.number,
                   onChanged: ((value) => _formKey.currentState?.validate()),
                   decoration: const InputDecoration(labelText: 'Phone number')),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  const Text(
+                    'EN',
+                    style: TextStyle(fontSize: 20, color: Colors.blue),
+                  ),
+                  Switch(
+                    value: isThai,
+                    onChanged: (value) => setState(() {
+                      isThai = !isThai;
+                    }),
+                    activeColor: Colors.red,
+                    inactiveTrackColor: Colors.blue[300],
+                    inactiveThumbColor: Colors.blue,
+                  ),
+                  const Text(
+                    'TH',
+                    style: TextStyle(fontSize: 20, color: Colors.red),
+                  ),
+                ],
+              ),
+              const SizedBox(
+                height: 20,
+              ),
               MaterialButton(
                 height: 60,
                 minWidth: double.infinity,
                 color: Colors.blue,
                 onPressed: () {
                   if (_formKey.currentState!.validate() && phoneController.text.length == 10) {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => Gbkyc.register(phoneController.text, isThai: true))).then((v) {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => Gbkyc.register(phoneController.text, isThai: isThai))).then((v) {
                       if (v != null) {
                         debugPrint('สมัครสำเร็จ : $v');
                       }
